@@ -87,7 +87,7 @@ void* Peek(const Stack* stack) {
 void FreeStack(Stack* stack) {
     //iteration on the stack
     while (!Empty(stack)) {
-        //pop out value from stack
+        //pop out value from stack, pop() - free the first node and return the value
         void* val = Pop(stack);
 
         //free it from memory
