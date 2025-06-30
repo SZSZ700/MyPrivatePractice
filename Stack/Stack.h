@@ -6,8 +6,11 @@
 
 //Generic Stack struct
 typedef struct Stack {
+    //pointer to the head of the list
     Node* top;
+    //length of the list = size of stack
     int size;
+    //pointer to the bottom value in the stack
     void* bottom;
 } Stack;
 
