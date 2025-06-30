@@ -61,7 +61,7 @@ void* Pop(Stack* stack) {
     //make the head pointer point to the next node in the list
     stack->top = GetNextNode(temp);
 
-    //free it from memory
+    //free the first node from memory
     free(temp);
 
     //decrease the size of the stack
