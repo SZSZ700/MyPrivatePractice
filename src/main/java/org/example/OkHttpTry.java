@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import java.io.IOException;
 
 public class OkHttpTry {
+
     public static void main(String[] args) {
         // יצירת מופע OkHttpClient אחד שישמש את כל הבקשות
         OkHttpClient client = new OkHttpClient();
