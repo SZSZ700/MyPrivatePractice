@@ -975,6 +975,7 @@ int main() {
     sort_even_odd(&node);
     printIntNode(node);
     printf("size of list is: %d\n",sizeOfList(node));
+    freeList(node);
 
     // ---------------- Pointer to function Test ----------------
     //create numbers: firstNum = 17, secondNum = 18, thirdNum = 19, fourthNum = 25
