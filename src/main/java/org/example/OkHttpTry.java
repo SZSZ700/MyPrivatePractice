@@ -1,10 +1,8 @@
 package org.example;
 import okhttp3.*;
-import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
-import java.util.concurrent.CompletableFuture;
-import java.io.IOException;
 import okhttp3.Call;
+import org.json.JSONObject;
+import java.io.IOException;
 
 public class OkHttpTry {
 
@@ -18,44 +16,37 @@ public class OkHttpTry {
         HttpUrl getUrl = new HttpUrl.Builder()
                 .scheme("https")                             // פרוטוקול
                 .host("jsonplaceholder.typicode.com")        // כתובת
-                .addPathSegment("posts")                     //  נתיב הראשון
-                .addPathSegment("1")                         //  נתיב שני (מזהה הפוסט)
-                .addQueryParameter("lang", "he") // ניתן להוסיף פרמטרים
+                .addPathSegment("posts")                     // נתיב ראשון
+                .addPathSegment("1")                         // מזהה פוסט
+                .addQueryParameter("lang", "he")             // ניתן להוסיף פרמטרים
                 .build();
 
         // בניית הבקשה
         Request getReq = new Request.Builder()
-                .url(getUrl)   // שימוש באובייקט Url
-                .get()         // פעולה GET
+                .url(getUrl)
+                .get()
                 .build();
 
-        // יצירת Future להמתנה לתוצאה
-        CompletableFuture<String> getFuture = new CompletableFuture<>();
-
-        // שליחת הבקשה - אסינכרונית
+        // שליחת הבקשה - אסינכרונית בלבד
         client.newCall(getReq).enqueue(new Callback() {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                try (response) { getFuture.complete(response.body().string()); }
+                try (response) {
+                    String body = response.body().string();
+                    JSONObject json = new JSONObject(body);
+                    System.out.println("GET title = " + json.getString("title"));
+                }
             }
 
             @Override
             public void onFailure(Call call, IOException e) {
-                getFuture.completeExceptionally(e);
+                System.err.println("GET failed: " + e.getMessage());
             }
         });
 
-        // הדפסת התוצאה
-        try {
-            JSONObject json = new JSONObject(getFuture.get());
-            System.out.println("GET title = " + json.getString("title"));
-        }
-        catch (Exception e) { e.printStackTrace(); }
-
-
         // ====== 2) POST =======
 
-        // בניית אובייקט HttpUrl ל-POST
+        // בניית URL ל־POST
         HttpUrl postUrl = new HttpUrl.Builder()
                 .scheme("https")
                 .host("jsonplaceholder.typicode.com")
@@ -69,18 +60,16 @@ public class OkHttpTry {
                 .put("body", "Created using HttpUrl object")
                 .put("userId", 123);
 
-        // סוג המידע שנשלח (..jason, xml, txt, image, etc) וקידוד
+        // סוג המידע שנשלח
         MediaType type = MediaType.parse("application/json; charset=utf-8");
 
         // בניית גוף הבקשה
         RequestBody postBody = RequestBody.create(postBodyJson.toString(), type);
 
-        // בניית בקשת post
+        // בניית בקשת POST
         Request postReq = new Request.Builder()
                 .url(postUrl)
                 .post(postBody)
-                // .put(postBody) // עדכון, שינוי שדות גייסון
-                // .delete() // מחיקה
                 .build();
 
         client.newCall(postReq).enqueue(new Callback() {
@@ -90,14 +79,12 @@ public class OkHttpTry {
                     System.out.println("POST status = " + response.code());
                     System.out.println("POST body   = " + response.body().string());
                 }
-
             }
 
             @Override
             public void onFailure(Call call, IOException e) {
                 System.err.println("POST failed: " + e.getMessage());
             }
-
         });
     }
 }
