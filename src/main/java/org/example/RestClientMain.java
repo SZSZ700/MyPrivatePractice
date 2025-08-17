@@ -17,7 +17,8 @@ public class RestClientMain {
         String baseUrl = "http://localhost:8080/myapp/api/users";
 
         // טיפוס המדיה JSON
-        MediaType jsonMedia = MediaType.parse("application.properties/json; charset=utf-8");
+        MediaType jsonMedia = MediaType.parse("application/json; charset=utf-8");
+
 
         // לאפשר ל-main להמתין עד שהזרימה האסינכרונית מסתיימת (רק כדי שלא תסתיים התוכנית)
         CountDownLatch done = new CountDownLatch(1);
