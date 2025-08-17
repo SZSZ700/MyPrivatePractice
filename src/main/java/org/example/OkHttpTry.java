@@ -99,8 +99,5 @@ public class OkHttpTry {
             }
 
         });
-
-        // השהייה קצרה כדי לאפשר לקריאות הא-סינכרוניות להסתיים
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
     }
 }
