@@ -61,7 +61,7 @@ public class OkHttpTry {
                 .put("userId", 123);
 
         // סוג המידע שנשלח
-        MediaType type = MediaType.parse("application/json; charset=utf-8");
+        MediaType type = MediaType.parse("application.properties/json; charset=utf-8");
 
         // בניית גוף הבקשה
         RequestBody postBody = RequestBody.create(postBodyJson.toString(), type);
