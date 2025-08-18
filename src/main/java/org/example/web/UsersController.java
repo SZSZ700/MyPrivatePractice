@@ -69,6 +69,7 @@ public class UsersController {
 
                     users.add(u); // הוספת אובייקט המשתמש לרשימה
 
+                    // קידום מונה משתמשים (מזהה יחודי)
                     ID.set(Math.max(ID.get(), u.getId() + 1));
                 }
             }
