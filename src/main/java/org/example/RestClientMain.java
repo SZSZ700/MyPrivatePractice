@@ -29,7 +29,7 @@ public class RestClientMain {
 
         // בניית גוף JSON: {"name":"Alice"}
         JSONObject postJson = new JSONObject();
-        postJson.put("name", "Alice");
+        postJson.put("name", "Aliana");
 
         // המרת ה־JSON לגוף בקשה
         RequestBody postBody = RequestBody.create(postJson.toString(), jsonMedia);
