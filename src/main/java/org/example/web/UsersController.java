@@ -49,6 +49,7 @@ public class UsersController {
     static {
         try (InputStream is = UsersController.class.getClassLoader().getResourceAsStream("users.json")) {
 
+            // אם נקרא תוכן מקובץ הג'ייסונים
             if (is != null) {
                 // קריאת כל תוכן קובץ ה JASON המרתו למחרוזת
                 String text = new String(is.readAllBytes(), StandardCharsets.UTF_8);
