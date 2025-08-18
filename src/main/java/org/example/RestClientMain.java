@@ -100,7 +100,10 @@ public class RestClientMain {
                                     return;
                                 }
 
-                                // קריאת הגוף
+                                // קריאת הגוף -
+                                // הגוף מכיל זרם בייטים,XML/JSON/IMAGE לכן דרוש להמיר למחרוזת
+                                // ורק אז נמיר לאובייקט גייסון שיודע לקבל רק מחרוזת גייסונים
+                                // ולא זרמים
                                 String listStr1 = r1.body() != null ? r1.body().string() : "[]";
                                 // המרה ל־JSONArray
                                 JSONArray arr1 = new JSONArray(listStr1);
