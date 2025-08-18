@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -28,6 +29,9 @@ public class UsersController {
         private int id; // מזהה יחודי
         private String name; // שם
 
+        // בנאי ריק
+        User(){ }
+
         // בנאי המחלקה הפנימית
         User(int id, String name) {
             this.id = id;
@@ -40,6 +44,38 @@ public class UsersController {
         public String getName() { return this.name; }
         public void setName(String name) { this.name = name; }
     }
+
+    // אתחול נתוני דוגמה
+    static {
+        try (InputStream is = UsersController.class.getClassLoader().getResourceAsStream("users.json")) {
+
+            if (is != null) {
+                // קריאת כל תוכן קובץ ה JASON המרתו למחרוזת
+                String text = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+
+                // המרת המחרוזת למערך גייסונים בחזרה
+                JSONArray arr = new JSONArray(text);
+
+                // מעבר על מערך גייסונים
+                for (int i = 0; i < arr.length(); i++) {
+                    // קבלת גייסון נוכחי
+                    JSONObject obj = arr.getJSONObject(i);
+
+                    // יצירת אובייקט משתמש, מאובייקט הגייסון
+                    User u = new User(
+                            obj.getInt("id"),
+                            obj.getString("name")
+                    );
+
+                    users.add(u); // הוספת אובייקט המשתמש לרשימה
+
+                    ID.set(Math.max(ID.get(), u.getId() + 1));
+                }
+            }
+
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
 
 
     // -- Methods -- //
@@ -81,7 +117,7 @@ public class UsersController {
     // GET /api/users/{id}  (משתמש בודד)
     // -----------------------------
     @GetMapping("/{id}")
-    public ResponseEntity<String> getOne(@PathVariable int id) {
+    public ResponseEntity<String> getOne(@PathVariable("id") int id) {
         // איטרציה לחיפוש אחר משתמש יחיד בעל אותו מזהה יחודי כמו שהתקבל בפונקציה כפרמטר
         for (User u : users) {
             if (u.id == id) {
@@ -150,7 +186,7 @@ public class UsersController {
     // גם כאן נקבל ANY Content-Type כדי שלא תיפול על ה-MediaType של הקליינט
     // -----------------------------
     @PutMapping(value = "/{id}", consumes = MediaType.ALL_VALUE)
-    public ResponseEntity<String> update(@PathVariable int id,
+    public ResponseEntity<String> update(@PathVariable("id") int id,
                                          @RequestBody(required = false) byte[] bodyBytes) {
         // קבלת גייסון - כלומר גוף הבקשה - המרתו ממערך בייטים למחרוזת, ואז לגייסון
         String body =
@@ -214,7 +250,7 @@ public class UsersController {
     // DELETE /api/users/{id}  (מחיקה לפי מזהה יחודי)
     // -----------------------------
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable int id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") int id) {
         // הסרה מהרשימה
         boolean removed = users.removeIf(u -> u.id == id);
 
