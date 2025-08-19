@@ -3,6 +3,7 @@ package org.example;
 // ייבוא OkHttp
 import okhttp3.*;
 import okhttp3.Call;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.IOException;
@@ -301,6 +302,5 @@ public class RestClientMain {
         // ניקוי משאבים אופציונלי
         client.dispatcher().executorService().shutdown();
         client.connectionPool().evictAll();
-        // (אם הגדרת Cache – גם cache.close())
     }
 }
