@@ -151,34 +151,49 @@ public class UsersController {
     @PostMapping(consumes = MediaType.ALL_VALUE)
     public ResponseEntity<String> create(@RequestBody(required = false) byte[] bodyBytes) throws IOException {
 
+        // מחרוזת שתקבל את גוף הבקשה שהתקבלה בשרת (גייסון משתמש חדש)
         String body =
+                // אם גוף הבקשה שהתקבלה בשרת ריקה
                 bodyBytes == null
                         ?
+                        // נציב מחרוזת ריקה
                         ""
                         :
+                        // אחרת את גוף הבקשה נמיר למחרוזת (לפי סטנדרט מסויים)
                         new String(bodyBytes, StandardCharsets.UTF_8);
 
+        // המרת מחרוזת גייסון של גוף הבקשה -> משתמש, לגייסון בחזרה
         JSONObject json = new JSONObject(body);
 
+        // קבלת שם המשתמש (ללא רווחים מיותרים)
         String name = json.optString("name", "").trim();
 
-        if (name.isEmpty()) {
+        // אם לא הוזן שם בשדה שם, או אין שדה שם
+        if (!json.has("name") || name.isEmpty()) {
+            // נחזיר תגובה :לא תקין"
             return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
+                    .status(HttpStatus.BAD_REQUEST) // סטטוס: בקשה לא תקינה
+                    // גוף התגובה:
                     .body(
+                            // גייסון: המפרט מה הבעיה, ומומר למחרוזת
                             new JSONObject()
                                     .put("error", "Name is required")
                                     .toString()
                     );
         }
 
-        User u = new User(ID.getAndIncrement(), name);
 
+        // בניית אובייקט משתמש: {שם, מזהה יחודי}
+        User u = new User(ID.getAndIncrement(), name);
+        // הוספתו לרשימת המשתמשים
         users.add(u);
 
+        // החזר תגובה שהתהליך הושלם בהצלחה
         return ResponseEntity
-                .status(HttpStatus.CREATED)
+                .status(HttpStatus.CREATED) // סטטוס: הוקם  בהצלחה
+                // גוף התגובה
                 .body(
+                        // החזרת גייסון של אובייקט המשתמש בתור מחרוזת
                         userToJson(u).toString()
                 );
     }
