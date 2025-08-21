@@ -860,6 +860,98 @@ void RemoveFirstOccurrence0fNumberFromList(Node **chain, const int number) {
     }
 }
 
+BinNode* returnEvenBinList(const BinNode *chain) {
+    BinNode *onlyEven = NULL; // head pointer
+    BinNode *tail = NULL; // tail pointer
+
+    const BinNode *pos = chain; // pointer for iteration
+
+    // iterate to the far left side of the list
+    while (GetLeft(pos) != NULL) { pos = GetLeft(pos); }
+
+    // iteration in the right direction, and build the new evens list
+    while (pos != NULL) {
+        int *num = (int*)malloc(sizeof(int)); // keep current value
+        *num = *(int*)GetBinNodeValue(pos); // get the actual current value
+
+        BinNode *toAdd = CreateBinNode(num); // create new binnode
+
+        // if thr current number is even
+        if (*num % 2 == 0) {
+            // case a: if the new list length is zero
+            if (onlyEven == NULL) {
+                onlyEven = toAdd;
+                tail = toAdd;
+            }else {
+                // case b: if the new list contains BinNodes
+                SetLeft(tail, toAdd);
+                // keep doubly connection
+                SetLeft(GetLeft(tail), tail);
+                // move the tail pointer to the next BinNode
+                tail = GetRight(tail);
+            }
+        }
+
+        pos = GetRight(pos); // move to the next right BinNode
+    }
+
+    // return the new list
+    return onlyEven;
+}
+
+// O(n)
+int isQueueContainsOnlyOneOrZeroOnly(Queue *q) {
+    // restoration queue
+    Queue *temp = CreateQueue();
+    // boolean flag, to detect if queue is not valid
+    int flag = 0;
+
+    // iteration: check if queue contains only 0/1
+    while (!QIsEmpty(q)) {
+        // keep current number
+        int *num = malloc(sizeof(int)); // allocate memory for the new value
+        *num = *(int*)Poll(q); // remove it from the queue
+
+        // if current value is not 1 or 0, flag = true = queue is not valid
+        if (*num != 0 || *num != 1) { flag = 1; }
+
+        Offer(temp, num); // offer it to the restoration queue
+    }
+
+    // restoration: restore original queue
+    while (!QIsEmpty(temp)) { Offer(temp, Poll(temp)); }
+
+    // return true if flag still false, else return true
+    return flag == 0 ? 1 : 0;
+}
+
+// O(n)^2
+int isStackContainsOnlyQueuesThatContainsOnlyOneOrZeroOnly(Stack *stk) {
+    // restoration stack
+    Stack *temp = CreateStack();
+    // boolean flag, to detect if the stack is not valid
+    int flag = 0;
+
+    // iteration: to check if all queues int the stack contains only 1 or zero
+    while (!Empty(stk)) {
+        Queue *current = Pop(stk); // remove current queue from the stack
+
+        // if it's not valid queue, flag = true = current queue is not valid
+        if (!isQueueContainsOnlyOneOrZeroOnly(current)){ flag = 1; }
+
+        // push current queue to the restoration stack
+        Push(temp, current);
+    }
+
+    // restoration: restore all the queues from the restoration stack
+    // to the original one
+    while (!Empty(temp)) { Push(stk, Pop(temp)); }
+
+    // return true if flag still false, else return true
+    return flag == 0 ? 1 : 0;
+}
+
+
 
 int main() {
 
@@ -1007,13 +1099,13 @@ int main() {
     SetLeft(root2, root4);
 
     //create list
-    Node* chain = CreateNode(root1);
+    //Node* chain = CreateNode(root1);
 
     //pointer to function
-    Node * (*func_ptr)(Node *) = TreesWithMaxBins;
+    //Node * (*func_ptr)(Node *) = TreesWithMaxBins;
 
     //call the function
-    Node *final = func_ptr(chain);
+    //Node *final = func_ptr(chain);
 
 
     return 0;
