@@ -9052,6 +9052,37 @@ public class Main {
         return true;
     };
 
+    public static void addly(Node<Integer> chain, int n, int pos) {
+        // case: add at the start of the chain
+        if (pos == 1) {
+            // save the original first value
+            var firstOriginal = chain.getValue();
+            // replace the value of the first node with the new value
+            chain.setValue(n);
+            // create a new node with the old value and set it as next
+            chain.setNext(new Node<>(firstOriginal, chain.getNext()));
+            return;
+        }
+
+        // case: add in between and at the end
+        var current = chain;   // pointer to traverse the chain
+        var tail = current;    // pointer to remember the last node visited
+        var count = 0;         // counter for the current position
+        while (current != null) {
+            // if the next position is the desired one
+            if (count + 1 == pos) {
+                // insert new node after the current node
+                current.setNext(new Node<>(n, current.getNext()));
+                return;
+            }
+            // otherwise, move to the next node
+            count++;
+            current = current.getNext();
+        }
+
+        // case: add at the end (if pos is larger than the chain length)
+        tail.setNext(new Node<>(n));
+    }
 
     //---------------------------------------------------------------------------------------------------------------//
 
