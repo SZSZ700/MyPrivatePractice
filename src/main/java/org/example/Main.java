@@ -10980,7 +10980,7 @@ public class Main {
                 };
 
                 // פונקצייה עיקרית
-                BiFunction<BinNode<Integer>, Integer, Boolean> isdfrAll = (root, num) -> {
+                Function<BinNode<Integer>, Boolean> isdfrAll = (root) -> {
                     // create search queue for iteration ONLY on the left side of the tree
                     var queue = new LinkedList<BinNode<Integer>>();
                     queue.offer(root.getLeft()); // offer the root to the queue
