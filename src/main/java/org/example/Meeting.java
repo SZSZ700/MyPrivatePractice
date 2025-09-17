@@ -118,9 +118,7 @@ public class Meeting {
             // Print missing department numbers
             System.out.println("The department numbers missing in this room are:");
             for (int i = 0; i < monim.length; i++) {
-                if (monim[i] == 0) {
-                    System.out.println(i + 1 + ", ");
-                }
+                if (monim[i] == 0) { System.out.println(i + 1 + ", "); }
             }
 
             // Move to next room in the linked list
