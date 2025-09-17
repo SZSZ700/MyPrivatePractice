@@ -11172,7 +11172,7 @@ public class Main {
                 };
 
                 // 1 - d
-                // ✅ Summary: In all three parts (A–C), the operations require a linear scan of the queue and use temporary data structures of size proportional to the input.
+                // Summary: In all three parts (A–C), the operations require a linear scan of the queue and use temporary data structures of size proportional to the input.
                 // Thus, time complexity is O(n) and space complexity is O(n).
 
                 // 2-3 בע"פ
