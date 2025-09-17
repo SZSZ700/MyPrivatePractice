@@ -11010,6 +11010,7 @@ public class Main {
             });
             // 2025 - my test
             q.offer(() -> {
+
                 // 1
                 // Definition?
                 // A valid queue of strings is a queue where all strings
@@ -11522,7 +11523,6 @@ public class Main {
                 // - isSubStack: Sliding window search in lists → O(n * m).
 
             });
-
             //The End
             q.offer(() -> {
                 System.out.println("Java <--> JVM <--> ByteCode(mechine code) /or/ JNI(Bridge interface) <--> native code (c,c++) <--> Assembly(mechine code)? ");
