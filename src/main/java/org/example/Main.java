@@ -11176,6 +11176,351 @@ public class Main {
 
                 // 2-3 בע"פ
 
+                // 6 - a
+                // Lambda that receives a binary tree of integers and returns the sum of all leaf values
+                Function<BinNode<Integer>, Integer> sumLeaves = (root) -> {
+                    // If the tree is empty → return 0
+                    if (root == null) return 0;
+
+                    // Initialize sum
+                    var sum = 0;
+
+                    // Queue for BFS traversal
+                    var qu = new LinkedList<BinNode<Integer>>();
+                    qu.offer(root);
+
+                    // Iterate through the tree
+                    while (!qu.isEmpty()) {
+                        // Current node
+                        var current = qu.poll();
+
+                        // If it is a leaf → add its value to sum
+                        if (!current.hasLeft() && !current.hasRight()) {
+                            sum += current.getValue();
+                        }
+
+                        // Add children if they exist
+                        if (current.hasLeft()) qu.offer(current.getLeft());
+                        if (current.hasRight()) qu.offer(current.getRight());
+                    }
+
+                    // Return total sum of leaf values
+                    return sum;
+                };
+
+
+                // 6 - b
+                // A function that creates a queue of NodeInfo objects from a binary tree
+                Function<BinNode<Integer>, Queue<NodeInfo>> createQueueOfNodesInfo = (root) -> {
+                    // Final queue that will contain the NodeInfo objects
+                    var finalQueue = new LinkedList<NodeInfo>();
+
+                    // Queue used for traversing the binary tree (BFS)
+                    var searchQueue = new LinkedList<BinNode<Integer>>();
+                    searchQueue.offer(root);
+
+                    // Iterate while there are nodes in the search queue
+                    while (!searchQueue.isEmpty()) {
+                        // Get the current binary node
+                        var currentBinNode = searchQueue.poll();
+                        // Get the value of the current node
+                        var currentBinNodeValue = currentBinNode.getValue();
+                        // String describing the type of node
+                        var whatIsIt = " ";
+
+                        // Check if the node is a leaf
+                        if (!currentBinNode.hasLeft() && !currentBinNode.hasRight()) {
+                            whatIsIt = "leaf";
+                        }
+                        // Otherwise, it's an internal node
+                        else if (currentBinNode.hasRight() || currentBinNode.hasLeft()) {
+                            whatIsIt = "internal";
+                        }
+
+                        // Add a new NodeInfo object to the final queue
+                        finalQueue.offer(new NodeInfo(currentBinNodeValue, whatIsIt));
+
+                        // Add the left child to the search queue if it exists
+                        if (currentBinNode.hasLeft()) {
+                            searchQueue.offer(currentBinNode.getLeft());
+                        }
+
+                        // Add the right child to the search queue if it exists
+                        if (currentBinNode.hasRight()) {
+                            searchQueue.offer(currentBinNode.getRight());
+                        }
+                    }
+
+                    // Return the queue of NodeInfo objects
+                    return finalQueue;
+                };
+
+                // 6 - c
+                // Lambda that receives a binary tree of integers and returns the maximum leaf value
+                Function<BinNode<Integer>, Integer> maxLeafValue = (root) -> {
+                    // If the tree is empty → return smallest possible value
+                    if (root == null) return Integer.MIN_VALUE;
+
+                    // Track maximum leaf value
+                    var max = Integer.MIN_VALUE;
+
+                    // Queue for BFS traversal
+                    var qu = new LinkedList<BinNode<Integer>>();
+                    qu.offer(root);
+
+                    // Iterate through the tree
+                    while (!qu.isEmpty()) {
+                        // Current node
+                        var current = qu.poll();
+
+                        // If it is a leaf → check for maximum
+                        if (!current.hasLeft() && !current.hasRight()) {
+                            if (current.getValue() > max) {
+                                max = current.getValue();
+                            }
+                        }
+
+                        // Add children if they exist
+                        if (current.hasLeft()) qu.offer(current.getLeft());
+                        if (current.hasRight()) qu.offer(current.getRight());
+                    }
+
+                    // Return maximum leaf value found
+                    return max;
+                };
+
+                // 7 - a
+                // Lambda that checks if all values in q1 are smaller than all values in q2
+                BiFunction<Queue<Integer>, Queue<Integer>, Boolean> isSmaller = (q1, q2) -> {
+                    // Temporary queues for restoration
+                    var restore1 = new LinkedList<Integer>();
+                    var restore2 = new LinkedList<Integer>();
+
+                    // Track maximum of q1 and minimum of q2
+                    var maxQ1 = Integer.MIN_VALUE;
+                    var minQ2 = Integer.MAX_VALUE;
+
+                    // Iterate through q1 to find maximum
+                    while (!q1.isEmpty()) {
+                        var current = q1.poll();
+                        if (current > maxQ1) maxQ1 = current;
+                        restore1.offer(current);
+                    }
+
+                    // Iterate through q2 to find minimum
+                    while (!q2.isEmpty()) {
+                        var current = q2.poll();
+                        if (current < minQ2) minQ2 = current;
+                        restore2.offer(current);
+                    }
+
+                    // Restore q1
+                    while (!restore1.isEmpty()) q1.offer(restore1.poll());
+                    // Restore q2
+                    while (!restore2.isEmpty()) q2.offer(restore2.poll());
+
+                    // Return true if max of q1 < min of q2
+                    return maxQ1 < minQ2;
+                };
+
+                // 7 - b
+                // Lambda that checks if a binary tree of queues of integers is an "excellent tree"
+                Function<BinNode<Queue<Integer>>, Boolean> isExcellentTree = (root) -> {
+                    // Empty tree is considered excellent
+                    if (root == null) return true;
+
+                    // Queue for BFS traversal
+                    var searchQueue = new LinkedList<BinNode<Queue<Integer>>>();
+                    searchQueue.offer(root);
+
+                    // Iterate through all nodes
+                    while (!searchQueue.isEmpty()) {
+                        var current = searchQueue.poll();
+
+                        // If current is not a leaf → must have 2 children
+                        if (current.hasLeft() || current.hasRight()) {
+                            if (!(current.hasLeft() && current.hasRight())) return false;
+
+                            var parentQ = current.getValue();
+                            var leftQ = current.getLeft().getValue();
+                            var rightQ = current.getRight().getValue();
+
+                            // Use previous lambda isSmaller to check order constraints
+                            if (!isSmaller.apply(leftQ, parentQ)) return false;
+                            if (!isSmaller.apply(parentQ, rightQ)) return false;
+
+                            // Offer children for further checking
+                            searchQueue.offer(current.getLeft());
+                            searchQueue.offer(current.getRight());
+                        }
+                    }
+
+                    // If all checks passed → tree is excellent
+                    return true;
+                };
+
+                // c
+                // Statement: "The smallest value in an excellent tree is found in the leftmost leaf."
+                // Explanation: This statement is true.
+                // Reason: By definition, every parent has values greater than all values in its left child.
+                // This property guarantees that the smallest values are always pushed down leftwards,
+                // and the absolute smallest is located in the leftmost leaf node.
+
+                // d
+                // Complexity analysis:
+                // - isSmaller: Each queue is scanned fully once → O(n + m) where n = |q1|, m = |q2|.
+                // - isExcellentTree: Each node is visited once, and for each node we may check its queues with isSmaller.
+                //   If each queue length is k, total cost = O(N * k) where N = number of nodes.
+                // Overall, both solutions are linear in terms of input size (number of elements processed).
+
+
+                // 9
+                // a
+                // Explanation of the given functions:
+                //
+                // isExist1: Checks if element x exists in the stack st by popping elements.
+                //           - Problem: it returns after the first comparison (inside while), so it only checks the top element.
+                //           - Complexity: O(1), but incorrect logic.
+                //
+                // isExist2: Checks if element x exists in the stack st by using a temporary stack to restore elements.
+                //           - Iterates through all elements, sets flag f = true if x is found.
+                //           - Restores st completely.
+                //           - Complexity: O(n), correct logic.
+
+
+                // b
+                // Lambda that checks if all elements of st1 exist in st2 (ignoring order)
+                BiFunction<Stack<Integer>, Stack<Integer>, Boolean> allElementsExist = (st1, st2) -> {
+                    // Temporary stacks for restoration
+                    var restore1 = new Stack<Integer>();
+                    var restore2 = new Stack<Integer>();
+
+                    // Copy all elements from st2 into restore2
+                    while (!st2.isEmpty()) restore2.push(st2.pop());
+
+                    // Flag for overall check
+                    boolean result = true;
+
+                    // Check each element in st1
+                    while (!st1.isEmpty()) {
+                        var current = st1.pop();
+                        restore1.push(current);
+
+                        boolean found = false;
+                        // Traverse restore2 to check for existence
+                        var temp = new Stack<Integer>();
+                        while (!restore2.isEmpty()) {
+                            var c2 = restore2.pop();
+                            if (c2.equals(current)) found = true;
+                            temp.push(c2);
+                        }
+                        // Restore restore2
+                        while (!temp.isEmpty()) restore2.push(temp.pop());
+
+                        if (!found) result = false;
+                    }
+
+                    // Restore st1
+                    while (!restore1.isEmpty()) st1.push(restore1.pop());
+                    // Restore st2
+                    while (!restore2.isEmpty()) st2.push(restore2.pop());
+
+                    return result;
+                };
+
+
+                // c
+                // Lambda that checks if all elements of st1 appear in st2 in the same order
+                BiFunction<Stack<Integer>, Stack<Integer>, Boolean> sameOrder = (st1, st2) -> {
+                    // Temporary copies for safe traversal
+                    var temp1 = new Stack<Integer>();
+                    var temp2 = new Stack<Integer>();
+                    var restore1 = new Stack<Integer>();
+                    var restore2 = new Stack<Integer>();
+
+                    // Reverse st1 into temp1
+                    while (!st1.isEmpty()) temp1.push(st1.pop());
+                    // Reverse st2 into temp2
+                    while (!st2.isEmpty()) temp2.push(st2.pop());
+
+                    boolean result = true;
+                    while (!temp1.isEmpty()) {
+                        var c1 = temp1.pop();
+                        restore1.push(c1);
+
+                        if (temp2.isEmpty()) { result = false; break; }
+                        var c2 = temp2.pop();
+                        restore2.push(c2);
+
+                        if (!c1.equals(c2)) { result = false; break; }
+                    }
+
+                    // Restore st1
+                    while (!restore1.isEmpty()) st1.push(restore1.pop());
+                    // Restore st2
+                    while (!restore2.isEmpty()) st2.push(restore2.pop());
+                    while (!temp2.isEmpty()) st2.push(temp2.pop());
+
+                    return result;
+                };
+
+
+                // d
+                // Lambda that checks if st1 is a subsequence (sub-stack) of st2 in consecutive order
+                BiFunction<Stack<Integer>, Stack<Integer>, Boolean> isSubStack = (st1, st2) -> {
+                    // Convert st1 into list for easier handling
+                    var temp1 = new Stack<Integer>();
+                    var restore1 = new Stack<Integer>();
+                    var list1 = new LinkedList<Integer>();
+
+                    while (!st1.isEmpty()) {
+                        var c = st1.pop();
+                        temp1.push(c);
+                    }
+                    while (!temp1.isEmpty()) {
+                        var c = temp1.pop();
+                        list1.add(c);
+                        st1.push(c);
+                    }
+
+                    // Convert st2 into list
+                    var temp2 = new Stack<Integer>();
+                    var restore2 = new Stack<Integer>();
+                    var list2 = new LinkedList<Integer>();
+
+                    while (!st2.isEmpty()) {
+                        var c = st2.pop();
+                        temp2.push(c);
+                    }
+                    while (!temp2.isEmpty()) {
+                        var c = temp2.pop();
+                        list2.add(c);
+                        st2.push(c);
+                    }
+
+                    // Sliding window search
+                    boolean found = false;
+                    for (int i = 0; i <= list2.size() - list1.size(); i++) {
+                        boolean match = true;
+                        for (int j = 0; j < list1.size(); j++) {
+                            if (!list2.get(i + j).equals(list1.get(j))) {
+                                match = false;
+                                break;
+                            }
+                        }
+                        if (match) { found = true; break; }
+                    }
+
+                    return found;
+                };
+
+
+                // e
+                // Complexity analysis:
+                // - allElementsExist: For each element in st1, we scan st2 fully → O(n * m).
+                // - sameOrder: Linear, O(min(n,m)).
+                // - isSubStack: Sliding window search in lists → O(n * m).
+
             });
 
             //The End
