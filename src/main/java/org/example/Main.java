@@ -11008,6 +11008,175 @@ public class Main {
 
                 System.out.println("----------------------------------------------------------");
             });
+            // 2025 - my test
+            q.offer(() -> {
+                // 1
+                // Definition?
+                // A valid queue of strings is a queue where all strings
+                // that start with the same letter are located only at the beginning of the queue
+
+                // 1 - a
+                // Write an operation that receives a valid queue of strings and a new string.
+                // The operation inserts the string into the queue so that the queue remains valid.
+                BiConsumer<Queue<String>, String> addToProperQueue = (queue, st) -> {
+                    // Temporary queue for valid strings (those starting with the same first char)
+                    var valid = new LinkedList<String>();
+                    // Temporary queue for all other strings
+                    var notValid = new LinkedList<String>();
+                    // Determine the first character of the first string in the queue
+                    char first = queue.peek().charAt(0);
+
+                    // Iteration: move all valid strings from the original queue to 'valid'
+                    while (!queue.isEmpty() && queue.peek().charAt(0) == first) {
+                        valid.offer(queue.poll());
+                    }
+
+                    // Move the rest of the strings to 'notValid'
+                    while (!queue.isEmpty()) { notValid.offer(queue.poll()); }
+
+                    // Decide where to put the new string, depending on its starting character
+                    if (st.charAt(0) == first) { valid.offer(st); }
+                    else { notValid.offer(st); }
+
+                    // Restoration: rebuild the original queue
+                    while (!valid.isEmpty()) { queue.offer(valid.poll()); }
+                    while (!notValid.isEmpty()) { queue.offer(notValid.poll()); }
+                };
+
+                // 1 - b
+                // Write a function that receives a queue of strings.
+                // The function checks if the queue is a "valid queue".
+                // A valid queue is defined as: all strings starting with the same letter appear only at the beginning of the queue.
+                // If valid → return true, otherwise → return false.
+                Function<Queue<String>, Boolean> isProperQueue = (queue) -> {
+                    // Get the first character of the first string in the queue
+                    char first = queue.peek().charAt(0);
+
+                    // Temporary queues for restoring the original queue later
+                    var rest1 = new LinkedList<String>();
+                    var rest2 = new LinkedList<String>();
+
+                    // Flag indicating if the queue is not valid
+                    boolean notvalid = false;
+
+                    // Move all strings that start with the same first char into rest1
+                    while (!queue.isEmpty() && queue.peek().charAt(0) == first) {
+                        rest1.offer(queue.poll());
+                    }
+
+                    // Move the rest of the strings into rest2, checking validity
+                    while (!queue.isEmpty()) {
+                        if (queue.peek().charAt(0) == first) {
+                            // If we find another string starting with 'first' after other strings → invalid
+                            notvalid = true;
+                        }
+                        rest2.offer(queue.poll());
+                    }
+
+                    // Restoration: rebuild the original queue
+                    while (!rest1.isEmpty()) { queue.offer(rest1.poll()); }
+                    while (!rest2.isEmpty()) { queue.offer(rest2.poll()); }
+
+                    // Return true if valid, false if invalid
+                    return !notvalid;
+                };
+
+                // 1 - c
+                // Write a function that receives a queue of strings.
+                // The function should check if the queue is a "valid queue".
+                // If it is valid – the function does nothing.
+                // If it is not valid – the function rearranges the order of the strings
+                // in the queue so that it becomes valid.
+                Consumer<Queue<String>> fixit = (queue) -> {
+                    // Define a local function to find the most popular first character in the queue
+                    Function<Queue<String>, Character> mostPopularChar = (ququ) -> {
+                        // Create a map to count how many times each first character appears
+                        var map = new HashMap<Character, Integer>();
+                        // Temporary queue to hold elements while counting
+                        var rest = new LinkedList<String>();
+
+                        // Iterate through the queue
+                        while (!ququ.isEmpty()) {
+                            // Take out the string at the front of the queue
+                            String cstr = ququ.poll();
+                            // Get the first character of the string
+                            char current = cstr.charAt(0);
+                            // Update its count in the map (default 0 if not yet present)
+                            map.put(current, map.getOrDefault(current, 0) + 1);
+                            // Store the string in the temporary queue for restoration
+                            rest.offer(cstr);
+                        }
+
+                        // Restore the queue by moving items back from temporary queue
+                        while (!rest.isEmpty()) { ququ.offer(rest.poll()); }
+
+                        // Initialize variables to find the max occurrence
+                        var max = Integer.MIN_VALUE;
+                        var most = ' ';
+
+                        // Go through all entries in the map
+                        for (var entry : map.entrySet()) {
+                            // Current character being checked
+                            var current = entry.getKey();
+                            // Number of times this character appeared
+                            var count = entry.getValue();
+
+                            // If this character occurs more than the current max
+                            if (count > max) {
+                                // Update max occurrence
+                                max = count;
+                                // Save this character as the most popular
+                                most = current;
+                            }
+                        }
+
+                        // Return the most frequent first character
+                        return most;
+                    };
+
+                    // Find the most popular first character in the given queue
+                    var most = mostPopularChar.apply(queue);
+
+                    // Temporary queue for strings that do not start with 'most'
+                    var rest = new LinkedList<String>();
+                    // Temporary queue for strings that start with 'most'
+                    var finalq = new LinkedList<String>();
+
+                    // Iterate through the original queue
+                    while (!queue.isEmpty()) {
+                        // Remove the current string
+                        var currentString = queue.poll();
+                        // Get its first character
+                        var currentCharcter = currentString.charAt(0);
+
+                        // If the first character matches the most popular one
+                        if (currentCharcter == most) {
+                            // Add it to the 'finalq' list
+                            finalq.offer(currentString);
+                        } else {
+                            // Otherwise, add it to the 'rest' list
+                            rest.offer(currentString);
+                        }
+                    }
+
+                    // Rebuild the queue: add all strings with the most popular char first
+                    while (!finalq.isEmpty()) {
+                        queue.offer(finalq.poll());
+                    }
+
+                    // Then add all other strings afterward
+                    while (!rest.isEmpty()) {
+                        queue.offer(rest.poll());
+                    }
+                };
+
+                // 1 - d
+                // ✅ Summary: In all three parts (A–C), the operations require a linear scan of the queue and use temporary data structures of size proportional to the input.
+                // Thus, time complexity is O(n) and space complexity is O(n).
+
+                // 2-3 בע"פ
+
+            });
 
             //The End
             q.offer(() -> {
