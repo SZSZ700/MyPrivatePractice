@@ -11340,15 +11340,17 @@ public class Main {
 
                         // If current is not a leaf → must have 2 children
                         if (current.hasLeft() || current.hasRight()) {
-                            if (!(current.hasLeft() && current.hasRight())) return false;
+                            if (!current.hasLeft() || !current.hasRight()){ return false; }
 
                             var parentQ = current.getValue();
                             var leftQ = current.getLeft().getValue();
                             var rightQ = current.getRight().getValue();
 
                             // Use previous lambda isSmaller to check order constraints
-                            if (!isSmaller.apply(leftQ, parentQ)) return false;
-                            if (!isSmaller.apply(parentQ, rightQ)) return false;
+                            if (!isSmaller.apply(leftQ, parentQ)
+                                    || !isSmaller.apply(parentQ, rightQ)){
+                                        return false;
+                            }
 
                             // Offer children for further checking
                             searchQueue.offer(current.getLeft());
