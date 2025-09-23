@@ -11352,9 +11352,9 @@ public class Main {
                                         return false;
                             }
 
-                            // Offer children for further checking
-                            searchQueue.offer(current.getLeft());
-                            searchQueue.offer(current.getRight());
+                            // offer the children to the search queue for further checking
+                            if (current.hasLeft()) { searchQueue.offer(current.getLeft()); }
+                            if (current.hasRight()) { searchQueue.offer(current.getRight()); }
                         }
                     }
 
