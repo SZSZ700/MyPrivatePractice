@@ -58,6 +58,28 @@ public class UsersController {
     }
 
     // -------------------------------------------------------------------------
+    // LOGIN (custom endpoint)
+    // Endpoint: POST /api/users/login
+    // Validates username + password against Firebase
+    // -------------------------------------------------------------------------
+    @PostMapping("/login")
+    public CompletableFuture<ResponseEntity<?>> login(@RequestBody User loginRequest) {
+        // Call service to get user by username
+        return firebaseService.getUser(loginRequest.getUserName()).thenApply(user -> {
+            // If user exists and password matches
+            if (user != null && user.getPassword().equals(loginRequest.getPassword())) {
+                return ResponseEntity.ok(user); // 200 OK with user object
+            } else {
+                // Otherwise return 401 Unauthorized
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body("Invalid username or password");
+            }
+        });
+    }
+
+
+    // -------------------------------------------------------------------------
     // READ (GET ALL)
     // Endpoint: GET /api/users
     // Returns a list of all users from Firebase
