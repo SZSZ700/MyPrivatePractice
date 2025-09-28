@@ -23,80 +23,111 @@ public class FirebaseService {
     // ----------------------------- INIT ---------------------------------
     // Initializes Firebase Admin SDK (only once) and binds usersRef to "/Users"
     public FirebaseService() throws IOException {
-        // Load service account key from resources
-        InputStream serviceAccount = getClass().getResourceAsStream("/firebase-key.json");
+        // טוען את המפתח החדש מה־resources
+        InputStream serviceAccount = getClass().getResourceAsStream("/myfinaltopap-firebase-adminsdk-fbsvc-765944770e.json");
         if (serviceAccount == null) {
-            throw new IllegalStateException("firebase-key.json not found in resources!");
+            throw new IllegalStateException("Service account JSON not found!");
         }
 
-        // Initialize Firebase once per JVM
+        // בונה את ההגדרות עם המפתח וה־DB URL החדש
+        FirebaseOptions options = FirebaseOptions.builder()
+                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                .setDatabaseUrl("https://myfinaltopap-default-rtdb.firebaseio.com/")
+                .build();
+
+        // מונע כפילות של אפליקציה
         if (FirebaseApp.getApps().isEmpty()) {
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    // IMPORTANT: Your **actual** Realtime Database URL
-                    .setDatabaseUrl("https://semband3-default-rtdb.firebaseio.com/")
-                    .build();
             FirebaseApp.initializeApp(options);
+            System.out.println("✅ Connected to Firebase project: myfinaltopap");
         }
 
-        // Point to the exact node name you use in DB (case sensitive)
         this.usersRef = FirebaseDatabase.getInstance().getReference("Users");
     }
 
-    // ----------------------------- LOGIN --------------------------------
-    // Find a user that matches exact (userName, password).
-    // NOTE: Relies on 'userName' and 'password' field names in DB + User POJO.
-    public CompletableFuture<User> login(String username, String password) {
-        CompletableFuture<User> future = new CompletableFuture<>();
+    // =========================================================
+    // SIGNUP → creates a new user with auto-generated key
+    // =========================================================
+    public CompletableFuture<String> signup(User user) {
+        CompletableFuture<String> future = new CompletableFuture<>();
 
+        // Read all users once to check if username already exists
         usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override public void onDataChange(DataSnapshot snapshot) {
-                User foundUser = null;
-
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                // Iterate through all existing users
                 for (DataSnapshot child : snapshot.getChildren()) {
                     String existingUser = child.child("userName").getValue(String.class);
-                    String existingPass = child.child("password").getValue(String.class);
 
-                    if (existingUser != null && existingPass != null
-                            && existingUser.equals(username)
-                            && existingPass.equals(password)) {
-                        foundUser = child.getValue(User.class);
-                        break;
+                    // If same username already exists → reject
+                    if (existingUser != null && existingUser.equals(user.getUserName())) {
+                        future.complete("Username already exists");
+                        return;
                     }
                 }
-                future.complete(foundUser);
+
+                // If no duplicate → create new record with auto-generated key
+                String key = usersRef.push().getKey(); // Generate unique Firebase key
+                if (key == null) {
+                    future.complete("Error generating key");
+                    return;
+                }
+
+                // Save user under the generated key
+                usersRef.child(key).setValue(user, (error, ref) -> {
+                    if (error == null) {
+                        future.complete("User created successfully");
+                    } else {
+                        future.complete("Error: " + error.getMessage());
+                    }
+                });
             }
-            @Override public void onCancelled(DatabaseError error) {
-                future.complete(null);
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Handle Firebase errors
+                future.complete("Error: " + error.getMessage());
             }
         });
 
         return future;
     }
 
-    // ----------------------------- SIGNUP -------------------------------
-    // Create a new user if 'userName' is not already taken (exact match).
-    public CompletableFuture<String> signup(User user) {
-        CompletableFuture<String> future = new CompletableFuture<>();
+    // =========================================================
+    // LOGIN → check username + password against stored users
+    // =========================================================
+    public CompletableFuture<User> login(String username, String password) {
+        CompletableFuture<User> future = new CompletableFuture<>();
 
-        usersRef.orderByChild("userName").equalTo(user.getUserName())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override public void onDataChange(DataSnapshot snapshot) {
-                        if (snapshot.exists()) {
-                            future.complete("Username already exists");
-                            return;
-                        }
-                        // Push new random key under /Users
-                        DatabaseReference newRef = usersRef.push();
-                        newRef.setValueAsync(user).addListener(() -> {
-                            // Completed write (no error callback available here)
-                            future.complete("User created successfully");
-                        }, Runnable::run);
+        // Read all users once
+        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                User foundUser = null;
+
+                // Iterate through users
+                for (DataSnapshot child : snapshot.getChildren()) {
+                    String existingUser = child.child("userName").getValue(String.class);
+                    String existingPass = child.child("password").getValue(String.class);
+
+                    // Match credentials
+                    if (existingUser != null && existingPass != null &&
+                            existingUser.equals(username) &&
+                            existingPass.equals(password)) {
+                        foundUser = child.getValue(User.class);
+                        break;
                     }
-                    @Override public void onCancelled(DatabaseError error) {
-                        future.complete("Error: " + error.getMessage());
-                    }
-                });
+                }
+
+                // Complete with user object or null
+                future.complete(foundUser);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Return null on error
+                future.complete(null);
+            }
+        });
 
         return future;
     }
@@ -419,5 +450,3 @@ public class FirebaseService {
         return future;
     }
 }
-
-
