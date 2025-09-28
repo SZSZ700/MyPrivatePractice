@@ -46,37 +46,52 @@ public class FirebaseService {
 
     // =========================================================
     // SIGNUP → creates a new user with auto-generated key
+    // With FULL DEBUG prints
     // =========================================================
     public CompletableFuture<String> signup(User user) {
         CompletableFuture<String> future = new CompletableFuture<>();
 
-        // Read all users once to check if username already exists
+        System.out.println("DEBUG: Signup called for username = " + user.getUserName());
+
+        // Print the reference path where we're working
+        System.out.println("DEBUG: usersRef PATH = " + usersRef.getPath());
+        System.out.println("DEBUG: usersRef URL  = " + usersRef.toString());
+
         usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                // Iterate through all existing users
+                System.out.println("DEBUG: Checking existing users... total children = " + snapshot.getChildrenCount());
+
+                // Iterate over existing users
                 for (DataSnapshot child : snapshot.getChildren()) {
                     String existingUser = child.child("userName").getValue(String.class);
 
-                    // If same username already exists → reject
+                    System.out.println("DEBUG: Found user in DB = " + existingUser);
+
                     if (existingUser != null && existingUser.equals(user.getUserName())) {
+                        System.out.println("DEBUG: Username already exists → " + existingUser);
                         future.complete("Username already exists");
                         return;
                     }
                 }
 
-                // If no duplicate → create new record with auto-generated key
-                String key = usersRef.push().getKey(); // Generate unique Firebase key
+                // No duplicate → create new record
+                String key = usersRef.push().getKey();
                 if (key == null) {
+                    System.err.println("DEBUG: Firebase push() returned null key!");
                     future.complete("Error generating key");
                     return;
                 }
 
-                // Save user under the generated key
+                System.out.println("DEBUG: Creating new user with key = " + key);
+                System.out.println("DEBUG: User object to save = " + user);
+
                 usersRef.child(key).setValue(user, (error, ref) -> {
                     if (error == null) {
+                        System.out.println("DEBUG: Successfully saved user at " + ref.toString());
                         future.complete("User created successfully");
                     } else {
+                        System.err.println("DEBUG: Failed to save user. Error = " + error.getMessage());
                         future.complete("Error: " + error.getMessage());
                     }
                 });
@@ -84,13 +99,16 @@ public class FirebaseService {
 
             @Override
             public void onCancelled(DatabaseError error) {
-                // Handle Firebase errors
+                System.err.println("DEBUG: Firebase read cancelled. Error = " + error.getMessage());
                 future.complete("Error: " + error.getMessage());
             }
         });
 
         return future;
     }
+
+
+
 
     // =========================================================
     // LOGIN → check username + password against stored users
