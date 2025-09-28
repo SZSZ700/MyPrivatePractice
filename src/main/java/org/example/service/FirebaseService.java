@@ -2,6 +2,9 @@
 package org.example.service;
 
 // Import Firebase Realtime Database classes
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
 
 // Import our custom User model
@@ -12,6 +15,8 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 // Import utilities for date/time and collections
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -35,12 +40,22 @@ public class FirebaseService {
     // ---------------------------------------------------------------------
     // Constructor: initialize Firebase reference
     // ---------------------------------------------------------------------
-    public FirebaseService() {
-        // Get the default FirebaseDatabase instance
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        // Point to the "Users" root node
-        this.usersRef = database.getReference("Users");
+    public FirebaseService() throws IOException {
+        // Load the service account key (from resources)
+        InputStream serviceAccount = getClass().getResourceAsStream("/firebase-key.json");
+
+        if (FirebaseApp.getApps().isEmpty()) {
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .setDatabaseUrl("https://YOUR_PROJECT_ID.firebaseio.com/")
+                    .build();
+
+            FirebaseApp.initializeApp(options);
+        }
+
+        this.usersRef = FirebaseDatabase.getInstance().getReference("users");
     }
+
 
     // ---------------------------------------------------------------------
     // CREATE USER
