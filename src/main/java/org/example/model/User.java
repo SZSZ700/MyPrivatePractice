@@ -30,6 +30,14 @@ public class User {
         this.password = password;
     }
 
+    // ------------------------------
+    // Mandatory no-args constructor
+    // Firebase uses this to deserialize
+    // ------------------------------
+    public User() {
+        // Required for Firebase
+    }
+
     // Getter for userName
     public String getUserName() {
         return userName;
