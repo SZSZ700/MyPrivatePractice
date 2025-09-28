@@ -95,7 +95,7 @@ public class UsersController {
     // ---------------------------------------------------------------------
     @GetMapping
     public CompletableFuture<ResponseEntity<List<User>>> getAllUsers() {
-        // Call service and wrap result in 200 OK
+        System.out.println("DEBUG: getAllUsers called");
         return firebaseService.getAllUsers().thenApply(ResponseEntity::ok);
     }
 
@@ -104,15 +104,14 @@ public class UsersController {
     // Retrieves a single user by username
     // ---------------------------------------------------------------------
     @GetMapping("/{username}")
-    public CompletableFuture<ResponseEntity<?>> getUser(@PathVariable String username) {
+    public CompletableFuture<ResponseEntity<?>> getUser(@PathVariable("username") String username) {
+        System.out.println("DEBUG: getUser called → username=" + username);
         return firebaseService.getUser(username).thenApply(user -> {
             if (user == null) {
-                // If user not found → return 404
                 return ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
                         .body("User not found");
             }
-            // Otherwise return 200 OK with user object
             return ResponseEntity.ok(user);
         });
     }
@@ -122,16 +121,16 @@ public class UsersController {
     // Replaces the entire user object
     // ---------------------------------------------------------------------
     @PutMapping("/{username}")
-    public CompletableFuture<ResponseEntity<?>> updateUser(@PathVariable String username,
-                                                           @RequestBody User updatedUser) {
+    public CompletableFuture<ResponseEntity<?>> updateUser(
+            @PathVariable("username") String username,
+            @RequestBody User updatedUser) {
+        System.out.println("DEBUG: updateUser called → username=" + username + ", body=" + updatedUser);
         return firebaseService.updateUser(username, updatedUser).thenApply(success -> {
             if (!success) {
-                // If user does not exist → return 404
                 return ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
                         .body("User not found");
             }
-            // Otherwise return 200 OK with updated user
             return ResponseEntity.ok(updatedUser);
         });
     }
@@ -141,16 +140,16 @@ public class UsersController {
     // Performs a partial update of user fields
     // ---------------------------------------------------------------------
     @PatchMapping("/{username}")
-    public CompletableFuture<ResponseEntity<?>> patchUser(@PathVariable String username,
-                                                          @RequestBody Map<String, Object> updates) {
+    public CompletableFuture<ResponseEntity<?>> patchUser(
+            @PathVariable("username") String username,
+            @RequestBody Map<String, Object> updates) {
+        System.out.println("DEBUG: patchUser called → username=" + username + ", updates=" + updates);
         return firebaseService.patchUser(username, updates).thenApply(updatedUser -> {
             if (updatedUser == null) {
-                // If not found → 404
                 return ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
                         .body("User not found");
             }
-            // Return updated user object
             return ResponseEntity.ok(updatedUser);
         });
     }
@@ -160,15 +159,14 @@ public class UsersController {
     // Removes a user from Firebase
     // ---------------------------------------------------------------------
     @DeleteMapping("/{username}")
-    public CompletableFuture<ResponseEntity<?>> deleteUser(@PathVariable String username) {
+    public CompletableFuture<ResponseEntity<?>> deleteUser(@PathVariable("username") String username) {
+        System.out.println("DEBUG: deleteUser called → username=" + username);
         return firebaseService.deleteUser(username).thenApply(success -> {
             if (!success) {
-                // If not found → 404
                 return ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
                         .body("User not found");
             }
-            // Otherwise → return success message
             return ResponseEntity.ok("User deleted");
         });
     }
@@ -178,13 +176,12 @@ public class UsersController {
     // Checks if user exists (status only, no body)
     // ---------------------------------------------------------------------
     @RequestMapping(value = "/{username}", method = RequestMethod.HEAD)
-    public CompletableFuture<ResponseEntity<Void>> headUser(@PathVariable String username) {
+    public CompletableFuture<ResponseEntity<Void>> headUser(@PathVariable("username") String username) {
+        System.out.println("DEBUG: headUser called → username=" + username);
         return firebaseService.exists(username).thenApply(exists -> {
             if (exists) {
-                // If exists → return 200 OK
                 return ResponseEntity.ok().build();
             }
-            // Otherwise → return 404 NOT FOUND
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         });
     }
@@ -194,16 +191,20 @@ public class UsersController {
     // Updates the "bmi" field of a user
     // ---------------------------------------------------------------------
     @PatchMapping("/{username}/bmi")
-    public CompletableFuture<ResponseEntity<?>> updateBmi(@PathVariable String username,
-                                                          @RequestParam double bmi) {
+    public CompletableFuture<ResponseEntity<?>> updateBmi(
+            @PathVariable("username") String username,
+            @RequestParam("bmi") double bmi) {
+
+        System.out.println("DEBUG: updateBmi called → username=" + username + ", bmi=" + bmi);
+
         return firebaseService.updateBmi(username, bmi).thenApply(success -> {
             if (!success) {
-                // If user not found → return 404
+                // אם המשתמש לא נמצא → החזר 404
                 return ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
                         .body("User not found");
             }
-            // Otherwise return success
+            // אחרת החזר הצלחה
             return ResponseEntity.ok("BMI updated successfully");
         });
     }
@@ -213,16 +214,16 @@ public class UsersController {
     // Adds a water entry for today (uses Firebase waterLog)
     // ---------------------------------------------------------------------
     @PatchMapping("/{username}/water")
-    public CompletableFuture<ResponseEntity<?>> updateWater(@PathVariable String username,
-                                                            @RequestParam int amount) {
+    public CompletableFuture<ResponseEntity<?>> updateWater(
+            @PathVariable("username") String username,
+            @RequestParam("amount") int amount) {
+
         return firebaseService.updateWater(username, amount).thenApply(success -> {
             if (!success) {
-                // If user not found or error → 404
                 return ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
                         .body("User not found or error");
             }
-            // Otherwise → success
             return ResponseEntity.ok("Water updated successfully");
         });
     }
@@ -232,14 +233,19 @@ public class UsersController {
     // Returns JSON object with { totalWater, yesterdayWater }
     // ---------------------------------------------------------------------
     @GetMapping("/{username}/water")
-    public CompletableFuture<ResponseEntity<?>> getWater(@PathVariable String username) {
+    public CompletableFuture<ResponseEntity<?>> getWater(
+            @PathVariable("username") String username) {
+
+        System.out.println("DEBUG: getWater called → username=" + username);
+
         return firebaseService.getWater(username).thenApply(result -> {
             if (result == null) {
-                // If not found → 404
+                // אם המשתמש לא נמצא → 404
                 return ResponseEntity
-                        .status(HttpStatus.NOT_FOUND).body("User not found");
+                        .status(HttpStatus.NOT_FOUND)
+                        .body("User not found");
             }
-            // Otherwise return the JSON result
+            // אחרת החזר את ה־JSON
             return ResponseEntity.ok(result);
         });
     }
