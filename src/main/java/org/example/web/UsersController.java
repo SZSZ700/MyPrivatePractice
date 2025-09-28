@@ -229,24 +229,27 @@ public class UsersController {
     }
 
     // ---------------------------------------------------------------------
-    // GET WATER (GET /api/users/{username}/water)
-    // Returns JSON object with { totalWater, yesterdayWater }
-    // ---------------------------------------------------------------------
+// GET WATER (GET /api/users/{username}/water)
+// Returns JSON object with { todayWater, yesterdayWater }
+// ---------------------------------------------------------------------
     @GetMapping("/{username}/water")
     public CompletableFuture<ResponseEntity<?>> getWater(
             @PathVariable("username") String username) {
 
-        System.out.println("DEBUG: getWater called → username=" + username);
-
         return firebaseService.getWater(username).thenApply(result -> {
             if (result == null) {
-                // אם המשתמש לא נמצא → 404
                 return ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
                         .body("User not found");
             }
-            // אחרת החזר את ה־JSON
-            return ResponseEntity.ok(result);
+
+            // ממירים את JSONObject שהגיע מה־FirebaseService ל־Map רגיל
+            Map<String, Object> response = new HashMap<>();
+            response.put("todayWater", result.optInt("todayWater", 0));
+            response.put("yesterdayWater", result.optInt("yesterdayWater", 0));
+
+            return ResponseEntity
+                    .ok(response);
         });
     }
 }
