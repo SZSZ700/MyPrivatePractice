@@ -364,12 +364,20 @@ public class FirebaseService {
                             DatabaseReference todayRef = userSnap.getRef()
                                     .child("waterLog").child(dayKey);
 
+                            //--//
+                            System.out.println("DEBUG: todayRef path = " + todayRef.toString());
+                            //--//
+
                             todayRef.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override public void onDataChange(DataSnapshot daySnapshot) {
                                     // Safely read as List<Long>
                                     GenericTypeIndicator<List<Long>> t =
                                             new GenericTypeIndicator<List<Long>>() {};
                                     List<Long> dayList = daySnapshot.getValue(t);
+
+                                    //
+                                    System.out.println("DEBUG: Existing value = " + daySnapshot.getValue());
+                                    //
 
                                     if (dayList == null) {
                                         dayList = new ArrayList<>(Collections.nCopies(13, 0L));
