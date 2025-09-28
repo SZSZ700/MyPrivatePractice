@@ -8,9 +8,11 @@ import com.google.firebase.database.*;
 import org.example.model.User;
 
 // Import Spring annotation to mark this class as a service
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 // Import utilities
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 // Import CompletableFuture for async handling
@@ -308,39 +310,73 @@ public class FirebaseService {
         return future;
     }
 
-    // -------------------------------------------------------------------------
-    // UPDATE WATER FIELD FOR USER
-    // -------------------------------------------------------------------------
-    public CompletableFuture<Boolean> updateWater(String username, int amount) {
-        // CompletableFuture for async response
+    // ============================================================================
+    // Update water log for a specific user and day
+    // ============================================================================
+    // This method will:
+    // 1. Find the user by username inside Firebase
+    // 2. Locate today's date key (yyyy-MM-dd)
+    // 3. Load the list of water slots (0 = total, 1–12 = cups)
+    // 4. Insert the new water amount in the first free slot
+    // 5. Update the total (index 0)
+    // 6. Save the list back to Firebase
+    // ============================================================================
+    public CompletableFuture<Boolean> updateWater(String username, int waterAmount) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
-        // Search for user by username
+        // Step 1: Query users where userName == username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
-                        // If user not found
                         if (!snapshot.exists()) {
+                            // User not found
                             future.complete(false);
                             return;
                         }
 
-                        // Iterate through matching users
-                        for (DataSnapshot child : snapshot.getChildren()) {
-                            // Reference to "totalWater"
-                            DatabaseReference waterRef = child.getRef().child("totalWater");
+                        for (DataSnapshot userSnap : snapshot.getChildren()) {
+                            // Step 2: Create today key
+                            String dayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
-                            // Fetch the current value of totalWater
-                            waterRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            // Step 3: Reference to today's water log
+                            DatabaseReference todayRef = userSnap.getRef().child("waterLog").child(dayKey);
+
+                            // Step 4: Load data for today
+                            todayRef.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
-                                public void onDataChange(DataSnapshot data) {
-                                    // Default current water amount = 0 if not exists
-                                    int current = data.exists() ? data.getValue(Integer.class) : 0;
+                                public void onDataChange(DataSnapshot daySnapshot) {
+                                    // Load existing list or create new 13-slot array
+                                    List<Long> dayList = daySnapshot.exists()
+                                            ? (List<Long>) daySnapshot.getValue()
+                                            : new ArrayList<>(Collections.nCopies(13, 0L));
 
-                                    // Write new incremented value
-                                    waterRef.setValueAsync(current + amount)
-                                            .addListener(() -> future.complete(true), Runnable::run);
+                                    // Step 5: Find next free slot
+                                    int cupIndex = 1;
+                                    while (cupIndex <= 12 && dayList.get(cupIndex) > 0) {
+                                        cupIndex++;
+                                    }
+
+                                    if (cupIndex <= 12) {
+                                        // Insert new water amount
+                                        dayList.set(cupIndex, (long) waterAmount);
+
+                                        // Update total at index 0
+                                        long sum = dayList.get(0);
+                                        dayList.set(0, sum + waterAmount);
+
+                                        // Step 6: Save back to Firebase
+                                        todayRef.setValue(dayList, (error, ref) -> {
+                                            if (error == null) {
+                                                future.complete(true);
+                                            } else {
+                                                future.complete(false);
+                                            }
+                                        });
+                                    } else {
+                                        // No free slots today
+                                        future.complete(false);
+                                    }
                                 }
 
                                 @Override
@@ -348,8 +384,6 @@ public class FirebaseService {
                                     future.completeExceptionally(error.toException());
                                 }
                             });
-
-                            return; // Only first user updated
                         }
                     }
 
@@ -359,6 +393,62 @@ public class FirebaseService {
                     }
                 });
 
+        return future;
+    }
+
+    // ============================================================================
+    // Get water log for today and yesterday
+    // ============================================================================
+    // This method will:
+    // 1. Find the user by username
+    // 2. Compute today and yesterday keys (yyyy-MM-dd)
+    // 3. Read total water at index 0 for both days
+    // 4. Return JSON with { totalWater, yesterdayWater }
+    // ============================================================================
+    public CompletableFuture<JSONObject> getWater(String username) {
+        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+
+        // Step 1: Create today + yesterday keys
+        String todayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_YEAR, -1);
+        String yesterdayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
+
+        // Step 2: Query user by username
+        usersRef.orderByChild("userName").equalTo(username)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        if (!snapshot.exists()) {
+                            future.complete(null);
+                            return;
+                        }
+
+                        for (DataSnapshot userSnap : snapshot.getChildren()) {
+                            // Step 3: Extract totals from Firebase
+                            Long todayAmount = userSnap.child("waterLog").child(todayKey).child("0").getValue(Long.class);
+                            Long yesterdayAmount = userSnap.child("waterLog").child(yesterdayKey).child("0").getValue(Long.class);
+
+                            // Step 4: Build JSON response
+                            JSONObject obj = new JSONObject();
+                            try {
+                                obj.put("totalWater", todayAmount != null ? todayAmount : 0);
+                                obj.put("yesterdayWater", yesterdayAmount != null ? yesterdayAmount : 0);
+                            } catch (Exception e) {
+                                future.complete(null);
+                                return;
+                            }
+
+                            // Complete with JSON object
+                            future.complete(obj);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        future.completeExceptionally(error.toException());
+                    }
+                });
         return future;
     }
 }
