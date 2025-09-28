@@ -1,5 +1,8 @@
 package org.example.model;
 
+import java.util.List;
+import java.util.Map;
+
 // This class represents a User model
 // It matches the structure expected in Spring Boot and Android side
 public class User {
@@ -15,6 +18,13 @@ public class User {
 
     // Full name field
     private String fullName;
+
+    // BMI field (can be updated separately)
+    private double bmi;
+
+    // Water log field → per-day water data
+    // Key = date (yyyy-MM-dd), Value = list of 13 numbers [sum, cups...]
+    private Map<String, List<Long>> waterLog;
 
     // Constructor with all fields
     public User(String userName, String password, int age, String fullName) {
@@ -78,6 +88,26 @@ public class User {
         this.fullName = fullName;
     }
 
+    // Getter for bmi
+    public double getBmi() {
+        return bmi;
+    }
+
+    // Setter for bmi
+    public void setBmi(double bmi) {
+        this.bmi = bmi;
+    }
+
+    // Getter for waterLog
+    public Map<String, List<Long>> getWaterLog() {
+        return waterLog;
+    }
+
+    // Setter for waterLog
+    public void setWaterLog(Map<String, List<Long>> waterLog) {
+        this.waterLog = waterLog;
+    }
+
     // toString for debugging
     @Override
     public String toString() {
@@ -86,6 +116,8 @@ public class User {
                 ", password='" + password + '\'' +
                 ", age=" + age +
                 ", fullName='" + fullName + '\'' +
+                ", bmi=" + bmi +
+                ", waterLog=" + (waterLog != null ? waterLog.toString() : "null") +
                 '}';
     }
 }
