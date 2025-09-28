@@ -1,126 +1,143 @@
 // Define the package for this service class
 package org.example.service;
 
-// Import Firebase Realtime Database classes
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
-
-// Import our custom User model
 import org.example.model.User;
-
-// Import Spring annotation to mark this class as a service
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
-
-// Import utilities for date/time and collections
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
-// Import CompletableFuture for async handling
 import java.util.concurrent.CompletableFuture;
 
-// Import ExecutionException if needed
-import java.util.concurrent.ExecutionException;
-
-// -------------------------------------------------------------------------
-// Mark this class as a Spring-managed service (so it can be injected)
-// -------------------------------------------------------------------------
 @Service
 public class FirebaseService {
 
-    // ---------------------------------------------------------------------
-    // Reference to the "Users" node in Firebase Realtime Database
-    // ---------------------------------------------------------------------
+    // Reference to /Users root
     private final DatabaseReference usersRef;
 
-    // ---------------------------------------------------------------------
-    // Constructor: initialize Firebase reference
-    // ---------------------------------------------------------------------
+    // ----------------------------- INIT ---------------------------------
+    // Initializes Firebase Admin SDK (only once) and binds usersRef to "/Users"
     public FirebaseService() throws IOException {
-        // Load the service account key (from resources)
+        // Load service account key from resources
         InputStream serviceAccount = getClass().getResourceAsStream("/firebase-key.json");
+        if (serviceAccount == null) {
+            throw new IllegalStateException("firebase-key.json not found in resources!");
+        }
 
+        // Initialize Firebase once per JVM
         if (FirebaseApp.getApps().isEmpty()) {
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .setDatabaseUrl("https://YOUR_PROJECT_ID.firebaseio.com/")
+                    // IMPORTANT: Your **actual** Realtime Database URL
+                    .setDatabaseUrl("https://semband3-default-rtdb.firebaseio.com/")
                     .build();
-
             FirebaseApp.initializeApp(options);
         }
 
-        this.usersRef = FirebaseDatabase.getInstance().getReference("users");
+        // Point to the exact node name you use in DB (case sensitive)
+        this.usersRef = FirebaseDatabase.getInstance().getReference("Users");
     }
 
+    // ----------------------------- LOGIN --------------------------------
+    // Find a user that matches exact (userName, password).
+    // NOTE: Relies on 'userName' and 'password' field names in DB + User POJO.
+    public CompletableFuture<User> login(String username, String password) {
+        CompletableFuture<User> future = new CompletableFuture<>();
 
-    // ---------------------------------------------------------------------
-    // CREATE USER
-    // ---------------------------------------------------------------------
-    public CompletableFuture<Boolean> createUser(User user) {
-        // Future result
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override public void onDataChange(DataSnapshot snapshot) {
+                User foundUser = null;
 
-        // Query to check if user exists already
+                for (DataSnapshot child : snapshot.getChildren()) {
+                    String existingUser = child.child("userName").getValue(String.class);
+                    String existingPass = child.child("password").getValue(String.class);
+
+                    if (existingUser != null && existingPass != null
+                            && existingUser.equals(username)
+                            && existingPass.equals(password)) {
+                        foundUser = child.getValue(User.class);
+                        break;
+                    }
+                }
+                future.complete(foundUser);
+            }
+            @Override public void onCancelled(DatabaseError error) {
+                future.complete(null);
+            }
+        });
+
+        return future;
+    }
+
+    // ----------------------------- SIGNUP -------------------------------
+    // Create a new user if 'userName' is not already taken (exact match).
+    public CompletableFuture<String> signup(User user) {
+        CompletableFuture<String> future = new CompletableFuture<>();
+
         usersRef.orderByChild("userName").equalTo(user.getUserName())
                 .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // If username exists -> fail
+                    @Override public void onDataChange(DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            future.complete("Username already exists");
+                            return;
+                        }
+                        // Push new random key under /Users
+                        DatabaseReference newRef = usersRef.push();
+                        newRef.setValueAsync(user).addListener(() -> {
+                            // Completed write (no error callback available here)
+                            future.complete("User created successfully");
+                        }, Runnable::run);
+                    }
+                    @Override public void onCancelled(DatabaseError error) {
+                        future.complete("Error: " + error.getMessage());
+                    }
+                });
+
+        return future;
+    }
+
+    // ---------------------------- CREATE USER ---------------------------
+    // Same semantics as signup but returns boolean and uses completion listener.
+    public CompletableFuture<Boolean> createUser(User user) {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+
+        usersRef.orderByChild("userName").equalTo(user.getUserName())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override public void onDataChange(DataSnapshot snapshot) {
                         if (snapshot.exists()) {
                             future.complete(false);
-                        } else {
-                            // Otherwise push new user object
-                            usersRef.push()
-                                    .setValueAsync(user)
-                                    // Complete with true on success
-                                    .addListener(() -> future.complete(true), Runnable::run);
+                            return;
                         }
+                        usersRef.push().setValueAsync(user)
+                                .addListener(() -> future.complete(true), Runnable::run);
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Complete with error
+                    @Override public void onCancelled(DatabaseError error) {
                         future.completeExceptionally(error.toException());
                     }
                 });
 
-        // Return async future
         return future;
     }
 
-    // ---------------------------------------------------------------------
-    // GET ALL USERS
-    // ---------------------------------------------------------------------
+    // ------------------------------ READ ALL ----------------------------
     public CompletableFuture<List<User>> getAllUsers() {
-        // Future with list of users
         CompletableFuture<List<User>> future = new CompletableFuture<>();
 
-        // Attach listener to fetch all
         usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                // Collect results into list
+            @Override public void onDataChange(DataSnapshot snapshot) {
                 List<User> users = new ArrayList<>();
-
-                // Convert each child into User object
                 for (DataSnapshot child : snapshot.getChildren()) {
                     User user = child.getValue(User.class);
-                    if (user != null) {
-                        users.add(user);
-                    }
+                    if (user != null) users.add(user);
                 }
-
-                // Complete with user list
                 future.complete(users);
             }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // Complete with exception
+            @Override public void onCancelled(DatabaseError error) {
                 future.completeExceptionally(error.toException());
             }
         });
@@ -128,34 +145,23 @@ public class FirebaseService {
         return future;
     }
 
-    // ---------------------------------------------------------------------
-    // GET USER BY USERNAME
-    // ---------------------------------------------------------------------
+    // ------------------------------ READ ONE ----------------------------
     public CompletableFuture<User> getUser(String username) {
-        // Future with User object
         CompletableFuture<User> future = new CompletableFuture<>();
 
-        // Query by userName
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // Iterate through children (only 1 expected)
+                    @Override public void onDataChange(DataSnapshot snapshot) {
                         for (DataSnapshot child : snapshot.getChildren()) {
                             User user = child.getValue(User.class);
                             if (user != null) {
-                                // Complete with found user
                                 future.complete(user);
                                 return;
                             }
                         }
-                        // If none found
                         future.complete(null);
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Complete with exception
+                    @Override public void onCancelled(DatabaseError error) {
                         future.completeExceptionally(error.toException());
                     }
                 });
@@ -163,33 +169,24 @@ public class FirebaseService {
         return future;
     }
 
-    // ---------------------------------------------------------------------
-    // UPDATE USER (replace full object)
-    // ---------------------------------------------------------------------
+    // ------------------------------ UPDATE FULL -------------------------
     public CompletableFuture<Boolean> updateUser(String username, User updatedUser) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
-        // Query for username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // Fail if not found
+                    @Override public void onDataChange(DataSnapshot snapshot) {
                         if (!snapshot.exists()) {
                             future.complete(false);
                             return;
                         }
-
-                        // Replace data with new user object
                         for (DataSnapshot child : snapshot.getChildren()) {
                             child.getRef().setValueAsync(updatedUser)
                                     .addListener(() -> future.complete(true), Runnable::run);
                             return;
                         }
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
+                    @Override public void onCancelled(DatabaseError error) {
                         future.completeExceptionally(error.toException());
                     }
                 });
@@ -197,36 +194,35 @@ public class FirebaseService {
         return future;
     }
 
-    // ---------------------------------------------------------------------
-    // PATCH USER (partial update)
-    // ---------------------------------------------------------------------
+    // ------------------------------ PATCH (PARTIAL) ----------------------
     public CompletableFuture<User> patchUser(String username, Map<String, Object> updates) {
         CompletableFuture<User> future = new CompletableFuture<>();
 
-        // Query by username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
+                    @Override public void onDataChange(DataSnapshot snapshot) {
                         if (!snapshot.exists()) {
                             future.complete(null);
                             return;
                         }
-
-                        // Apply updates to found user
                         for (DataSnapshot child : snapshot.getChildren()) {
-                            child.getRef().updateChildrenAsync(updates)
-                                    .addListener(() -> {
-                                        // Get updated user back
-                                        User updatedUser = child.getValue(User.class);
-                                        future.complete(updatedUser);
-                                    }, Runnable::run);
+                            DatabaseReference ref = child.getRef();
+                            ref.updateChildrenAsync(updates).addListener(() -> {
+                                // Re-read after update to return the fresh object
+                                ref.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override public void onDataChange(DataSnapshot refreshed) {
+                                        User updated = refreshed.getValue(User.class);
+                                        future.complete(updated);
+                                    }
+                                    @Override public void onCancelled(DatabaseError error) {
+                                        future.completeExceptionally(error.toException());
+                                    }
+                                });
+                            }, Runnable::run);
                             return;
                         }
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
+                    @Override public void onCancelled(DatabaseError error) {
                         future.completeExceptionally(error.toException());
                     }
                 });
@@ -234,33 +230,24 @@ public class FirebaseService {
         return future;
     }
 
-    // ---------------------------------------------------------------------
-    // DELETE USER
-    // ---------------------------------------------------------------------
+    // ------------------------------ DELETE ------------------------------
     public CompletableFuture<Boolean> deleteUser(String username) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
-        // Query user by username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
+                    @Override public void onDataChange(DataSnapshot snapshot) {
                         if (!snapshot.exists()) {
-                            // User not found
                             future.complete(false);
                             return;
                         }
-
-                        // Delete node
                         for (DataSnapshot child : snapshot.getChildren()) {
                             child.getRef().removeValueAsync()
                                     .addListener(() -> future.complete(true), Runnable::run);
                             return;
                         }
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
+                    @Override public void onCancelled(DatabaseError error) {
                         future.completeExceptionally(error.toException());
                     }
                 });
@@ -268,23 +255,16 @@ public class FirebaseService {
         return future;
     }
 
-    // ---------------------------------------------------------------------
-    // CHECK IF USER EXISTS
-    // ---------------------------------------------------------------------
+    // ------------------------------ EXISTS ------------------------------
     public CompletableFuture<Boolean> exists(String username) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
-        // Query by username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // Complete with true/false
+                    @Override public void onDataChange(DataSnapshot snapshot) {
                         future.complete(snapshot.exists());
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
+                    @Override public void onCancelled(DatabaseError error) {
                         future.completeExceptionally(error.toException());
                     }
                 });
@@ -292,32 +272,24 @@ public class FirebaseService {
         return future;
     }
 
-    // ---------------------------------------------------------------------
-    // UPDATE BMI FIELD
-    // ---------------------------------------------------------------------
+    // ------------------------------ UPDATE BMI --------------------------
     public CompletableFuture<Boolean> updateBmi(String username, double bmi) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
-        // Query by username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
+                    @Override public void onDataChange(DataSnapshot snapshot) {
                         if (!snapshot.exists()) {
                             future.complete(false);
                             return;
                         }
-
-                        // Update "bmi" field
                         for (DataSnapshot child : snapshot.getChildren()) {
                             child.getRef().child("bmi").setValueAsync(bmi)
                                     .addListener(() -> future.complete(true), Runnable::run);
                             return;
                         }
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
+                    @Override public void onCancelled(DatabaseError error) {
                         future.completeExceptionally(error.toException());
                     }
                 });
@@ -325,54 +297,60 @@ public class FirebaseService {
         return future;
     }
 
-    // ---------------------------------------------------------------------
-    // UPDATE WATER LOG
-    // ---------------------------------------------------------------------
+    // ------------------------------ UPDATE WATER ------------------------
+    // Stores per-day array (size 13): index 0 = daily sum (ml), 1..12 = cups
     public CompletableFuture<Boolean> updateWater(String username, int waterAmount) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
-        // Query user by username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
+                    @Override public void onDataChange(DataSnapshot snapshot) {
                         if (!snapshot.exists()) {
-                            // Fail if user not found
                             future.complete(false);
                             return;
                         }
-
                         for (DataSnapshot userSnap : snapshot.getChildren()) {
-                            // Generate today key (yyyy-MM-dd)
-                            String dayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+                            String dayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                    .format(new Date());
+                            DatabaseReference todayRef = userSnap.getRef()
+                                    .child("waterLog").child(dayKey);
 
-                            // Reference to today's water log
-                            DatabaseReference todayRef = userSnap.getRef().child("waterLog").child(dayKey);
-
-                            // Read data for today
                             todayRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot daySnapshot) {
-                                    // Load existing list or create new 13-slot list
-                                    List<Long> dayList = daySnapshot.exists()
-                                            ? (List<Long>) daySnapshot.getValue()
-                                            : new ArrayList<>(Collections.nCopies(13, 0L));
+                                @Override public void onDataChange(DataSnapshot daySnapshot) {
+                                    // Safely read as List<Long>
+                                    GenericTypeIndicator<List<Long>> t =
+                                            new GenericTypeIndicator<List<Long>>() {};
+                                    List<Long> dayList = daySnapshot.getValue(t);
 
-                                    // Find next free slot (1–12)
+                                    if (dayList == null) {
+                                        dayList = new ArrayList<>(Collections.nCopies(13, 0L));
+                                    } else if (dayList.size() < 13) {
+                                        // Ensure length 13
+                                        List<Long> fixed = new ArrayList<>(Collections.nCopies(13, 0L));
+                                        for (int i = 0; i < Math.min(dayList.size(), 13); i++) {
+                                            Long val = dayList.get(i);
+                                            fixed.set(i, val == null ? 0L : val);
+                                        }
+                                        dayList = fixed;
+                                    } else {
+                                        // Normalize nulls
+                                        for (int i = 0; i < 13; i++) {
+                                            if (dayList.get(i) == null) dayList.set(i, 0L);
+                                        }
+                                    }
+
+                                    // Find next free cup slot 1..12
                                     int cupIndex = 1;
                                     while (cupIndex <= 12 && dayList.get(cupIndex) > 0) {
                                         cupIndex++;
                                     }
 
                                     if (cupIndex <= 12) {
-                                        // Insert water amount
                                         dayList.set(cupIndex, (long) waterAmount);
-
-                                        // Update total at index 0
-                                        long sum = dayList.get(0);
+                                        long sum = dayList.get(0) == null ? 0L : dayList.get(0);
                                         dayList.set(0, sum + waterAmount);
 
-                                        // Save back to Firebase
+                                        // Write back
                                         todayRef.setValue(dayList, (error, ref) -> {
                                             if (error == null) {
                                                 future.complete(true);
@@ -381,21 +359,17 @@ public class FirebaseService {
                                             }
                                         });
                                     } else {
-                                        // No free slots left
+                                        // No more slots available (12 cups filled)
                                         future.complete(false);
                                     }
                                 }
-
-                                @Override
-                                public void onCancelled(DatabaseError error) {
+                                @Override public void onCancelled(DatabaseError error) {
                                     future.completeExceptionally(error.toException());
                                 }
                             });
                         }
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
+                    @Override public void onCancelled(DatabaseError error) {
                         future.completeExceptionally(error.toException());
                     }
                 });
@@ -403,52 +377,41 @@ public class FirebaseService {
         return future;
     }
 
-    // ---------------------------------------------------------------------
-    // GET WATER LOG (today + yesterday totals)
-    // ---------------------------------------------------------------------
+    // ------------------------------- GET WATER --------------------------
+    // Returns {"todayWater": <ml>, "yesterdayWater": <ml>} to match Android.
     public CompletableFuture<JSONObject> getWater(String username) {
         CompletableFuture<JSONObject> future = new CompletableFuture<>();
 
-        // Generate today key
         String todayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-        // Generate yesterday key
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, -1);
         String yesterdayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
 
-        // Query user by username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
+                    @Override public void onDataChange(DataSnapshot snapshot) {
                         if (!snapshot.exists()) {
-                            // Fail if not found
                             future.complete(null);
                             return;
                         }
-
                         for (DataSnapshot userSnap : snapshot.getChildren()) {
-                            // Extract totals from waterLog
-                            Long todayAmount = userSnap.child("waterLog").child(todayKey).child("0").getValue(Long.class);
-                            Long yesterdayAmount = userSnap.child("waterLog").child(yesterdayKey).child("0").getValue(Long.class);
+                            Long todayAmt = userSnap.child("waterLog").child(todayKey).child("0").getValue(Long.class);
+                            Long yesterdayAmt = userSnap.child("waterLog").child(yesterdayKey).child("0").getValue(Long.class);
 
-                            // Build JSON response
                             JSONObject obj = new JSONObject();
                             try {
-                                obj.put("totalWater", todayAmount != null ? todayAmount : 0);
-                                obj.put("yesterdayWater", yesterdayAmount != null ? yesterdayAmount : 0);
+                                // IMPORTANT: keys must match WaterActivity
+                                obj.put("todayWater", todayAmt == null ? 0 : todayAmt);
+                                obj.put("yesterdayWater", yesterdayAmt == null ? 0 : yesterdayAmt);
                             } catch (Exception e) {
                                 future.complete(null);
                                 return;
                             }
-
-                            // Complete with JSON
                             future.complete(obj);
+                            return;
                         }
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
+                    @Override public void onCancelled(DatabaseError error) {
                         future.completeExceptionally(error.toException());
                     }
                 });
@@ -456,4 +419,5 @@ public class FirebaseService {
         return future;
     }
 }
+
 
