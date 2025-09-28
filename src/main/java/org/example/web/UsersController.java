@@ -58,26 +58,28 @@ public class UsersController {
     }
 
     // -------------------------------------------------------------------------
-    // LOGIN (custom endpoint)
+    // LOGIN (POST)
     // Endpoint: POST /api/users/login
-    // Validates username + password against Firebase
+    // Accepts username + password and returns user if valid
     // -------------------------------------------------------------------------
     @PostMapping("/login")
-    public CompletableFuture<ResponseEntity<?>> login(@RequestBody User loginRequest) {
-        // Call service to get user by username
-        return firebaseService.getUser(loginRequest.getUserName()).thenApply(user -> {
-            // If user exists and password matches
-            if (user != null && user.getPassword().equals(loginRequest.getPassword())) {
-                return ResponseEntity.ok(user); // 200 OK with user object
-            } else {
-                // Otherwise return 401 Unauthorized
+    public CompletableFuture<ResponseEntity<?>> loginUser(@RequestBody Map<String, String> credentials) {
+        String username = credentials.get("userName");
+        String password = credentials.get("password");
+
+        // Fetch user by username
+        return firebaseService.getUser(username).thenApply(user -> {
+            if (user == null || !user.getPassword().equals(password)) {
+                // Wrong username or password
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body("Invalid username or password");
             }
+
+            // ✅ Return 200 OK with user object
+            return ResponseEntity.ok(user);
         });
     }
-
 
     // -------------------------------------------------------------------------
     // READ (GET ALL)
@@ -226,26 +228,31 @@ public class UsersController {
         });
     }
 
-    // -------------------------------------------------------------------------
-    // UPDATE WATER FIELD
-    // Endpoint: PATCH /api/users/{username}/water
-    // Increments total water consumption for a user
-    // -------------------------------------------------------------------------
+    // עדכון מים (PATCH /api/users/{username}/water?amount=...)
     @PatchMapping("/{username}/water")
     public CompletableFuture<ResponseEntity<?>> updateWater(@PathVariable String username,
                                                             @RequestParam int amount) {
-        // Call service to update water field
         return firebaseService.updateWater(username, amount).thenApply(success -> {
             if (!success) {
-                // Return 404 if user not found
                 return ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
-                        .body("User not found");
+                        .body("User not found or error");
             }
-
-            // Otherwise return success message
             return ResponseEntity
                     .ok("Water updated successfully");
+        });
+    }
+
+    // קבלת מים (GET /api/users/{username}/water)
+    @GetMapping("/{username}/water")
+    public CompletableFuture<ResponseEntity<?>> getWater(@PathVariable String username) {
+        return firebaseService.getWater(username).thenApply(result -> {
+            if (result == null) {
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+            return ResponseEntity
+                    .ok(result);
         });
     }
 }
