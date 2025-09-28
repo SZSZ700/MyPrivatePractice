@@ -229,9 +229,9 @@ public class UsersController {
     }
 
     // ---------------------------------------------------------------------
-// GET WATER (GET /api/users/{username}/water)
-// Returns JSON object with { todayWater, yesterdayWater }
-// ---------------------------------------------------------------------
+    // GET WATER (GET /api/users/{username}/water)
+    // Returns JSON object with { todayWater, yesterdayWater }
+    // ---------------------------------------------------------------------
     @GetMapping("/{username}/water")
     public CompletableFuture<ResponseEntity<?>> getWater(
             @PathVariable("username") String username) {
