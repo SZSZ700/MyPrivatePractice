@@ -35,41 +35,44 @@ public class UsersController {
         this.firebaseService = firebaseService;
     }
 
-    // ------------------------------------------------------------------------
+    // =========================================================
     // SIGNUP (POST /api/users/signup)
-    // Creates a new user inside Firebase under "Users"
-    // ------------------------------------------------------------------------
+    // Android → RestClient.register(user) → here
+    // =========================================================
     @PostMapping("/signup")
     public CompletableFuture<ResponseEntity<String>> signup(@RequestBody User user) {
-        // Call Firebase service signup method
+        // Call service.signup() which checks username and creates user
         return firebaseService.signup(user).thenApply(result -> {
             if ("User created successfully".equals(result)) {
-                // If user was created → return 201 CREATED
+                // Return HTTP 201 if success
                 return ResponseEntity.status(HttpStatus.CREATED).body(result);
             } else if ("Username already exists".equals(result)) {
-                // If username already exists → return 409 CONFLICT
+                // Return HTTP 409 if username exists
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(result);
             } else {
-                // Any other issue → return 500 INTERNAL SERVER ERROR
+                // Return HTTP 500 for generic errors
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
             }
         });
     }
 
-    // ------------------------------------------------------------------------
+    // =========================================================
     // LOGIN (POST /api/users/login)
-    // Validates username + password against Firebase "Users" node
-    // **IMPORTANT FIX**: use @RequestBody User so Android JSON matches server
-    // ------------------------------------------------------------------------
+    // Android → RestClient.login(username,password) → here
+    // =========================================================
     @PostMapping("/login")
-    public CompletableFuture<ResponseEntity<?>> login(@RequestBody User user) {
-        // Call Firebase service login method with provided credentials
-        return firebaseService.login(user.getUserName(), user.getPassword()).thenApply(found -> {
-            if (found != null) {
-                // If a match was found → return 200 OK with User object
-                return ResponseEntity.ok(found);
+    public CompletableFuture<ResponseEntity<?>> login(@RequestBody User loginRequest) {
+        // Extract username & password from request body
+        String username = loginRequest.getUserName();
+        String password = loginRequest.getPassword();
+
+        // Call service.login() which validates credentials
+        return firebaseService.login(username, password).thenApply(user -> {
+            if (user != null) {
+                // Return HTTP 200 with user object if valid
+                return ResponseEntity.ok(user);
             } else {
-                // If no match → return 401 UNAUTHORIZED with error message
+                // Return HTTP 401 if invalid
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body("Invalid username or password");
