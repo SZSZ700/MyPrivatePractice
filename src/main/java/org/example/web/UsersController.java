@@ -34,6 +34,15 @@ public class UsersController {
     public UsersController(FirebaseService firebaseService) {
         this.firebaseService = firebaseService;
     }
+    // ---------------------------------------------------------------------
+    // HEALTH CHECK (GET /api/users/health)
+    // Simple endpoint to verify the server is alive
+    // ---------------------------------------------------------------------
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("OK");
+    }
+
 
     // =========================================================
     // SIGNUP (POST /api/users/signup)
