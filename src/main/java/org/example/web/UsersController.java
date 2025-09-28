@@ -1,5 +1,5 @@
 // Define the package for this controller
-package org.example;
+package org.example.web;
 
 // Import the User model
 import org.example.model.User;
