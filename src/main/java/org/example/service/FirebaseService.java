@@ -132,6 +132,7 @@ public class FirebaseService {
                                 return;
                             }
                         }
+
                         // If no user found, return null
                         future.complete(null);
                     }
@@ -162,6 +163,7 @@ public class FirebaseService {
                             future.complete(false);
                             return;
                         }
+
                         // Replace user data with updatedUser
                         for (DataSnapshot child : snapshot.getChildren()) {
                             child.getRef().setValueAsync(updatedUser)
@@ -195,6 +197,7 @@ public class FirebaseService {
                             future.complete(null);
                             return;
                         }
+
                         // Apply updates to the found user
                         for (DataSnapshot child : snapshot.getChildren()) {
                             child.getRef().updateChildrenAsync(updates)
@@ -232,6 +235,7 @@ public class FirebaseService {
                             future.complete(false);
                             return;
                         }
+
                         // Remove the node
                         for (DataSnapshot child : snapshot.getChildren()) {
                             child.getRef().removeValueAsync()
@@ -286,6 +290,7 @@ public class FirebaseService {
                             future.complete(false);
                             return;
                         }
+
                         // Update the "bmi" field
                         for (DataSnapshot child : snapshot.getChildren()) {
                             child.getRef().child("bmi").setValueAsync(bmi)
