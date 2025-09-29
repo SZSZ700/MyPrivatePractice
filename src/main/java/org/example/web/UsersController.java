@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;   // For async non-blocking calls
 
+
 // -------------------------------------------------------------------------
 // Marks this class as a REST controller → all methods return JSON by default
 // -------------------------------------------------------------------------
@@ -278,6 +279,42 @@ public class UsersController {
                     System.out.println("DEBUG UsersController.getWaterHistoryMap -> sending response: " + result);
 
                     return ResponseEntity.ok(result);
+                });
+    }
+
+    // -----------------------------------------------------------
+    // Get 4-week average water consumption for a user
+    // Endpoint: GET /users/{username}/weeklyAverages
+    // -----------------------------------------------------------
+    @GetMapping("/{username}/weeklyAverages")
+    public CompletableFuture<ResponseEntity<?>> getWeeklyAverages(
+            @PathVariable("username") String username) { // Extract username from URL path
+
+        // Print debug log with the username
+        System.out.println("DEBUG UsersController.getWeeklyAverages -> username=" + username);
+
+        // Call FirebaseService to calculate weekly averages
+        return firebaseService.getWeeklyAverages(username)
+
+                // Handle successful result
+                .thenApply(result -> {
+                    // If result is null or empty
+                    if (result == null || result.isEmpty()) {
+                        System.out.println("DEBUG getWeeklyAverages -> no data");
+                        // Return 404 Not Found
+                        return ResponseEntity.notFound().build();
+                    }
+                    // Print and return result
+                    System.out.println("DEBUG getWeeklyAverages -> result=" + result);
+                    return ResponseEntity.ok(result);
+                })
+
+                // Handle exception if FirebaseService fails
+                .exceptionally(ex -> {
+                    // Print error to console
+                    System.err.println("ERROR getWeeklyAverages -> " + ex.getMessage());
+                    // Return HTTP 500 with explicit generic type <Map<String,Integer>>
+                    return ResponseEntity.<Map<String, Integer>>status(HttpStatus.INTERNAL_SERVER_ERROR).build();
                 });
     }
 
