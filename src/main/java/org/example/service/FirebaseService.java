@@ -556,4 +556,100 @@ public class FirebaseService {
 
         return future;
     }
+
+    // ------------------------------- GET WEEKLY AVERAGES --------------------------
+    // Calculates weekly averages for the last 7 days
+    // Returns a map where key = day name (Mon, Tue, ...) and value = average water amount
+    public CompletableFuture<Map<String, Integer>> getWeeklyAverages(String username) {
+        // Future container for async result
+        CompletableFuture<Map<String, Integer>> future = new CompletableFuture<>();
+
+        // Date formatter for "yyyy-MM-dd"
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        // Date formatter for day-of-week labels (Mon, Tue, ...)
+        SimpleDateFormat dayLabelFormat = new SimpleDateFormat("EEE", Locale.getDefault());
+
+        // Calendar starting from today
+        Calendar cal = Calendar.getInstance();
+
+        // Prepare last 7 days keys
+        List<String> keys = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            keys.add(sdf.format(cal.getTime()));
+            cal.add(Calendar.DAY_OF_YEAR, -1); // move one day back
+        }
+
+        // 🔹 Debug log
+        System.out.println("DEBUG getWeeklyAverages -> generated keys: " + keys);
+
+        // Query Firebase by username
+        usersRef.orderByChild("userName").equalTo(username)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        if (!snapshot.exists()) {
+                            System.out.println("DEBUG getWeeklyAverages -> user not found: " + username);
+                            future.complete(Collections.emptyMap());
+                            return;
+                        }
+
+                        // Map to hold final averages
+                        Map<String, Integer> averages = new LinkedHashMap<>();
+
+                        for (DataSnapshot userSnap : snapshot.getChildren()) {
+                            try {
+                                // Iterate over each date key
+                                for (String key : keys) {
+                                    // Read slot 0 (daily total already stored)
+                                    Long amt = userSnap.child("waterLog")
+                                            .child(key)
+                                            .child("0")
+                                            .getValue(Long.class);
+
+                                    // Default to 0 if null
+                                    long safeAmt = (amt == null ? 0 : amt);
+
+                                    // Get day label (Mon, Tue, etc.)
+                                    String dayLabel;
+                                    try {
+                                        Date parsedDate = sdf.parse(key);
+                                        dayLabel = (parsedDate != null)
+                                                ? dayLabelFormat.format(parsedDate)
+                                                : key; // fallback: use raw date
+                                    } catch (Exception e) {
+                                        dayLabel = key;
+                                    }
+
+                                    // Put into map as Integer (safe cast from long)
+                                    averages.put(dayLabel, (int) safeAmt);
+
+                                    // 🔹 Debug log
+                                    System.out.println("DEBUG getWeeklyAverages -> " + key +
+                                            " (" + dayLabel + ") = " + safeAmt);
+                                }
+
+                                // 🔹 Debug log final result
+                                System.out.println("DEBUG getWeeklyAverages -> final averages: " + averages);
+
+                                future.complete(averages);
+                                return; // exit loop after first userSnap
+                            } catch (Exception e) {
+                                System.err.println("ERROR getWeeklyAverages -> exception: " + e.getMessage());
+                                e.printStackTrace();
+                                future.complete(Collections.emptyMap());
+                                return;
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        System.err.println("ERROR getWeeklyAverages -> cancelled: " + error.getMessage());
+                        future.completeExceptionally(error.toException());
+                    }
+                });
+
+        return future;
+    }
+
 }
