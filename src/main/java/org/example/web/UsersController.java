@@ -287,28 +287,21 @@ public class UsersController {
     // Returns a JSON map with day labels as keys and averages as values
     // Example: {"Mon": 6200, "Tue": 2740, ...}
     // -------------------------------------------------------------
+    // UsersController
     @GetMapping("/{username}/weeklyAverages")
     public CompletableFuture<ResponseEntity<Map<String, Integer>>> getWeeklyAverages(
-            // Extract path variable {username} from URL
-            @PathVariable("username") String username) {
-
-        // Debug log: which user is being requested
+            @PathVariable("username") String username) {   // <-- ציון מפורש של שם הפרמטר
         System.out.println("DEBUG UsersController.getWeeklyAverages -> username=" + username);
 
-        // Call service method (async)
         return firebaseService.getWeeklyAverages(username)
                 .thenApply(result -> {
                     if (result == null || result.isEmpty()) {
-                        // If no data found, return 404 (Not Found)
                         System.out.println("DEBUG getWeeklyAverages -> no data");
                         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyMap());
-                    } else {
-                        // If data found, return 200 (OK) with the map
-                        System.out.println("DEBUG getWeeklyAverages -> sending result: " + result);
-                        return ResponseEntity.ok(result);
                     }
+                    System.out.println("DEBUG getWeeklyAverages -> sending result: " + result);
+                    return ResponseEntity.ok(result);
                 });
     }
-
 }
 
