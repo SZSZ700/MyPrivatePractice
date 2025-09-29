@@ -256,20 +256,31 @@ public class UsersController {
     // ---------------------------------------------------------------------
     // GET WATER HISTORY MAP
     // GET /api/users/{username}/waterHistoryMap?days=7
+    // Returns JSON object with date → water amount
+    // Example:
+    // {
+    //   "2025-09-29": 1200,
+    //   "2025-09-28": 2000,
+    //   "2025-09-27": 0
+    // }
     // ---------------------------------------------------------------------
     @GetMapping("/{username}/waterHistoryMap")
     public CompletableFuture<ResponseEntity<?>> getWaterHistoryMap(
-            @PathVariable("username") String username,
-            @RequestParam(name = "days", defaultValue = "7") int days) {
-
+            @PathVariable("username") String username,  // Extracts {username} from URL
+            @RequestParam(name = "days", defaultValue = "7") int days // Extracts ?days=7 (default = 7)
+    ) {
+        // Call FirebaseService to fetch water history for the given user
         return firebaseService.getWaterHistoryMap(username, days)
-                .thenApply(map -> {
-                    if (map == null || map.isEmpty()) {
+                .thenApply(result -> {
+                    // If no data found → return 404 Not Found
+                    if (result == null) {
                         return ResponseEntity
                                 .status(HttpStatus.NOT_FOUND)
-                                .body("No history found");
+                                .body("User not found or no water history");
                     }
-                    return ResponseEntity.ok(map);
+
+                    // ✅ Return the result as JSON with HTTP 200 OK
+                    return ResponseEntity.ok(result);
                 });
     }
 }
