@@ -252,5 +252,27 @@ public class UsersController {
                     .ok(response);
         });
     }
+
+    // ---------------------------------------------------------------------
+    // GET WATER HISTORY MAP
+    // GET /api/users/{username}/waterHistoryMap?days=7
+    // ---------------------------------------------------------------------
+    @GetMapping("/{username}/waterHistoryMap")
+    public CompletableFuture<ResponseEntity<?>> getWaterHistoryMap(
+            @PathVariable("username") String username,
+            @RequestParam(defaultValue = "7") int days) {
+
+        return firebaseService.getWaterHistoryMap(username, days)
+                .thenApply(result -> {
+                    if (result == null) {
+                        return ResponseEntity
+                                .status(HttpStatus.NOT_FOUND)
+                                .body("User not found or no water data");
+                    }
+                    return ResponseEntity.ok(result.toMap());
+                    // ⚠️ result.toMap() → שיהיה JSON נקי כמו {"2025-09-29":1200,...}
+                });
+    }
+
 }
 
