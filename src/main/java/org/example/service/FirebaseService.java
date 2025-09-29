@@ -475,4 +475,53 @@ public class FirebaseService {
 
         return future;
     }
+
+    // ------------------------------- GET WATER HISTORY MAP --------------------------
+    // Returns {"2025-09-29": 1200, "2025-09-28": 2000, ...}
+    public CompletableFuture<JSONObject> getWaterHistoryMap(String username, int days) {
+        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+
+        // חישוב רשימת תאריכים מהיום אחורה X ימים
+        List<String> keys = new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        Calendar cal = Calendar.getInstance();
+        for (int i = 0; i < days; i++) {
+            keys.add(sdf.format(cal.getTime())); // מוסיף תאריך
+            cal.add(Calendar.DAY_OF_YEAR, -1);   // יום אחורה
+        }
+
+        usersRef.orderByChild("userName").equalTo(username)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        if (!snapshot.exists()) {
+                            future.complete(null);
+                            return;
+                        }
+                        for (DataSnapshot userSnap : snapshot.getChildren()) {
+                            JSONObject obj = new JSONObject();
+                            try {
+                                for (String key : keys) {
+                                    // מביא את התא "0" (הסכום המצטבר לאותו יום)
+                                    Long amt = userSnap.child("waterLog")
+                                            .child(key)
+                                            .child("0")
+                                            .getValue(Long.class);
+                                    obj.put(key, amt == null ? 0 : amt);
+                                }
+                                future.complete(obj);
+                            } catch (Exception e) {
+                                future.complete(null);
+                            }
+                            return;
+                        }
+                    }
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        future.completeExceptionally(error.toException());
+                    }
+                });
+
+        return future;
+    }
 }
