@@ -538,82 +538,59 @@ public class RestClient {
         return future;
     }
 
-
     // -------------------------------------------------------------
     // getWeeklyAverages
-    // Calls the REST endpoint /users/{username}/weeklyAverages
-    // Returns CompletableFuture<Map<String, Integer>>
-    // Example output: {"Mon"=6200, "Tue"=2740, ...}
+    // Calls: GET {BASE_URL}/{username}/weeklyAverages
+    // Returns: CompletableFuture<Map<String, Integer>>
     // -------------------------------------------------------------
     public static CompletableFuture<Map<String, Integer>> getWeeklyAverages(String username) {
-        // Future container for async result
         CompletableFuture<Map<String, Integer>> future = new CompletableFuture<>();
-
-        // Build the URL for the request
         String url = BASE_URL + "/" + username + "/weeklyAverages";
 
-        // 🔹 Debug log: show request URL
-        Log.d("HTTP", "➡️ Sending GET request to " + url);
-
-        // Build the request with OkHttp
         Request request = new Request.Builder()
                 .url(url)
                 .get()
                 .build();
 
-        // Execute async call
         client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                // Log error and complete future exceptionally
-                Log.e("HTTP", "❌ Request failed: " + e.getMessage(), e);
+            @Override public void onFailure(Call call, IOException e) {
+                Log.w("HTTP", "weeklyAverages onFailure: " + e.getMessage());
                 future.completeExceptionally(e);
             }
 
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                try {
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                try (ResponseBody body = response.body()) {
                     if (!response.isSuccessful()) {
-                        // Non-200 response → return empty map
-                        Log.w("HTTP", "⚠️ Non-OK response: " + response.code());
+                        String resp = (body != null ? body.string() : "");
+                        Log.w("HTTP", "⚠️ Non-OK weeklyAverages: " + response.code() + " body=" + resp);
                         future.complete(Collections.emptyMap());
                         return;
                     }
+                    String json = (body != null ? body.string() : "{}");
+                    JSONObject obj = new JSONObject(json);
 
-                    // Read response body
-                    String body = response.body().string();
-                    Log.d("HTTP", "⬅️ Response code=" + response.code());
-                    Log.d("HTTP", "📥 Response body: " + body);
-
-                    // Parse JSON into Map<String, Integer>
-                    Map<String, Integer> result = new LinkedHashMap<>();
-                    JSONObject obj = new JSONObject(body);
-
-                    // Iterate over keys in JSON object
+                    // Preserve insertion order in case server sends it ordered
+                    Map<String, Integer> map = new LinkedHashMap<>();
                     Iterator<String> keys = obj.keys();
+                    // If you prefer specific order "Week 1..Week 4", you can sort keys:
+                    // List<String> sorted = new ArrayList<>();
+                    // while (keys.hasNext()) sorted.add(keys.next());
+                    // Collections.sort(sorted, Comparator.comparingInt(k -> Integer.parseInt(k.replaceAll("\\D+",""))));
+                    // for (String k : sorted) map.put(k, obj.optInt(k, 0));
                     while (keys.hasNext()) {
-                        String day = keys.next(); // e.g., "Mon"
-                        int value = obj.optInt(day, 0); // fallback = 0
-                        result.put(day, value);
+                        String k = keys.next();
+                        map.put(k, obj.optInt(k, 0));
                     }
 
-                    // Debug log parsed result
-                    Log.d("WEEKLY_AVG", "✅ Parsed weekly averages: " + result);
-
-                    // Complete future with result
-                    future.complete(result);
-
+                    future.complete(map);
                 } catch (Exception e) {
-                    // Handle parsing or runtime errors
-                    Log.e("HTTP", "❌ Parsing error", e);
                     future.completeExceptionally(e);
-                } finally {
-                    response.close();
                 }
             }
         });
 
         return future;
     }
+
 }
 
