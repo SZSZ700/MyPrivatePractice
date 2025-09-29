@@ -260,19 +260,17 @@ public class UsersController {
     @GetMapping("/{username}/waterHistoryMap")
     public CompletableFuture<ResponseEntity<?>> getWaterHistoryMap(
             @PathVariable("username") String username,
-            @RequestParam(defaultValue = "7") int days) {
+            @RequestParam(name = "days", defaultValue = "7") int days) {
 
         return firebaseService.getWaterHistoryMap(username, days)
-                .thenApply(result -> {
-                    if (result == null) {
+                .thenApply(map -> {
+                    if (map == null) {
                         return ResponseEntity
                                 .status(HttpStatus.NOT_FOUND)
-                                .body("User not found or no water data");
+                                .body("User not found");
                     }
-                    return ResponseEntity.ok(result.toMap());
-                    // ⚠️ result.toMap() → שיהיה JSON נקי כמו {"2025-09-29":1200,...}
+                    return ResponseEntity.ok(map); // ✅ מחזיר JSON map
                 });
     }
-
 }
 
