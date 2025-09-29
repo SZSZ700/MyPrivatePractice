@@ -264,12 +264,12 @@ public class UsersController {
 
         return firebaseService.getWaterHistoryMap(username, days)
                 .thenApply(map -> {
-                    if (map == null) {
+                    if (map == null || map.isEmpty()) {
                         return ResponseEntity
                                 .status(HttpStatus.NOT_FOUND)
-                                .body("User not found");
+                                .body("No history found");
                     }
-                    return ResponseEntity.ok(map); // ✅ מחזיר JSON map
+                    return ResponseEntity.ok(map);
                 });
     }
 }
