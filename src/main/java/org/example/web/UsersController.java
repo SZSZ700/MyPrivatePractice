@@ -282,39 +282,31 @@ public class UsersController {
                 });
     }
 
-    // -----------------------------------------------------------
-    // Get 4-week average water consumption for a user
-    // Endpoint: GET /users/{username}/weeklyAverages
-    // -----------------------------------------------------------
+    // -------------------------------------------------------------
+    // GET /api/users/{username}/weeklyAverages
+    // Returns a JSON map with day labels as keys and averages as values
+    // Example: {"Mon": 6200, "Tue": 2740, ...}
+    // -------------------------------------------------------------
     @GetMapping("/{username}/weeklyAverages")
-    public CompletableFuture<ResponseEntity<?>> getWeeklyAverages(
-            @PathVariable("username") String username) { // Extract username from URL path
+    public CompletableFuture<ResponseEntity<Map<String, Integer>>> getWeeklyAverages(
+            // Extract path variable {username} from URL
+            @PathVariable String username) {
 
-        // Print debug log with the username
+        // Debug log: which user is being requested
         System.out.println("DEBUG UsersController.getWeeklyAverages -> username=" + username);
 
-        // Call FirebaseService to calculate weekly averages
+        // Call service method (async)
         return firebaseService.getWeeklyAverages(username)
-
-                // Handle successful result
                 .thenApply(result -> {
-                    // If result is null or empty
                     if (result == null || result.isEmpty()) {
+                        // If no data found, return 404 (Not Found)
                         System.out.println("DEBUG getWeeklyAverages -> no data");
-                        // Return 404 Not Found
-                        return ResponseEntity.notFound().build();
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyMap());
+                    } else {
+                        // If data found, return 200 (OK) with the map
+                        System.out.println("DEBUG getWeeklyAverages -> sending result: " + result);
+                        return ResponseEntity.ok(result);
                     }
-                    // Print and return result
-                    System.out.println("DEBUG getWeeklyAverages -> result=" + result);
-                    return ResponseEntity.ok(result);
-                })
-
-                // Handle exception if FirebaseService fails
-                .exceptionally(ex -> {
-                    // Print error to console
-                    System.err.println("ERROR getWeeklyAverages -> " + ex.getMessage());
-                    // Return HTTP 500 with explicit generic type <Map<String,Integer>>
-                    return ResponseEntity.<Map<String, Integer>>status(HttpStatus.INTERNAL_SERVER_ERROR).build();
                 });
     }
 
