@@ -290,7 +290,7 @@ public class UsersController {
     @GetMapping("/{username}/weeklyAverages")
     public CompletableFuture<ResponseEntity<Map<String, Integer>>> getWeeklyAverages(
             // Extract path variable {username} from URL
-            @PathVariable String username) {
+            @PathVariable("username") String username) {
 
         // Debug log: which user is being requested
         System.out.println("DEBUG UsersController.getWeeklyAverages -> username=" + username);
