@@ -477,51 +477,69 @@ public class FirebaseService {
     }
 
     // ------------------------------- GET WATER HISTORY MAP --------------------------
-    // Returns {"2025-09-29": 1200, "2025-09-28": 2000, ...}
-    public CompletableFuture<JSONObject> getWaterHistoryMap(String username, int days) {
-        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+    // Returns map like: {"2025-09-29": 1200, "2025-09-28": 2000, ...}
+    // ------------------------------- GET WATER HISTORY MAP --------------------------
+    public CompletableFuture<Map<String, Long>> getWaterHistoryMap(String username, int days) {
+        // Create a future object that will eventually hold the result
+        CompletableFuture<Map<String, Long>> future = new CompletableFuture<>();
 
-        // חישוב רשימת תאריכים מהיום אחורה X ימים
+        // List of date keys (format: yyyy-MM-dd)
         List<String> keys = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         Calendar cal = Calendar.getInstance();
+
+        // Generate "days" worth of keys (today, yesterday, etc.)
         for (int i = 0; i < days; i++) {
-            keys.add(sdf.format(cal.getTime())); // מוסיף תאריך
-            cal.add(Calendar.DAY_OF_YEAR, -1);   // יום אחורה
+            keys.add(sdf.format(cal.getTime())); // Add current date to list
+            cal.add(Calendar.DAY_OF_YEAR, -1);   // Move one day back
         }
 
+        // Query Firebase for the user with the given username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
+                        // If user not found → return null
                         if (!snapshot.exists()) {
                             future.complete(null);
                             return;
                         }
+
+                        // Iterate over the matching user snapshots (usually only one)
                         for (DataSnapshot userSnap : snapshot.getChildren()) {
-                            JSONObject obj = new JSONObject();
+                            // Create the result map (date → water amount)
+                            Map<String, Long> result = new HashMap<>();
                             try {
+                                // For each date key, fetch water amount
                                 for (String key : keys) {
-                                    // מביא את התא "0" (הסכום המצטבר לאותו יום)
+                                    // "0" child contains the total amount for that day
                                     Long amt = userSnap.child("waterLog")
                                             .child(key)
                                             .child("0")
                                             .getValue(Long.class);
-                                    obj.put(key, amt == null ? 0 : amt);
+
+                                    // If no data → default to 0
+                                    result.put(key, amt == null ? 0 : amt);
                                 }
-                                future.complete(obj);
+
+                                // Complete the future with the result map
+                                future.complete(result);
                             } catch (Exception e) {
+                                // In case of unexpected error → return null
                                 future.complete(null);
                             }
-                            return;
+                            return; // Exit after first user found
                         }
                     }
+
                     @Override
                     public void onCancelled(DatabaseError error) {
+                        // Complete the future with an exception if query fails
                         future.completeExceptionally(error.toException());
                     }
                 });
 
+        // Return the pending future (will complete later)
         return future;
     }
 }
