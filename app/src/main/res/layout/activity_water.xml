@@ -1,0 +1,95 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center_horizontal"
+    android:background="#E3F2FD">
+
+    <!-- כותרת ראשית -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Water Intake Tracker 💧"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#1565C0"
+        android:layout_marginBottom="20dp" />
+
+    <!-- תיבת טקסט להצגת שתייה מאתמול -->
+    <TextView
+        android:id="@+id/yesterdayText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Yesterday you drank: 0 ml"
+        android:textSize="16sp"
+        android:textColor="#004D40"
+        android:background="#B2EBF2"
+        android:padding="12dp"
+        android:layout_marginBottom="20dp" />
+
+    <!-- תיבת טקסט להצגת סך השתייה עד כה -->
+    <TextView
+        android:id="@+id/totalWaterText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="You have drunk so far: 0 ml"
+        android:textSize="18sp"
+        android:textColor="#0D47A1"
+        android:layout_marginBottom="24dp" />
+
+    <!-- כפתור שתייה 150 -->
+    <Button
+        android:id="@+id/drink150"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:backgroundTint="#64B5F6"
+        android:text="Plastic cup - 150 ml"
+        android:textColor="#FFF" />
+
+    <!-- כפתור שתייה 200 -->
+    <Button
+        android:id="@+id/drink200"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:backgroundTint="#2196F3"
+        android:text="Paper cup - 200 ml"
+        android:textColor="#FFF" />
+
+    <!-- כפתור שתייה 1000 -->
+    <Button
+        android:id="@+id/drink1000"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="30dp"
+        android:backgroundTint="#1976D2"
+        android:text="Water bottle - 1000 ml"
+        android:textColor="#FFF" />
+
+    <!-- כיתוב להסבר על בחירת תזכורת -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Choose reminder interval:"
+        android:textSize="16sp"
+        android:textColor="#0D47A1"
+        android:layout_marginBottom="10dp" />
+
+    <!-- ספינר של תזכורות -->
+    <Spinner
+        android:id="@+id/reminderSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp" />
+
+    <!-- כפתור חזרה לבית -->
+    <ImageButton
+        android:id="@+id/imageButton4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#E3F2FD"
+        app:srcCompat="?attr/homeAsUpIndicator" />
+</LinearLayout>

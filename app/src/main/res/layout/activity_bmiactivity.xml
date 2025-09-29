@@ -1,0 +1,56 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp"
+    android:orientation="vertical"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="מחשבון BMI"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#1565C0"
+        android:layout_marginBottom="20dp" />
+
+    <EditText
+        android:id="@+id/weightEdit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="משקל (ק״ג)"
+        android:inputType="numberDecimal" />
+
+    <EditText
+        android:id="@+id/heightEdit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="גובה (ס״מ)"
+        android:inputType="numberDecimal"
+        android:layout_marginTop="10dp" />
+
+    <Button
+        android:id="@+id/calcButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="חשב BMI"
+        android:layout_marginTop="20dp" />
+
+    <TextView
+        android:id="@+id/resultText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="18sp"
+        android:layout_marginTop="30dp"
+        android:gravity="center"/>
+
+    <ImageButton
+        android:id="@+id/imageButton3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/white"
+        app:srcCompat="?attr/homeAsUpIndicator" />
+
+</LinearLayout>

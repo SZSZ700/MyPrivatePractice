@@ -1,0 +1,82 @@
+package com.example.myfinaltopapplication;           // Package declaration
+import android.content.Intent;                       // For switching between activities
+import android.os.Bundle;                            // For saving/restoring activity state
+import android.view.View;                            // For handling button clicks
+import android.widget.Button;                        // UI component for buttons
+import androidx.activity.EdgeToEdge;                 // Enables edge-to-edge UI layout
+import androidx.appcompat.app.AppCompatActivity;     // Base class for Android activities
+import androidx.core.graphics.Insets;                // (Optional, if needed for window insets)
+import androidx.core.view.ViewCompat;                // Utility for view adjustments
+import androidx.core.view.WindowInsetsCompat;        // Utility for window insets
+
+// -----------------------------------------------------------------------------
+// HomePage Activity
+// This activity acts as the "dashboard" or main menu after login.
+// From here the user can navigate to BMI calculator or Water tracking pages.
+// -----------------------------------------------------------------------------
+public class HomePage extends AppCompatActivity {
+
+    // -------------------------------------------------------------------------
+    // Class fields (UI components)
+    private Button bmiPage;    // Button for navigating to BMI calculator activity
+    private Button waterPage;  // Button for navigating to Water tracking activity
+
+    private Button graphPage;  // Button for navigating to Graphs/Statistics activity
+    // -------------------------------------------------------------------------
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);          // Call parent constructor
+        EdgeToEdge.enable(this);                     // Enable full screen UI (edge-to-edge)
+
+        // ---------------------------------------------------------------------
+        // Link this Activity to its layout file (activity_home_page.xml)
+        setContentView(R.layout.activity_home_page);
+        // ---------------------------------------------------------------------
+
+        // ---------------------------------------------------------------------
+        // Connect UI components (find buttons by their IDs in XML layout)
+        bmiPage = findViewById(R.id.button3);        // BMI button
+        waterPage = findViewById(R.id.button4);      // Water button
+        graphPage = findViewById(R.id.button5);      // Graphs/Statistics button
+        // ---------------------------------------------------------------------
+
+        // ---------------------------------------------------------------------
+        // Set click listener for BMI button
+        bmiPage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Create intent to open BMIActivity
+                Intent bmi = new Intent(HomePage.this, BMIActivity.class);
+                startActivity(bmi);                  // Start BMIActivity
+            }
+        });
+        // ---------------------------------------------------------------------
+
+        // ---------------------------------------------------------------------
+        // Set click listener for Water button
+        waterPage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Create intent to open WaterActivity
+                Intent wte = new Intent(HomePage.this, WaterActivity.class);
+                startActivity(wte);                  // Start WaterActivity
+            }
+        });
+        // ---------------------------------------------------------------------
+
+        // ---------------------------------------------------------------------
+        // Future extension:
+        // You can add navigation to a Graphs/Statistics page here for final project
+        // ---------------------------------------------------------------------
+        graphPage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Create intent to open GraphsActivity
+                Intent graph = new Intent(HomePage.this, WaterChartActivity.class);
+                startActivity(graph); // Start GraphsActivity
+            }
+        });
+        // ---------------------------------------------------------------------
+    }
+}

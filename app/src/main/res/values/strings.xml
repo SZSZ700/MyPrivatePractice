@@ -1,0 +1,41 @@
+<resources>
+    <string name="app_name">MyFinalTopApplication</string>
+    <string name="your_description">אפליקציית בריאות</string>
+    <string name="username_or_password_wrong">username or password wrong</string>
+    <string name="wellcome">"wellcome "</string>
+    <string name="myprefs">myPrefs</string>
+    <string name="currentuser">currentUser</string>
+    <string name="age">age</string>
+    <string name="users">Users</string>
+    <string name="sign_up_succesfully">sign up succesfully</string>
+    <string name="username_allready_exists">username allready exists</string>
+    <string name="fill_all_fields">fill all fields</string>
+    <string name="connected_user_not_found">connected user not found</string>
+    <string name="bmi">bmi</string>
+    <string name="saved_bmi">"saved BMI: "</string>
+    <string name="_2f">%.2f</string>
+    <string name="your_bmi_is">"your BMI is: "</string>
+    <string name="bmi_saved">BMI saved!</string>
+    <string name="todaywater">todayWater</string>
+    <string name="yesterdaywater">yesterdayWater</string>
+    <string name="you_have_drunk_so_far">"You have drunk so far: "</string>
+    <string name="ml">" ml"</string>
+    <string name="yesterday_you_drank">"💧 Yesterday you drank: "</string>
+    <string name="ml_try_to_reach_your_goal_again_today_don_t_forget_your_overall_mission">" ml – try to reach your goal again today.\nDon’t forget your overall mission."</string>
+    <string name="reminder_set">Reminder set!</string>
+    <string name="reminder_canceled">Reminder canceled</string>
+    <string name="you_have_drunk_so_far2">"You have drunk so far: "</string>
+    <string name="ml_saved">" ml saved!"</string>
+    <string name="water_history">Water History</string>
+    <string name="water_history1">Water History</string>
+    <string name="back_button">Back button</string>
+    <string name="back">Back</string>
+
+    <!-- התזכורות לשתיית מים -->
+    <string-array name="reminder_options">
+        <item>ללא תזכורת</item>
+        <item>כל שעה</item>
+        <item>כל שעתיים</item>
+        <item>כל 3 שעות</item>
+    </string-array>
+</resources>
