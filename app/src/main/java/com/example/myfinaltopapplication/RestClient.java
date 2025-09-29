@@ -2,16 +2,26 @@
 package com.example.myfinaltopapplication;
 // Import OkHttp classes for HTTP requests and responses
 import android.util.Log;
+
+import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken;
+
 import okhttp3.*;
 import okio.Buffer;
 // Import JSON library for building and parsing JSON objects
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 // Import exception handling for input/output operations
 import java.io.IOException;
 // Import Map class for PATCH requests (partial updates)
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 // Import CompletableFuture for asynchronous programming
 import java.util.concurrent.CompletableFuture;
+import java.lang.reflect.Type;
+
 
 /**
  * RestClient - class that manages communication between
@@ -528,5 +538,82 @@ public class RestClient {
         return future;
     }
 
+
+    // -------------------------------------------------------------
+    // getWeeklyAverages
+    // Calls the REST endpoint /users/{username}/weeklyAverages
+    // Returns CompletableFuture<Map<String, Integer>>
+    // Example output: {"Mon"=6200, "Tue"=2740, ...}
+    // -------------------------------------------------------------
+    public static CompletableFuture<Map<String, Integer>> getWeeklyAverages(String username) {
+        // Future container for async result
+        CompletableFuture<Map<String, Integer>> future = new CompletableFuture<>();
+
+        // Build the URL for the request
+        String url = BASE_URL + "/" + username + "/weeklyAverages";
+
+        // 🔹 Debug log: show request URL
+        Log.d("HTTP", "➡️ Sending GET request to " + url);
+
+        // Build the request with OkHttp
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        // Execute async call
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                // Log error and complete future exceptionally
+                Log.e("HTTP", "❌ Request failed: " + e.getMessage(), e);
+                future.completeExceptionally(e);
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                try {
+                    if (!response.isSuccessful()) {
+                        // Non-200 response → return empty map
+                        Log.w("HTTP", "⚠️ Non-OK response: " + response.code());
+                        future.complete(Collections.emptyMap());
+                        return;
+                    }
+
+                    // Read response body
+                    String body = response.body().string();
+                    Log.d("HTTP", "⬅️ Response code=" + response.code());
+                    Log.d("HTTP", "📥 Response body: " + body);
+
+                    // Parse JSON into Map<String, Integer>
+                    Map<String, Integer> result = new LinkedHashMap<>();
+                    JSONObject obj = new JSONObject(body);
+
+                    // Iterate over keys in JSON object
+                    Iterator<String> keys = obj.keys();
+                    while (keys.hasNext()) {
+                        String day = keys.next(); // e.g., "Mon"
+                        int value = obj.optInt(day, 0); // fallback = 0
+                        result.put(day, value);
+                    }
+
+                    // Debug log parsed result
+                    Log.d("WEEKLY_AVG", "✅ Parsed weekly averages: " + result);
+
+                    // Complete future with result
+                    future.complete(result);
+
+                } catch (Exception e) {
+                    // Handle parsing or runtime errors
+                    Log.e("HTTP", "❌ Parsing error", e);
+                    future.completeExceptionally(e);
+                } finally {
+                    response.close();
+                }
+            }
+        });
+
+        return future;
+    }
 }
 
