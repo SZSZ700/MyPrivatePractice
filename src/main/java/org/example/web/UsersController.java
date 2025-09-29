@@ -254,34 +254,32 @@ public class UsersController {
     }
 
     // ---------------------------------------------------------------------
-    // GET WATER HISTORY MAP
-    // GET /api/users/{username}/waterHistoryMap?days=7
-    // Returns JSON object with date → water amount
-    // Example:
-    // {
-    //   "2025-09-29": 1200,
-    //   "2025-09-28": 2000,
-    //   "2025-09-27": 0
-    // }
+    // GET WATER HISTORY MAP (GET /api/users/{username}/waterHistoryMap?days=7)
+    // Returns JSON: {"2025-09-29":4600, "2025-09-28":0, ...}
     // ---------------------------------------------------------------------
     @GetMapping("/{username}/waterHistoryMap")
     public CompletableFuture<ResponseEntity<?>> getWaterHistoryMap(
-            @PathVariable("username") String username,  // Extracts {username} from URL
-            @RequestParam(name = "days", defaultValue = "7") int days // Extracts ?days=7 (default = 7)
-    ) {
-        // Call FirebaseService to fetch water history for the given user
+            @PathVariable("username") String username,
+            @RequestParam(name = "days", defaultValue = "7") int days) {
+
+        System.out.println("DEBUG UsersController.getWaterHistoryMap -> username="
+                + username + " days=" + days);
+
         return firebaseService.getWaterHistoryMap(username, days)
                 .thenApply(result -> {
-                    // If no data found → return 404 Not Found
                     if (result == null) {
+                        System.out.println("DEBUG UsersController.getWaterHistoryMap -> result=null (user not found)");
                         return ResponseEntity
                                 .status(HttpStatus.NOT_FOUND)
-                                .body("User not found or no water history");
+                                .body("User not found");
                     }
 
-                    // ✅ Return the result as JSON with HTTP 200 OK
+                    // 🔹 Debug log before sending response
+                    System.out.println("DEBUG UsersController.getWaterHistoryMap -> sending response: " + result);
+
                     return ResponseEntity.ok(result);
                 });
     }
+
 }
 
