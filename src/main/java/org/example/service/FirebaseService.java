@@ -477,69 +477,83 @@ public class FirebaseService {
     }
 
     // ------------------------------- GET WATER HISTORY MAP --------------------------
-    // Returns map like: {"2025-09-29": 1200, "2025-09-28": 2000, ...}
-    // ------------------------------- GET WATER HISTORY MAP --------------------------
+    // Returns {"2025-09-29": 4600, "2025-09-28": 0, ...} for last N days
     public CompletableFuture<Map<String, Long>> getWaterHistoryMap(String username, int days) {
-        // Create a future object that will eventually hold the result
+        // Future result container (async)
         CompletableFuture<Map<String, Long>> future = new CompletableFuture<>();
 
-        // List of date keys (format: yyyy-MM-dd)
+        // Prepare list of last `days` date-keys (today, yesterday, etc.)
         List<String> keys = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         Calendar cal = Calendar.getInstance();
 
-        // Generate "days" worth of keys (today, yesterday, etc.)
         for (int i = 0; i < days; i++) {
-            keys.add(sdf.format(cal.getTime())); // Add current date to list
-            cal.add(Calendar.DAY_OF_YEAR, -1);   // Move one day back
+            String dateKey = sdf.format(cal.getTime());
+            keys.add(dateKey);
+            cal.add(Calendar.DAY_OF_YEAR, -1); // move one day back
         }
 
-        // Query Firebase for the user with the given username
+        // 🔹 Debug log: which date keys we are about to query
+        System.out.println("DEBUG getWaterHistoryMap -> generated keys: " + keys);
+
+        // Query Firebase for this username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
-                        // If user not found → return null
                         if (!snapshot.exists()) {
+                            System.out.println("DEBUG getWaterHistoryMap -> user not found: " + username);
                             future.complete(null);
                             return;
                         }
 
-                        // Iterate over the matching user snapshots (usually only one)
+                        // Map to hold final results
+                        Map<String, Long> result = new LinkedHashMap<>();
+
                         for (DataSnapshot userSnap : snapshot.getChildren()) {
-                            // Create the result map (date → water amount)
-                            Map<String, Long> result = new HashMap<>();
                             try {
-                                // For each date key, fetch water amount
                                 for (String key : keys) {
-                                    // "0" child contains the total amount for that day
+                                    // Read slot 0 (daily sum)
                                     Long amt = userSnap.child("waterLog")
                                             .child(key)
                                             .child("0")
                                             .getValue(Long.class);
 
-                                    // If no data → default to 0
-                                    result.put(key, amt == null ? 0 : amt);
+                                    System.out.println("DEBUG getWaterHistoryMap -> date=" + key
+                                            + " raw=" + amt
+                                            + " path=" + userSnap.child("waterLog").child(key).child("0").getRef());
+
+                                    // Default to 0 if null
+                                    long safeAmt = (amt == null ? 0 : amt);
+
+                                    // 🔹 Debug log: what we read for this date
+                                    System.out.println("DEBUG getWaterHistoryMap -> key=" + key + " amt=" + safeAmt);
+
+                                    // Put into map
+                                    result.put(key, safeAmt);
                                 }
 
-                                // Complete the future with the result map
+                                // 🔹 Debug log: final map before return
+                                System.out.println("DEBUG getWaterHistoryMap -> final map: " + result);
+
                                 future.complete(result);
+                                return; // Important: exit loop after first userSnap
                             } catch (Exception e) {
-                                // In case of unexpected error → return null
+                                System.err.println("ERROR getWaterHistoryMap -> exception: " + e.getMessage());
+                                e.printStackTrace();
                                 future.complete(null);
+                                return;
                             }
-                            return; // Exit after first user found
                         }
                     }
 
                     @Override
                     public void onCancelled(DatabaseError error) {
-                        // Complete the future with an exception if query fails
+                        System.err.println("ERROR getWaterHistoryMap -> cancelled: " + error.getMessage());
                         future.completeExceptionally(error.toException());
                     }
                 });
 
-        // Return the pending future (will complete later)
         return future;
     }
 }
