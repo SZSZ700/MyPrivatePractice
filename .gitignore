@@ -1,15 +1,38 @@
+# Android Studio
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.gradle/
+.idea/
 local.properties
+.DS_Store
+
+# קבצים מתוך .idea שלא צריך
+.idea/caches
+.idea/libraries
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+
+# Build and generated files
+/build/
+app/build/
+.cxx/
+.externalNativeBuild/
+captures/
+
+# Gradle Wrapper
+gradle/
+gradlew
+gradlew.bat
+
+# Kotlin DSL build files
+*.kts
+
+# APKs, חתימות, קבצי הפצה
+*.apk
+*.jks
+*.keystore
+
+# קבצי גיבוי או זמניים
+*.log
+*.tmp
