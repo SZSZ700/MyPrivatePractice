@@ -290,17 +290,25 @@ public class UsersController {
     // UsersController
     @GetMapping("/{username}/weeklyAverages")
     public CompletableFuture<ResponseEntity<Map<String, Integer>>> getWeeklyAverages(
-            @PathVariable("username") String username) {   // <-- ציון מפורש של שם הפרמטר
+            @PathVariable("username") String username) {
+
         System.out.println("DEBUG UsersController.getWeeklyAverages -> username=" + username);
 
         return firebaseService.getWeeklyAverages(username)
                 .thenApply(result -> {
                     if (result == null || result.isEmpty()) {
+
                         System.out.println("DEBUG getWeeklyAverages -> no data");
-                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyMap());
+
+                        return ResponseEntity
+                                .status(HttpStatus.NOT_FOUND)
+                                .body(Collections.emptyMap());
                     }
+
                     System.out.println("DEBUG getWeeklyAverages -> sending result: " + result);
-                    return ResponseEntity.ok(result);
+
+                    return ResponseEntity
+                            .ok(result);
                 });
     }
 }
