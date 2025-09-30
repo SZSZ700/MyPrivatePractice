@@ -294,12 +294,22 @@ public class UsersController {
 
         System.out.println("DEBUG UsersController.getWeeklyAverages -> username=" + username);
 
+        // מקבל את ה FUTURE הריק
         return firebaseService.getWeeklyAverages(username)
+
+                // ⚠️⤵️⚠️
+                // thenApply - מוסיף קולבאק לרשימות הפנימיות של הפיוטשר
+                //כשה־complete קורה → ה־Future מפעיל את כל ה־Callbacks שנרשמו.
+                // ⚠️⤴️⚠️
+
+                // מה ה CALLBACK עושה?
+                // מקיא את תוכן הFUTURE שזה MAP לתוך משתנה MAP נוסף
                 .thenApply(result -> {
                     if (result == null || result.isEmpty()) {
 
                         System.out.println("DEBUG getWeeklyAverages -> no data");
 
+                        // ותחזיר בהמשך כמובן מתי שהיא תופעל, תגובה! ללקוח!
                         return ResponseEntity
                                 .status(HttpStatus.NOT_FOUND)
                                 .body(Collections.emptyMap());
@@ -310,6 +320,8 @@ public class UsersController {
                     return ResponseEntity
                             .ok(result);
                 });
+
+        // נזרק לחדר ההמתנה הפנימי בספרינג
     }
 }
 
