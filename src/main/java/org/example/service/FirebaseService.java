@@ -561,6 +561,8 @@ public class FirebaseService {
     // Reads slot "0" (daily sum) for the last 28 days, groups by week (7-day chunks),
     // and returns a LinkedHashMap in this order: Week 1 (newest) .. Week 4 (oldest).
     public CompletableFuture<Map<String, Integer>> getWeeklyAverages(String username) {
+
+        // ⚠️⤵️ מתבצע ב THREAD נוכחי ⤵️⚠️
         CompletableFuture<Map<String, Integer>> future = new CompletableFuture<>();
 
         // Build the exact 28 date keys (today inclusive, going backwards)
@@ -573,7 +575,12 @@ public class FirebaseService {
             cal.add(Calendar.DAY_OF_YEAR, -1);
         }
         System.out.println("DEBUG getWeeklyAverages(4w) -> keys size=" + last28.size());
+        // ⚠️⤴️ מתבצע ב THREAD נוכחי ⤴️⚠️
 
+
+
+        // ⚠️⤵️ מתבצע ב THREAD נפרד ⤵️⚠️
+        // נפתח ב THREAD נפרד לחלוטין, עם רפרנס לאובייקט FUTURE
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -582,7 +589,7 @@ public class FirebaseService {
                         if (!snapshot.exists()) {
                             System.out.println("DEBUG getWeeklyAverages(4w) -> user not found: " + username);
                             future.complete(Collections.emptyMap());
-                            return;
+                            return; // ⚠️ stop the listener ⚠️
                         }
 
                         for (DataSnapshot userSnap : snapshot.getChildren()) {
@@ -613,7 +620,7 @@ public class FirebaseService {
 
                                 System.out.println("DEBUG getWeeklyAverages(4w) -> result=" + out);
                                 future.complete(out);
-                                return;
+                                return; // ⚠️ stop the listener ⚠️
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 future.complete(Collections.emptyMap());
@@ -627,7 +634,14 @@ public class FirebaseService {
                         future.completeExceptionally(error.toException());
                     }
                 });
+                // ⚠️⤴️ מתבצע ב THREAD נפרד ⤴️⚠️
 
+
+
+        // ⚠️⤵️ מתבצע ב THREAD נוכחי ⤵️⚠️
+        // נזרק ל USERSCONTROLLER
+        // לתוך ה firebaseService.getWeeklyAverages(username)
         return future;
+        // ⚠️⤴️ מתבצע ב THREAD נוכחי ⤴️⚠️
     }
 }
