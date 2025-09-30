@@ -578,6 +578,7 @@ public class FirebaseService {
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
+
                         if (!snapshot.exists()) {
                             System.out.println("DEBUG getWeeklyAverages(4w) -> user not found: " + username);
                             future.complete(Collections.emptyMap());
