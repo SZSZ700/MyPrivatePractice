@@ -38,35 +38,39 @@ public class RestClient {
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
     // Reusable HTTP client for all network requests
-    // נבנה Client עם Interceptor שמדפיס לוגים
-    // Reusable HTTP client for all network requests with logging interceptor
+    // Built with an interceptor that prints detailed logs for each request and response
     private static final OkHttpClient client = new OkHttpClient.Builder()
             .addInterceptor(chain -> {
+                // Capture the outgoing request
                 Request request = chain.request();
 
+                // Start timer for performance measurement
                 long t1 = System.nanoTime();
                 android.util.Log.d("HTTP", "➡️ Sending " + request.method() + " request to " + request.url());
 
+                // If request has a body, log its contents
                 if (request.body() != null) {
                     Buffer buffer = new Buffer();
                     request.body().writeTo(buffer);
                     android.util.Log.d("HTTP", "📤 Request body: " + buffer.readUtf8());
                 }
 
+                // Proceed with the request and capture the response
                 Response response = chain.proceed(request);
 
+                // End timer for performance measurement
                 long t2 = System.nanoTime();
                 android.util.Log.d("HTTP", "⬅️ Received response for " + response.request().url() +
                         " in " + ((t2 - t1) / 1e6d) + "ms, code = " + response.code());
 
-                // Print response body (careful with big payloads)
+                // Print response body (peek to avoid consuming original stream)
                 ResponseBody responseBody = response.peekBody(Long.MAX_VALUE);
                 android.util.Log.d("HTTP", "📥 Response body: " + responseBody.string());
 
+                // Return the response so the client can use it
                 return response;
             })
             .build();
-
 
     // =========================================================
     // REGISTER (POST /api/users/signup)
@@ -353,38 +357,45 @@ public class RestClient {
 
     // =========================================================
     // UPDATE WATER (PATCH /api/users/{username}/water?amount=...)
+    // Sends a PATCH request to update the user's water intake
     // =========================================================
     public static CompletableFuture<Boolean> updateWater(String username, int amount) {
+        // Future that will hold the result of the network call
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
-        // נבנה את ה־URL
+        // Build the request URL
         String url = BASE_URL + "/" + username + "/water?amount=" + amount;
 
-        // לוג לפני השליחה
+        // Debug logs before sending request
         Log.d("HTTP", "➡️ Sending PATCH request to " + url);
         Log.d("HTTP", "📤 Request body: (empty)");
 
-        // נבנה את הבקשה (body ריק)
+        // Build the PATCH request with an empty body
         Request request = new Request.Builder()
                 .url(url)
                 .patch(RequestBody.create(new byte[0], null))
                 .build();
 
-        // שליחת הבקשה
+        // Execute the request asynchronously
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
+                // Log error if request fails
                 Log.e("HTTP", "❌ updateWater request failed: " + e.getMessage());
                 future.complete(false);
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
+                // Capture status code and body
                 int code = response.code();
                 String body = response.body() != null ? response.body().string() : "";
+
+                // Debug logs for response
                 Log.d("HTTP", "⬅️ Received response for updateWater, code = " + code);
                 Log.d("HTTP", "📥 Response body: " + body);
 
+                // Complete the future depending on success
                 if (response.isSuccessful()) {
                     Log.d("DEBUG", "✅ updateWater worked!");
                     future.complete(true);
@@ -395,6 +406,7 @@ public class RestClient {
             }
         });
 
+        // Return the future immediately (async result will be set later)
         return future;
     }
 
@@ -498,21 +510,24 @@ public class RestClient {
 
     // ---------------------------------------------------------------------
     // GET WATER HISTORY MAP
-    // פונה לשרת: GET /api/users/{username}/waterHistoryMap?days=7
-    // מחזיר JSONObject {"2025-09-29":1200, "2025-09-28":2000, ...}
+    // Calls: GET /api/users/{username}/waterHistoryMap?days=7
+    // Returns: JSONObject {"2025-09-29":1200, "2025-09-28":2000, ...}
     // ---------------------------------------------------------------------
     public static CompletableFuture<JSONObject> getWaterHistoryMap(String username, int days) {
         CompletableFuture<JSONObject> future = new CompletableFuture<>();
 
+        // Build the URL for water history map
         String url = BASE_URL + "/" + username + "/waterHistoryMap?days=" + days;
         Request request = new Request.Builder()
                 .url(url)
                 .get()
                 .build();
 
+        // Send request asynchronously
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
+                // Log error and complete future with null
                 Log.e("HTTP", "❌ getWaterHistoryMap failed", e);
                 future.complete(null);
             }
@@ -520,15 +535,19 @@ public class RestClient {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 try (Response r = response) {
+                    // If response is not successful, complete with null
                     if (!r.isSuccessful()) {
                         Log.e("HTTP", "❌ getWaterHistoryMap error code=" + r.code());
                         future.complete(null);
                         return;
                     }
+                    // Read body and log response
                     String body = r.body() != null ? r.body().string() : "{}";
                     Log.d("HTTP", "📥 getWaterHistoryMap response=" + body);
+                    // Parse JSON and complete future
                     future.complete(new JSONObject(body));
                 } catch (Exception e) {
+                    // Handle JSON parse errors
                     Log.e("HTTP", "❌ getWaterHistoryMap parse error", e);
                     future.complete(null);
                 }
@@ -545,6 +564,7 @@ public class RestClient {
     // -------------------------------------------------------------
     public static CompletableFuture<Map<String, Integer>> getWeeklyAverages(String username) {
         CompletableFuture<Map<String, Integer>> future = new CompletableFuture<>();
+        // Build the URL for weakly water history map
         String url = BASE_URL + "/" + username + "/weeklyAverages";
 
         Request request = new Request.Builder()
@@ -552,38 +572,43 @@ public class RestClient {
                 .get()
                 .build();
 
+        // Send request asynchronously
         client.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(Call call, IOException e) {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Log error and complete with exception
                 Log.w("HTTP", "weeklyAverages onFailure: " + e.getMessage());
                 future.completeExceptionally(e);
             }
 
-            @Override public void onResponse(Call call, Response response) throws IOException {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
                 try (ResponseBody body = response.body()) {
+                    // Handle non-OK responses
                     if (!response.isSuccessful()) {
                         String resp = (body != null ? body.string() : "");
                         Log.w("HTTP", "⚠️ Non-OK weeklyAverages: " + response.code() + " body=" + resp);
                         future.complete(Collections.emptyMap());
                         return;
                     }
+
+                    // Parse JSON response
                     String json = (body != null ? body.string() : "{}");
                     JSONObject obj = new JSONObject(json);
 
-                    // Preserve insertion order in case server sends it ordered
+                    // Use LinkedHashMap to preserve order
                     Map<String, Integer> map = new LinkedHashMap<>();
                     Iterator<String> keys = obj.keys();
-                    // If you prefer specific order "Week 1..Week 4", you can sort keys:
-                    // List<String> sorted = new ArrayList<>();
-                    // while (keys.hasNext()) sorted.add(keys.next());
-                    // Collections.sort(sorted, Comparator.comparingInt(k -> Integer.parseInt(k.replaceAll("\\D+",""))));
-                    // for (String k : sorted) map.put(k, obj.optInt(k, 0));
+                    // Iterate over JSON keys and populate map
                     while (keys.hasNext()) {
                         String k = keys.next();
                         map.put(k, obj.optInt(k, 0));
                     }
 
+                    // Complete future with parsed map
                     future.complete(map);
                 } catch (Exception e) {
+                    // Handle parsing exceptions
                     future.completeExceptionally(e);
                 }
             }
@@ -591,6 +616,5 @@ public class RestClient {
 
         return future;
     }
-
 }
 
