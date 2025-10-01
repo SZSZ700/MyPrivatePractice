@@ -432,114 +432,119 @@ public class FirebaseService {
         return future;
     }
 
-    // ------------------------------ UPDATE WATER ------------------------
-    // Stores per-day array of size 13:
-    // index 0 = daily total sum (ml), indexes 1..12 = individual cups
+    // --------------------------------------------------------------
+    // UPDATE WATER (no 12-cup limit, dynamic list)
+    // - Keeps index 0 as the daily total (sum in ml)
+    // - Appends each new drink amount to the end of the list (index 1..N)
+    // - Uses a Firebase Realtime Database Transaction for atomic updates
+    // --------------------------------------------------------------
     public CompletableFuture<Boolean> updateWater(String username, int waterAmount) {
-        // Future that will hold true/false result after operation
+        // Future that will be completed once the async work finishes
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
-        // Query Firebase for the given username
+        // Optional guard: ignore invalid amounts (<= 0). You can remove this if you support negatives.
+        if (waterAmount <= 0) {
+            System.out.println("DEBUG updateWater -> ignored non-positive amount: " + waterAmount);
+            future.complete(false);
+            return future;
+        }
+
+        // Find user by userName
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
-                        // If user not found, complete with false
+                        // If user is not found, finish with false
                         if (!snapshot.exists()) {
+                            System.out.println("DEBUG updateWater -> user not found: " + username);
                             future.complete(false);
                             return;
                         }
 
-                        // Iterate over user snapshots (normally just one)
+                        // We expect a single user, but loop just in case
                         for (DataSnapshot userSnap : snapshot.getChildren()) {
-                            // Generate today's date key
+                            // Build today's date key: yyyy-MM-dd (matches your existing structure)
                             String dayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                                     .format(new Date());
 
-                            // Reference to today's waterLog entry
+                            // Reference to the "today" node (Users/<uid>/waterLog/<yyyy-MM-dd>)
                             DatabaseReference todayRef = userSnap.getRef()
-                                    .child("waterLog").child(dayKey);
+                                    .child("waterLog")
+                                    .child(dayKey);
 
-                            //-- Debug log for path reference
-                            System.out.println("DEBUG: todayRef path = " + todayRef.toString());
-                            //--
+                            System.out.println("DEBUG updateWater -> todayRef = " + todayRef);
 
-                            // Fetch today's record once
-                            todayRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            // Run a transaction to update sum (index 0) and append the new cup atomically
+                            todayRef.runTransaction(new Transaction.Handler() {
                                 @Override
-                                public void onDataChange(DataSnapshot daySnapshot) {
-                                    // Read the data as List<Long>
-                                    GenericTypeIndicator<List<Long>> t =
-                                            new GenericTypeIndicator<List<Long>>() {};
-                                    List<Long> dayList = daySnapshot.getValue(t);
+                                public Transaction.Result doTransaction(MutableData currentData) {
+                                    // Try to read current value as a List<Long> (array-like structure)
+                                    List<Long> dayList = currentData.getValue(new GenericTypeIndicator<List<Long>>() {});
 
-                                    // Debug log for existing value
-                                    System.out.println("DEBUG: Existing value = " + daySnapshot.getValue());
-
-                                    // Normalize the list to ensure correct size and no nulls
+                                    // If there's no list yet for today, create one
                                     if (dayList == null) {
-                                        // Initialize with 13 zeros
-                                        dayList = new ArrayList<>(Collections.nCopies(13, 0L));
-                                    } else if (dayList.size() < 13) {
-                                        // If list is shorter than 13, extend to length 13
-                                        List<Long> fixed = new ArrayList<>(Collections.nCopies(13, 0L));
-                                        for (int i = 0; i < Math.min(dayList.size(), 13); i++) {
-                                            Long val = dayList.get(i);
-                                            fixed.set(i, val == null ? 0L : val);
-                                        }
-                                        dayList = fixed;
-                                    } else {
-                                        // Replace any nulls with 0
-                                        for (int i = 0; i < 13; i++) {
-                                            if (dayList.get(i) == null) dayList.set(i, 0L);
-                                        }
+                                        dayList = new ArrayList<>();
                                     }
 
-                                    // Find next available cup slot (1..12)
-                                    int cupIndex = 1;
-                                    while (cupIndex <= 12 && dayList.get(cupIndex) > 0) {
-                                        cupIndex++;
+                                    // Ensure index 0 exists (daily sum slot)
+                                    if (dayList.isEmpty()) {
+                                        dayList.add(0L); // index 0 = sum
+                                    } else if (dayList.get(0) == null) {
+                                        dayList.set(0, 0L);
                                     }
 
-                                    if (cupIndex <= 12) {
-                                        // Place water amount into the next free slot
-                                        dayList.set(cupIndex, (long) waterAmount);
+                                    // Update the daily sum (index 0)
+                                    long currentSum = dayList.get(0);
+                                    long newSum = currentSum + waterAmount;
+                                    dayList.set(0, newSum);
 
-                                        // Update daily total at index 0
-                                        long sum = dayList.get(0) == null ? 0L : dayList.get(0);
-                                        dayList.set(0, sum + waterAmount);
+                                    // Append the new drink amount to the end of the list (index 1..N)
+                                    dayList.add((long) waterAmount);
 
-                                        // Write updated list back to Firebase
-                                        todayRef.setValue(dayList, (error, ref) -> {
-                                            if (error == null) {
-                                                future.complete(true);   // success
-                                            } else {
-                                                future.complete(false);  // failed write
-                                            }
-                                        });
-                                    } else {
-                                        // All 12 cup slots are already filled
-                                        future.complete(false);
-                                    }
+                                    // Write the updated list back to the transaction data
+                                    currentData.setValue(dayList);
+
+                                    // Commit the transaction
+                                    return Transaction.success(currentData);
                                 }
 
                                 @Override
-                                public void onCancelled(DatabaseError error) {
-                                    // If query cancelled, complete with exception
-                                    future.completeExceptionally(error.toException());
+                                public void onComplete(DatabaseError error, boolean committed, DataSnapshot snapshot) {
+                                    if (error != null) {
+                                        System.err.println("ERROR updateWater -> transaction failed: " + error.getMessage());
+                                        future.complete(false);
+                                        return;
+                                    }
+                                    if (!committed) {
+                                        System.err.println("WARN updateWater -> transaction not committed");
+                                        future.complete(false);
+                                        return;
+                                    }
+
+                                    // Debug: log the final state after commit
+                                    try {
+                                        List<Long> finalList = snapshot.getValue(new GenericTypeIndicator<List<Long>>() {});
+                                        System.out.println("DEBUG updateWater -> committed, finalList=" + finalList);
+                                    } catch (Exception ignored) { }
+
+                                    future.complete(true);
                                 }
                             });
+
+                            // We handled the first (and only) user; stop iterating
+                            break;
                         }
                     }
 
                     @Override
                     public void onCancelled(DatabaseError error) {
-                        // If outer query cancelled, complete with exception
+                        // Read of the user failed
+                        System.err.println("ERROR updateWater -> onCancelled: " + error.getMessage());
                         future.completeExceptionally(error.toException());
                     }
                 });
 
-        // Return the future immediately, will complete later asynchronously
+        // Return the future immediately; it will be completed asynchronously
         return future;
     }
 
