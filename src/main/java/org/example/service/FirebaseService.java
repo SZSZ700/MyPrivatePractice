@@ -797,50 +797,85 @@ public class FirebaseService {
         // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
     }
 
-    // Updates the daily water goal (goalMl) for a given user
-    public CompletableFuture<Boolean> updateGoalMl(String username, int goalMl) {
-        // Future that will hold the success/failure result
-        CompletableFuture<Boolean> fut = new CompletableFuture<>();
+    // get Daily drink goal
+    public CompletableFuture<Integer> getGoalMl(String username) {
+        // Future that will hold the user's goal (or default if missing)
+        CompletableFuture<Integer> fut = new CompletableFuture<>();
 
-        // Validate input range for goal (example: between 500ml and 10000ml)
-        if (goalMl < 500 || goalMl > 10000) {
-            fut.complete(false);
-            return fut;
-        }
-
-        // Query Firebase by username
+        // Query Firebase for user by username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snap) {
-                        // If user not found, complete with false
+                        // If user not found, return default value (3000)
                         if (!snap.exists()) {
-                            fut.complete(false);
+                            fut.complete(3000);
                             return;
                         }
 
-                        // Update "goalMl" field for the first matched user
+                        // For each user match (usually just one)
                         for (DataSnapshot userSnap : snap.getChildren()) {
-                            userSnap.getRef().child("goalMl").setValue(goalMl, (error, ref) -> {
-                                if (error != null) {
-                                    // If error occurred, complete with false
-                                    fut.complete(false);
-                                } else {
-                                    // If update succeeded, complete with true
-                                    fut.complete(true);
-                                }
-                            });
-                            return; // Exit after first update
+                            // Read goalMl as Integer
+                            Integer goal = userSnap.child("goalMl").getValue(Integer.class);
+                            // Return value or default if null
+                            fut.complete(goal != null ? goal : 3000);
+                            return; // Only first match
                         }
                     }
 
                     @Override
                     public void onCancelled(DatabaseError error) {
-                        // If query is cancelled, complete future with exception
+                        // Complete exceptionally so controller can handle as 5xx
                         fut.completeExceptionally(error.toException());
                     }
                 });
 
         return fut;
     }
+
+    // update Daily drink goal
+    public CompletableFuture<Boolean> updateGoalMl(String username, int goalMl) {
+        // Future that will hold true/false depending on update result
+        CompletableFuture<Boolean> fut = new CompletableFuture<>();
+
+        // Validate input (example: between 500ml and 10000ml)
+        if (goalMl < 500 || goalMl > 10000) {
+            fut.complete(false);
+            return fut;
+        }
+
+        // Query Firebase for user by username
+        usersRef.orderByChild("userName").equalTo(username)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snap) {
+                        // If no user found, complete with false
+                        if (!snap.exists()) {
+                            fut.complete(false);
+                            return;
+                        }
+
+                        // For each match, update goalMl field
+                        for (DataSnapshot userSnap : snap.getChildren()) {
+                            userSnap.getRef().child("goalMl").setValue(goalMl, (err, ref) -> {
+                                if (err != null) {
+                                    fut.complete(false);
+                                } else {
+                                    fut.complete(true);
+                                }
+                            });
+                            return; // Stop after first update
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        // Complete exceptionally if query cancelled
+                        fut.completeExceptionally(error.toException());
+                    }
+                });
+
+        return fut;
+    }
+
 }
