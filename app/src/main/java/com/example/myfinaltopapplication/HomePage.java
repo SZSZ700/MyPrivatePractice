@@ -20,8 +20,8 @@ public class HomePage extends AppCompatActivity {
     // Class fields (UI components)
     private Button bmiPage;    // Button for navigating to BMI calculator activity
     private Button waterPage;  // Button for navigating to Water tracking activity
-
     private Button graphPage;  // Button for navigating to Graphs/Statistics activity
+    private Button dailyGoal; // Button for navigating to Daily Water Goal activity
     // -------------------------------------------------------------------------
 
     @Override
@@ -78,5 +78,16 @@ public class HomePage extends AppCompatActivity {
             }
         });
         // ---------------------------------------------------------------------
+
+        // ---------------------------------------------------------------------
+        // Set click listener for Daily Water Goal button
+        dailyGoal.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Create intent to open DailyWaterGoalActivity
+                Intent daily = new Intent(HomePage.this, DailyWaterGoal.class);
+                startActivity(daily); // Start DailyWaterGoalActivity
+            }
+        });
     }
 }
