@@ -15,6 +15,9 @@
         android:theme="@style/Theme.MyFinalTopApplication"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".DailyWaterGoal"
+            android:exported="false" />
+        <activity
             android:name=".WaterChartActivity"
             android:exported="false" />
         <activity

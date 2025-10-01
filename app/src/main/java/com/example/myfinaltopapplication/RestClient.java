@@ -616,5 +616,83 @@ public class RestClient {
 
         return future;
     }
+
+    // -------------------------------------------------------------
+    // getGoal
+    // Calls: GET {BASE_URL}/{username}/goal
+    // Returns: CompletableFuture<JSONObject>
+    public static CompletableFuture<JSONObject> getGoal(String username) {
+        // Future for async result (JSONObject response)
+        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+        String url = BASE_URL + "/" + username + "/goal";
+
+        // Build GET request
+        Request req = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        // Send request asynchronously
+        client.newCall(req).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Complete with exception if request fails
+                future.completeExceptionally(e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response res) throws IOException {
+                if (!res.isSuccessful()) {
+                    // If HTTP response is not OK, complete with exception
+                    future.completeExceptionally(new IOException("HTTP " + res.code()));
+                    return;
+                }
+                try {
+                    // Parse body into JSONObject {"goalMl": 2600}
+                    String body = res.body().string();
+                    future.complete(new JSONObject(body));
+                } catch (Exception ex) {
+                    // On parse error, complete exceptionally
+                    future.completeExceptionally(ex);
+                }
+            }
+        });
+
+        return future;
+    }
+
+    // -------------------------------------------------------------
+    // setGoal
+    // Calls: PUT {BASE_URL}/{username}/goal?goalMl={goalMl}
+    // Returns: CompletableFuture<Boolean>
+    public static CompletableFuture<Boolean> setGoal(String username, int goalMl) {
+        // Future for async result (true if success, false otherwise)
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        String url = BASE_URL + "/" + username + "/goal?goalMl=" + goalMl;
+
+        // Build PUT request with empty body (query params carry data)
+        Request req = new Request.Builder()
+                .url(url)
+                .put(RequestBody.create(new byte[0]))
+                .build();
+
+        // Send request asynchronously
+        client.newCall(req).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Complete with exception if request fails
+                future.completeExceptionally(e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response res) {
+                // Complete with true if response is successful, otherwise false
+                future.complete(res.isSuccessful());
+            }
+        });
+
+        return future;
+    }
+
 }
 
