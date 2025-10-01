@@ -2,6 +2,7 @@
 package com.example.myfinaltopapplication;
 
 // Android imports
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -75,7 +76,11 @@ public class DailyWaterGoal extends AppCompatActivity {
         setupChartAppearance();
 
         // Back click → finish
-        backButton.setOnClickListener(v -> finish());
+        backButton.setOnClickListener(v ->
+        {
+            Intent intent = new Intent(this, HomePage.class);
+            startActivity(intent);
+        });
 
         // Save goal handler
         saveGoalBtn.setOnClickListener(v -> onSaveGoalClicked());
