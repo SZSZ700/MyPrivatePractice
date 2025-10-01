@@ -39,6 +39,7 @@ public class HomePage extends AppCompatActivity {
         bmiPage = findViewById(R.id.button3);        // BMI button
         waterPage = findViewById(R.id.button4);      // Water button
         graphPage = findViewById(R.id.button5);      // Graphs/Statistics button
+        dailyGoal = findViewById(R.id.button6);      // Daily Water Goal button
         // ---------------------------------------------------------------------
 
         // ---------------------------------------------------------------------
