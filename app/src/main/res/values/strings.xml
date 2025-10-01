@@ -30,6 +30,8 @@
     <string name="water_history1">Water History</string>
     <string name="back_button">Back button</string>
     <string name="back">Back</string>
+    <string name="water_bottle_1000_ml">Water bottle - 1000 ml</string>
+    <string name="paper_cup_200_ml">Paper cup - 200 ml</string>
 
     <!-- התזכורות לשתיית מים -->
     <string-array name="reminder_options">

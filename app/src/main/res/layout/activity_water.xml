@@ -56,7 +56,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
         android:backgroundTint="#2196F3"
-        android:text="Paper cup - 200 ml"
+        android:text="@string/paper_cup_200_ml"
         android:textColor="#FFF" />
 
     <!-- כפתור שתייה 1000 -->
@@ -66,24 +66,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="30dp"
         android:backgroundTint="#1976D2"
-        android:text="Water bottle - 1000 ml"
+        android:text="@string/water_bottle_1000_ml"
         android:textColor="#FFF" />
-
-    <!-- כיתוב להסבר על בחירת תזכורת -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Choose reminder interval:"
-        android:textSize="16sp"
-        android:textColor="#0D47A1"
-        android:layout_marginBottom="10dp" />
-
-    <!-- ספינר של תזכורות -->
-    <Spinner
-        android:id="@+id/reminderSpinner"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp" />
 
     <!-- כפתור חזרה לבית -->
     <ImageButton
