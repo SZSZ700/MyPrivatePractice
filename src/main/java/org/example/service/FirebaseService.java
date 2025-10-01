@@ -796,4 +796,51 @@ public class FirebaseService {
         return future;
         // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
     }
+
+    // Updates the daily water goal (goalMl) for a given user
+    public CompletableFuture<Boolean> updateGoalMl(String username, int goalMl) {
+        // Future that will hold the success/failure result
+        CompletableFuture<Boolean> fut = new CompletableFuture<>();
+
+        // Validate input range for goal (example: between 500ml and 10000ml)
+        if (goalMl < 500 || goalMl > 10000) {
+            fut.complete(false);
+            return fut;
+        }
+
+        // Query Firebase by username
+        usersRef.orderByChild("userName").equalTo(username)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snap) {
+                        // If user not found, complete with false
+                        if (!snap.exists()) {
+                            fut.complete(false);
+                            return;
+                        }
+
+                        // Update "goalMl" field for the first matched user
+                        for (DataSnapshot userSnap : snap.getChildren()) {
+                            userSnap.getRef().child("goalMl").setValue(goalMl, (error, ref) -> {
+                                if (error != null) {
+                                    // If error occurred, complete with false
+                                    fut.complete(false);
+                                } else {
+                                    // If update succeeded, complete with true
+                                    fut.complete(true);
+                                }
+                            });
+                            return; // Exit after first update
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        // If query is cancelled, complete future with exception
+                        fut.completeExceptionally(error.toException());
+                    }
+                });
+
+        return fut;
+    }
 }
