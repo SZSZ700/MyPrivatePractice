@@ -32,6 +32,12 @@
     <string name="back">Back</string>
     <string name="water_bottle_1000_ml">Water bottle - 1000 ml</string>
     <string name="paper_cup_200_ml">Paper cup - 200 ml</string>
+    <string name="enter_new_daily_goal_ml">Enter new daily goal (ml)</string>
+    <string name="save_goal">Save Goal</string>
+    <string name="today_0_ml">Today: 0 ml</string>
+    <string name="goal_3_000_ml">Goal: 3,000 ml</string>
+    <string name="daily_water_vs_goal">Daily Water vs Goal</string>
+    <string name="backb">Back</string>
 
     <!-- התזכורות לשתיית מים -->
     <string-array name="reminder_options">
