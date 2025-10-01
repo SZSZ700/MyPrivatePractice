@@ -367,5 +367,37 @@ public class UsersController {
 
         // Execution is placed into Spring's internal async waiting queue
     }
+
+    // PUT /api/users/{username}/goal?goalMl=2600
+    @PutMapping("/{username}/goal")
+    public CompletableFuture<ResponseEntity<Map<String, String>>> setGoal( @PathVariable String username,
+            @RequestParam int goalMl) {
+
+        // Debug log: endpoint triggered with username and goalMl value
+        System.out.println("DEBUG setGoal -> " + username + " goalMl=" + goalMl);
+
+        // Call Firebase service to update the user's daily water goal
+        return firebaseService.updateGoalMl(username, goalMl)
+                .thenApply(ok -> ok
+                        // If successful, return 200 OK with status message
+                        ? ResponseEntity
+                        .ok(Map.of("status", "OK"))
+                        // If goal is invalid or user not found, return 400 BAD REQUEST
+                        : ResponseEntity
+                        .badRequest()
+                        .body(
+                                Map.of("status", "INVALID_OR_NOT_FOUND")
+                        )
+                )
+                .exceptionally(ex ->
+                        // If an exception occurred, return 500 INTERNAL SERVER ERROR with details
+                        ResponseEntity
+                                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body(
+                                        Map.of("status", "ERROR", "msg", ex.getMessage())
+                                )
+                );
+    }
+
 }
 
