@@ -368,36 +368,71 @@ public class UsersController {
         // Execution is placed into Spring's internal async waiting queue
     }
 
-    // PUT /api/users/{username}/goal?goalMl=2600
+    // -------------------------------------------
+    // GET /api/users/{username}/goal  -> {"goalMl": 2600}
+    // -------------------------------------------
+    @GetMapping("/{username}/goal")
+    public CompletableFuture<ResponseEntity<Map<String, Integer>>> getGoal(
+            @PathVariable("username") String username) { // Explicit name avoids parameter-name reflection issues
+
+        // Debug log: endpoint triggered
+        System.out.println("DEBUG getGoal -> username=" + username);
+
+        // Call Firebase service to get goal value
+        return firebaseService.getGoalMl(username)
+                .thenApply(goal -> {
+                    // Always return 200 OK with a value (default if not found)
+                    return ResponseEntity
+                            .ok(
+                                    Map.of("goalMl", goal)
+                            );
+                })
+                .exceptionally(ex -> {
+                    // On failure return 500 Internal Server Error
+                    System.err.println("ERROR getGoal -> " + ex.getMessage());
+
+                    return ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(
+                                    Map.of()
+                            );
+                });
+    }
+
+    // ------------------------------------------------------
+    // PUT /api/users/{username}/goal?goalMl=2600  -> 200/400
+    // ------------------------------------------------------
     @PutMapping("/{username}/goal")
-    public CompletableFuture<ResponseEntity<Map<String, String>>> setGoal( @PathVariable String username,
-            @RequestParam int goalMl) {
+    public CompletableFuture<ResponseEntity<Map<String, String>>> setGoal(
+            @PathVariable("username") String username,
+            @RequestParam("goalMl") int goalMl) {
 
-        // Debug log: endpoint triggered with username and goalMl value
-        System.out.println("DEBUG setGoal -> " + username + " goalMl=" + goalMl);
+        // Debug log: endpoint triggered
+        System.out.println("DEBUG setGoal -> username=" + username + " goalMl=" + goalMl);
 
-        // Call Firebase service to update the user's daily water goal
+        // Call Firebase service to update goal
         return firebaseService.updateGoalMl(username, goalMl)
                 .thenApply(ok -> ok
-                        // If successful, return 200 OK with status message
+                        // If update succeeds -> 200 OK
                         ? ResponseEntity
                         .ok(Map.of("status", "OK"))
-                        // If goal is invalid or user not found, return 400 BAD REQUEST
+                        // If invalid value or user not found -> 400 BAD REQUEST
                         : ResponseEntity
                         .badRequest()
                         .body(
                                 Map.of("status", "INVALID_OR_NOT_FOUND")
                         )
                 )
-                .exceptionally(ex ->
-                        // If an exception occurred, return 500 INTERNAL SERVER ERROR with details
-                        ResponseEntity
-                                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                .body(
-                                        Map.of("status", "ERROR", "msg", ex.getMessage())
-                                )
-                );
-    }
+                .exceptionally(ex -> {
+                    // On exception -> 500 Internal Server Error
+                    System.err.println("ERROR setGoal -> " + ex.getMessage());
 
+                    return ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(
+                                    Map.of("status", "ERROR")
+                            );
+                });
+    }
 }
 
