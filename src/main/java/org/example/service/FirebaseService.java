@@ -5,6 +5,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
+import org.example.EnvConfig;
 import org.example.model.User;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -30,10 +31,13 @@ public class FirebaseService {
             throw new IllegalStateException("Service account JSON not found!");
         }
 
+        // load the address of the real-time database form the .env
+        String firebaseUrl = EnvConfig.getFirebaseUrl();
+
         // Build Firebase options using the service account and database URL
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .setDatabaseUrl("https://myfinaltopap-default-rtdb.firebaseio.com/")
+                .setDatabaseUrl(firebaseUrl)
                 .build();
 
         // Initialize FirebaseApp only if it has not been initialized before
