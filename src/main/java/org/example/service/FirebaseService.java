@@ -891,13 +891,13 @@ public class FirebaseService {
 
                         // For each match, update goalMl field
                         for (DataSnapshot userSnap : snap.getChildren()) {
+
                             userSnap.getRef().child("goalMl").setValue(goalMl, (err, ref) -> {
-                                if (err != null) {
-                                    fut.complete(false);
-                                } else {
-                                    fut.complete(true);
-                                }
+                                if (err != null) { fut.complete(false); }
+
+                                else { fut.complete(true); }
                             });
+
                             return; // Stop after first update
                         }
                     }
