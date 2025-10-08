@@ -1,12 +1,13 @@
 package org.example;
+
 import io.github.cdimascio.dotenv.Dotenv;
 
 public class EnvConfig {
 
-    // טוען את קובץ ה־.env מהשורש של הפרויקט
+    // Loads the .env file from the root directory of the project
     private static final Dotenv dotenv = Dotenv.load();
 
-    // מחזיר את כתובת הפיירבייס מתוך הקובץ
+    // Returns the Firebase URL stored in the .env file
     public static String getFirebaseUrl() {
         return dotenv.get("FIREBASE_URL");
     }
