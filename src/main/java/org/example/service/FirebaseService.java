@@ -609,6 +609,9 @@ public class FirebaseService {
     // ------------------------------- GET WATER HISTORY MAP --------------------------
     // Returns {"2025-09-29": 4600, "2025-09-28": 0, ...} for last N days
     public CompletableFuture<Map<String, Long>> getWaterHistoryMap(String username, int days) {
+
+
+        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
         // Future result container (async) that will eventually hold a Map<String, Long>
         CompletableFuture<Map<String, Long>> future = new CompletableFuture<>();
 
@@ -627,7 +630,11 @@ public class FirebaseService {
 
         // 🔹 Debug log: which date keys we are about to query
         System.out.println("DEBUG getWaterHistoryMap -> generated keys: " + keys);
+        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
 
+
+
+        // ⚠️⤵️ Executed in a SEPARATE THREAD ⤵️⚠️
         // Query Firebase for this username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -692,8 +699,13 @@ public class FirebaseService {
                         future.completeExceptionally(error.toException());
                     }
                 });
+        // ⚠️⤴️ Executed in a SEPARATE THREAD ⤴️⚠️
 
+
+
+        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
         return future;
+        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
     }
 
     // ------------------------------- GET WEEKLY AVERAGES (4 WEEKS) --------------------------
@@ -736,7 +748,7 @@ public class FirebaseService {
                         if (!snapshot.exists()) {
                             System.out.println("DEBUG getWeeklyAverages(4w) -> user not found: " + username);
                             future.complete(Collections.emptyMap());
-                            return; // ⚠️ stop the listener ⚠️
+                            return;
                         }
 
                         // Iterate over all matching users (should usually be just one)
@@ -775,12 +787,12 @@ public class FirebaseService {
 
                                 // Complete the future with the calculated map
                                 future.complete(out);
-                                return; // ⚠️ stop the listener ⚠️
+                                return;
                             } catch (Exception e) {
                                 // If any exception occurs, complete future with empty map
                                 e.printStackTrace();
                                 future.complete(Collections.emptyMap());
-                                return; // ⚠️ stop the listener ⚠️
+                                return;
                             }
                         }
                     }
@@ -821,7 +833,7 @@ public class FirebaseService {
                         // If user not found, return default value (3000)
                         if (!snap.exists()) {
                             fut.complete(3000);
-                            return; // ⚠️ stop the listener ⚠️
+                            return;
                         }
 
                         // For each user match (usually just one)
@@ -830,7 +842,7 @@ public class FirebaseService {
                             Integer goal = userSnap.child("goalMl").getValue(Integer.class);
                             // Return value or default if null
                             fut.complete(goal != null ? goal : 3000);
-                            return; // Only first match  // ⚠️ stop the listener ⚠️
+                            return; // Only first match
                         }
                     }
 
@@ -874,7 +886,7 @@ public class FirebaseService {
                         // If no user found, complete with false
                         if (!snap.exists()) {
                             fut.complete(false);
-                            return; // ⚠️ stop the listener ⚠️
+                            return;
                         }
 
                         // For each match, update goalMl field
@@ -886,7 +898,7 @@ public class FirebaseService {
                                     fut.complete(true);
                                 }
                             });
-                            return; // Stop after first update  // ⚠️ stop the listener ⚠️
+                            return; // Stop after first update
                         }
                     }
 
