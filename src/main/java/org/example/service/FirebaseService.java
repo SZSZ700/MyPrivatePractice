@@ -887,6 +887,9 @@ public class FirebaseService {
 
         // ⚠️⤵️ Executed in a SEPARATE THREAD ⤵️⚠️
         // Query Firebase for user by username
+        // Create a query in which child nodes are ordered by the values of the specified path.
+        // Add a listener for a single change in the data at this location.
+        // This listener will be triggered once with the value of the data at the location.
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
