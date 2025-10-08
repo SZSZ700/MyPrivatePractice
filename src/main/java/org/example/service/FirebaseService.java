@@ -804,9 +804,15 @@ public class FirebaseService {
 
     // get Daily drink goal
     public CompletableFuture<Integer> getGoalMl(String username) {
+
+        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
         // Future that will hold the user's goal (or default if missing)
         CompletableFuture<Integer> fut = new CompletableFuture<>();
+        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
 
+
+
+        // ⚠️⤵️ Executed in a SEPARATE THREAD ⤵️⚠️
         // Query Firebase for user by username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -815,7 +821,7 @@ public class FirebaseService {
                         // If user not found, return default value (3000)
                         if (!snap.exists()) {
                             fut.complete(3000);
-                            return;
+                            return; // ⚠️ stop the listener ⚠️
                         }
 
                         // For each user match (usually just one)
@@ -824,7 +830,7 @@ public class FirebaseService {
                             Integer goal = userSnap.child("goalMl").getValue(Integer.class);
                             // Return value or default if null
                             fut.complete(goal != null ? goal : 3000);
-                            return; // Only first match
+                            return; // Only first match  // ⚠️ stop the listener ⚠️
                         }
                     }
 
@@ -834,12 +840,19 @@ public class FirebaseService {
                         fut.completeExceptionally(error.toException());
                     }
                 });
+        // ⚠️⤴️ Executed in a SEPARATE THREAD ⤴️⚠️
 
+
+
+        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
         return fut;
+        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
     }
 
     // update Daily drink goal
     public CompletableFuture<Boolean> updateGoalMl(String username, int goalMl) {
+
+        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
         // Future that will hold true/false depending on update result
         CompletableFuture<Boolean> fut = new CompletableFuture<>();
 
@@ -848,7 +861,11 @@ public class FirebaseService {
             fut.complete(false);
             return fut;
         }
+        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
 
+
+
+        // ⚠️⤵️ Executed in a SEPARATE THREAD ⤵️⚠️
         // Query Firebase for user by username
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -857,7 +874,7 @@ public class FirebaseService {
                         // If no user found, complete with false
                         if (!snap.exists()) {
                             fut.complete(false);
-                            return;
+                            return; // ⚠️ stop the listener ⚠️
                         }
 
                         // For each match, update goalMl field
@@ -869,7 +886,7 @@ public class FirebaseService {
                                     fut.complete(true);
                                 }
                             });
-                            return; // Stop after first update
+                            return; // Stop after first update  // ⚠️ stop the listener ⚠️
                         }
                     }
 
@@ -879,7 +896,12 @@ public class FirebaseService {
                         fut.completeExceptionally(error.toException());
                     }
                 });
+        // ⚠️⤴️ Executed in a SEPARATE THREAD ⤴️⚠️
 
+
+
+        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
         return fut;
+        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
     }
 }
