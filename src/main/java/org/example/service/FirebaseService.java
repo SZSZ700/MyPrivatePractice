@@ -780,7 +780,7 @@ public class FirebaseService {
                                 // If any exception occurs, complete future with empty map
                                 e.printStackTrace();
                                 future.complete(Collections.emptyMap());
-                                return;
+                                return; // ⚠️ stop the listener ⚠️
                             }
                         }
                     }
