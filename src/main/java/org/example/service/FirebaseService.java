@@ -36,8 +36,12 @@ public class FirebaseService {
 
         // Build Firebase options using the service account and database URL
         FirebaseOptions options = FirebaseOptions.builder()
+                // Sets the GoogleCredentials to use to authenticate the SDK.
+                // This parameter must be specified when creating a new instance of FirebaseOptions.
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                // Sets the Realtime Database URL to use for data storage.
                 .setDatabaseUrl(firebaseUrl)
+                // Builds the FirebaseOptions instance from the previously set options.
                 .build();
 
         // Initialize FirebaseApp only if it has not been initialized before
