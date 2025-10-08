@@ -249,6 +249,14 @@ public class UsersController {
             @RequestParam("amount") int amount) {
 
         // Call Firebase service to update water log
+
+        // ⚠️⤵️⚠️
+        // thenApply - adds a callback to the internal callback list of the Future.
+        // Once `complete()` is called, the Future executes all registered callbacks.
+        // ⚠️⤴️⚠️
+
+        // What does this callback do?
+        // It unwraps the Future's content (the Boolean) and places it into the response.
         return firebaseService.updateWater(username, amount).thenApply(success -> {
             if (!success) {
                 // If user not found or slots are full, return 404 with error message
@@ -270,22 +278,30 @@ public class UsersController {
             @PathVariable("username") String username) {
 
         // Call Firebase service to get today's and yesterday's water amounts
-        return firebaseService.getWater(username).thenApply(result -> {
-            // If user not found, return 404
-            if (result == null) {
-                return ResponseEntity
-                        .status(HttpStatus.NOT_FOUND)
-                        .body("User not found");
-            }
+        return firebaseService.getWater(username)
+                // ⚠️⤵️⚠️
+                // thenApply - adds a callback to the internal callback list of the Future.
+                // Once `complete()` is called, the Future executes all registered callbacks.
+                // ⚠️⤴️⚠️
 
-            // Convert JSONObject from FirebaseService into a plain Java Map
-            Map<String, Object> response = new HashMap<>();
-            response.put("todayWater", result.optInt("todayWater", 0));
-            response.put("yesterdayWater", result.optInt("yesterdayWater", 0));
+                // What does this callback do?
+                // It unwraps the Future's content (the JASONObject) and places it into the response.
+                .thenApply(result -> {
+                    // If user not found, return 404
+                    if (result == null) {
+                        return ResponseEntity
+                            .status(HttpStatus.NOT_FOUND)
+                            .body("User not found");
+                    }
 
-            // Return 200 OK with the response map
-            return ResponseEntity
-                    .ok(response);
+                    // Convert JSONObject from FirebaseService into a plain Java Map
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("todayWater", result.optInt("todayWater", 0));
+                    response.put("yesterdayWater", result.optInt("yesterdayWater", 0));
+
+                    // Return 200 OK with the response map
+                    return ResponseEntity
+                            .ok(response);
         });
     }
 
@@ -304,6 +320,13 @@ public class UsersController {
 
         // Call Firebase service to get the water history map
         return firebaseService.getWaterHistoryMap(username, days)
+                // ⚠️⤵️⚠️
+                // thenApply - adds a callback to the internal callback list of the Future.
+                // Once `complete()` is called, the Future executes all registered callbacks.
+                // ⚠️⤴️⚠️
+
+                // What does this callback do?
+                // It unwraps the Future's content (the Map) and places it into the response.
                 .thenApply(result -> {
                     // If user not found, return 404 with error message
                     if (result == null) {
@@ -317,7 +340,8 @@ public class UsersController {
                     System.out.println("DEBUG UsersController.getWaterHistoryMap -> sending response: " + result);
 
                     // Return 200 OK with the history map
-                    return ResponseEntity.ok(result);
+                    return ResponseEntity
+                            .ok(result);
                 });
     }
 
@@ -380,6 +404,13 @@ public class UsersController {
 
         // Call Firebase service to get goal value
         return firebaseService.getGoalMl(username)
+                // ⚠️⤵️⚠️
+                // thenApply - adds a callback to the internal callback list of the Future.
+                // Once `complete()` is called, the Future executes all registered callbacks.
+                // ⚠️⤴️⚠️
+
+                // What does this callback do?
+                // It unwraps the Future's content (the Integer) and places it into the response.
                 .thenApply(goal -> {
                     // Always return 200 OK with a value (default if not found)
                     return ResponseEntity
@@ -412,6 +443,13 @@ public class UsersController {
 
         // Call Firebase service to update goal
         return firebaseService.updateGoalMl(username, goalMl)
+                // ⚠️⤵️⚠️
+                // thenApply - adds a callback to the internal callback list of the Future.
+                // Once `complete()` is called, the Future executes all registered callbacks.
+                // ⚠️⤴️⚠️
+
+                // What does this callback do?
+                // It unwraps the Future's content (the Boolean) and places it into the response.
                 .thenApply(ok -> ok
                         // If update succeeds -> 200 OK
                         ? ResponseEntity
