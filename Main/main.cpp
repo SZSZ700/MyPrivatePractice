@@ -1711,7 +1711,7 @@ void lambdasTry() {
     int** rr = &r;          // pointer to pointer (address of r)
     int** ss = &s;          // pointer to pointer (address of s)
 
-    // ⚙️ Lambda that takes double pointers and replaces their contents
+    // ⚙️ Lambda that takes double pointers and replaces their contents:
     auto changeByDoublePointer = [](int** rd, int** sd) {
         delete *rd;                  // delete old int at *rd
         delete *sd;                  // delete old int at *sd
