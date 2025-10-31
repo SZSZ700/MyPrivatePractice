@@ -4,7 +4,7 @@ add_compile_options(-fexec-charset=UTF-8 -finput-charset=UTF-8)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(untitled1 main.cpp
+add_executable(untitled1 Main/main.cpp
         Node/Node.h
         BinNode/BinNode.h
         Buffer/Buffer.cpp
