@@ -1,16 +1,16 @@
-# 📦 תיקיות Build של CLion
+#  Build
 cmake-build-debug/
 cmake-build-release/
 build/
 
-# 🧠 קבצים ותיקיות של CLion/JetBrains
+# CLion/JetBrains
 .idea/
 *.iml
 *.iws
 *.ipr
 *.sublime*
 
-# 🧪 קבצים זמניים
+# temp files
 *.o
 *.obj
 *.exe
@@ -19,17 +19,17 @@ build/
 *.out
 *.bak
 
-# 📄 קובצי scratch ו־consoles של CLion
+# scratch and consoles
 .idea/scratches/
 .idea/consoles/
 .idea/.name
 .idea/shelf/
 
-# 📦 תיקיות gradle/Android אם בטעות הועתקו
+# gradle
 .gradle/
 .gradle/*
 
-# 🧾 מערכת הפעלה
+# os
 .DS_Store
 Thumbs.db
 desktop.ini

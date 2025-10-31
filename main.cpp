@@ -1477,11 +1477,11 @@ void someTry0 () {
     std::cout<< " " <<endl;
     std::cout<< "Drivers: " <<endl;
     // ⤵️ create instance of Driver ⤵️:
-    const auto* firstName = new std::string("sharbel"); // first name
-    const auto* lastName = new std::string("zarzour"); // last name
-    const auto* id = new int(321518987); // id
-    const auto *age = new int(25); // age
-    auto *d1 = new Driver(firstName, lastName, id, age); // construct new driver
+    const auto* firstName = new std::string("shar"); // first name
+    const auto* lastName = new std::string("cle"); // last name
+    const auto* id = new int(123456789); // id
+    const auto *age = new int(45); // age
+    const auto *d1 = new Driver(firstName, lastName, id, age); // construct new driver
     cout<< "created new Driver: " << d1->toString() <<endl;
     cout<< " " << endl;
 
