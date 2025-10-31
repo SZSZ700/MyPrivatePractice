@@ -10237,39 +10237,6 @@ public class Main {
 
                 System.out.println("----------------------------------------------------------");
             });
-            // classe: Client, Package, BasicPackage, ExtendedPackage, Phone, Company
-            q.offer(() -> {
-                var company = new Company();
-
-                // לקוח עם ערוץ "Sport"
-                var c1 = new Clientc(
-                        "David",
-                        new ExtendedPackage(
-                                10, 30, 5, 2,
-                                new String[]{"Kids", "Sport"}
-                        )
-                );
-
-                // לקוח עם BasicPackage
-                var c3 = new Clientc(
-                        "Maya",
-                        new BasicPackage(
-                                15, 20
-                        )
-                );
-
-                // הוספה למערכת
-                company.addClient(c1);
-                company.addClient(c3);
-
-                // הפעלת הפונקציה שדורשת להדפיס לקוחות עם ערוץ ספורט
-                System.out.println("Clients with Sport channel:");
-                company.printAllClientsThatHaveSportChannel();
-                System.out.println();
-                var basicClients = company.onlyBasicClients();
-                System.out.println("num of clients that have only the basic package: " + basicClients);
-                System.out.println("----------------------------------------------------------");
-            });
             // differenceList + theSurvives
             q.offer(() -> {
                 //2022 summer a
