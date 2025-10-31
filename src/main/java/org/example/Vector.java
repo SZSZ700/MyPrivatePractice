@@ -51,9 +51,7 @@ public class Vector {
     // |/a1^2 + a2^2 + a3^2 = |a|
     public double V_length() {
         return Math.sqrt(
-                coord[0] * coord[0] +
-                        coord[1] * coord[1] +
-                        coord[2] * coord[2]
+                Math.pow(coord[0],2) + Math.pow(coord[1],2) + Math.pow(coord[2],2)
         );
     }
 
