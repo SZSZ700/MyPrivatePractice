@@ -7895,25 +7895,6 @@ public class Main {
     //ב
     //O(n)
 
-    //4
-    //א
-    public static int howManyMotorcyclesDriveBetween(Object [] arr){
-        int count = 0;
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i] instanceof Motorcycle){
-                Motorcycle temp = ((Motorcycle) arr[i]);
-                if (temp.getSpeed() >= 180 && temp.getSpeed() <= 250){
-                    count++;
-                }
-            }
-        }
-
-        return count;
-    }
-
-    //ב
-    //in main function
-
     //6
     //א
     //O(n)
@@ -9573,27 +9554,6 @@ public class Main {
                 }
                 System.out.println("----------------------------------------------------------");
             });
-            //2022 summer a' - 3
-            q.offer(() -> {
-                A y1 = new B1(10);
-                B1 y2 = new B1(10);
-                A z1 = new C1(10);
-                C1 z2 = new C1(10);
-                //שגיאת קומפילציה
-                //System.out.println(y1.getNum()==((B)z1).getNum());
-                //f של A מופעלת
-                //
-                System.out.println(y1.f(y2));
-                //שגיעת קומפילציה - למרות שזה לא נראה ככה
-                System.out.println(y2.f(y1));
-                //תקין
-                System.out.println(z1.f(z2));
-                //תקין יוחזר False
-                System.out.println(z1.f(y1));
-                //שגיעת קומפילציה
-                //System.out.println(z2.f((C)y2));
-                System.out.println("----------------------------------------------------------");
-            });
             //BinNode question...
             q.offer(() -> {
                 BinNode<Integer> a = new BinNode<>(3);
@@ -9620,25 +9580,6 @@ public class Main {
                 i.setRight(j);
                 what1(a);
                 System.out.println("----------------------------------------------------------");
-            });
-            //classes: Car, MotorCycle..
-            q.offer(() -> {
-                Car c1 = new Car (180);
-                Object c2 = new Car (180);
-                Motorcycle m1 = new Motorcycle (180);
-                Object m2 = new Motorcycle (180);
-
-                //questions and answers:
-                //compilation error : c1.speed
-                //runtime exception : System.out.println (((Motorcycle)c2).getSpeed());
-                //good : c1 invoke equals() of object class, cause its not overided in car class : System.out.println (c1.equals(c2));
-                //c2 invoke equals() of object class, cause its not overided in car class : System.out.println (c2.equals(c1));
-                //true : equals() in Motorcycle overide equals() in Object class : System.out.println (m1.equals(m2));
-                //System.out.println (m2.equals(m1));
-                //false : System.out.println (c1.equals((Motorcycle)m2));
-                //true : System.out.println (c1.equals((Car)c2));
-                //false : System.out.println (m1.equals((Car)c2));
-                //runtime exception : System.out.println (m1.equals((Motorcycle)c2));
             });
             //class Doctor...
             q.offer(() -> {
