@@ -170,104 +170,137 @@ bool Memory::isInDanger() const {
 // ✅ First-Fit allocation – finds first free block >= num and splits it
 bool Memory::firstFit(const int *num) {
 
-    // 🛑 Check dangerous memory state (free < 10%) → no allocation allowed
-    if (this->isInDanger()) {  return false;  }
+    // 🛑 If memory is already dangerous → refuse allocation immediately
+    if (this->isInDanger()) { return false; }
 
-    if (!num){ return false; }
+    // 🛑 if num is nullptr
+    if (!num) { return false; }
 
-    // 🧱 Create a new allocated block (with size = *num)
-    const auto toAdd = new Node(new Data(num));
+    // 🧱 Create new allocated block with required size
+    auto toAdd = new Node(new Data(num));
 
-    // 🔒 Set the block as occupied (free = false)
-    const bool* markOccupied = new bool(false);
-    toAdd->getValue()->setFree(const_cast<bool*>(markOccupied));
-    delete markOccupied; // 🧹 free temp flag (deep copied inside)
+    // 🔒 Mark newly added block as occupied (free = false)
+    const bool *markOccupied = new bool(false);
+    toAdd->getValue()->setFree(markOccupied);
+    delete markOccupied; // 🧹 delete temporary flag
 
-    // ✅ CASE 1️⃣ — Try fitting at the first memory block
+    // ✅ Case 1️⃣: Try to fit at the start of the list
     if (this->start->getValue()->getSize()) {
 
-        // ReSharper disable once CppTooWideScopeInitStatement
-        const bool *firstFree = this->start->getValue()->isFree(); // 🔎 check if first is free
+        // ✅ Allocate only if first block is free and has enough space
+        if (const bool *firstFree = this->start->getValue()->isFree();
+            firstFree && *firstFree == true && *num <= *this->start->getValue()->getSize()) {
 
-        // ✅ only if free AND size >= num
-        if (firstFree && *firstFree == true && *num <= *this->start->getValue()->getSize()) {
+            // 📸 --- SNAPSHOT for UNDO --- save original state before change
+            Node<Data*>* oldNext = this->start;                         // original first block
+            const int oldSize = *oldNext->getValue()->getSize();              // original size
+            const bool oldFree = *oldNext->getValue()->isFree();              // original free flag
 
-            // 🔗 insert at start
+            // 🔗 Insert new allocated block before the original first
             toAdd->setNext(this->start);
             this->start = toAdd;
 
-            // ✂️ compute remainder
-            int* toExtract = toAdd->getNext()->getValue()->getSize() ?
-                new int(*toAdd->getNext()->getValue()->getSize() - *num) : nullptr;
+            // ✂️ Calculate leftover memory size
+            const int *toExtract = oldSize? new int(oldSize - *num) : nullptr;
 
-            // ✅ remainder positive → resize free block
+            // ✅ If leftover > 0 → update size of next block
             if (toExtract && *toExtract > 0) {
                 this->start->getNext()->getValue()->setSize(toExtract);
             }
-            // ❌ no remainder → convert next block to 0-sized occupied
             else {
-                const int* zero = new int(0);
+                // ❌ No leftover → convert next block to 0-sized occupied
+                const int *zero = new int(0);
                 this->start->getNext()->getValue()->setSize(zero);
 
-                const bool* markUsed = new bool(false);
+                const bool *markUsed = new bool(false);
                 this->start->getNext()->getValue()->setFree(markUsed);
 
-                delete zero; // 🧹 clean up
-                delete markUsed; // 🧹 clean up
+                delete zero;
+                delete markUsed;
             }
 
-            delete toExtract; // 🧹 clean up
-            return true; // ✅ allocated!
+            delete toExtract; // 🧹 cleanup temp
+
+            // 🚨 Check if we accidentally made memory dangerous
+            if (this->isInDanger()) {
+
+                // 🔄 --- UNDO: Restore original state ---
+                const Node<Data*>* toDelete = this->start;       // block we added
+                this->start = oldNext;                     // restore original first
+                oldNext->getValue()->setSize(&oldSize);    // restore size
+                oldNext->getValue()->setFree(&oldFree);    // restore free flag
+                delete toDelete;                           // delete new block
+
+                return false; // ❌ undo & refuse
+            }
+
+            return true; // ✅ success at start
         }
     }
 
-    // ✅ CASE 2️⃣ — Search in the list (First-Fit)
+    // ✅ Case 2️⃣: Search for first fitting block in the list
     Node<Data*>* pos = this->start;
 
     while (pos->getNext() != nullptr) {
 
-        // 👉 grab block data
-        const Data* nextData = pos->getNext()->getValue();
-        const int* blockSize = nextData->getSize();
+        const Data* currentData = pos->getNext()->getValue(); // 📦 next block data
+        const int* blockSize = currentData->getSize();        // 📏 block size
 
-        // 🎯 condition: free AND size >= requested
-        if (const bool* isFree = nextData->isFree();
+        // 🎯 Only allocate if block is free AND big enough
+        if (const bool* isFree = currentData->isFree();
             isFree && *isFree == true && blockSize && *blockSize >= *num) {
 
-            // 🔗 insert toAdd BEFORE the found block
+            // 📸 --- SNAPSHOT for UNDO ---
+            Node<Data*>* oldNext = pos->getNext();               // original next node
+            const int oldSize = *blockSize;                            // backup original size
+            const bool oldFree = *isFree;                              // backup free flag
+
+            // 🔗 Insert allocation block before this free block
             toAdd->setNext(pos->getNext());
             pos->setNext(toAdd);
 
-            // ✂️ compute remainder
-            int* toExtract = toAdd->getNext()->getValue()->getSize() ?
-                new int(*toAdd->getNext()->getValue()->getSize() - *num) : nullptr;
+            // ✂️ Calculate leftover free memory
+            int* toExtract = oldSize ? new int(oldSize - *num) : nullptr;
 
             if (toExtract && *toExtract > 0) {
-                // ➕ shrink the free block to leftover size
+                // ✏️ update remainder block size
                 toAdd->getNext()->getValue()->setSize(toExtract);
-            }
-            else {
-                // ❌ zero remainder → turn next into occupied dummy block
-                const int* zero = new int(0);
+            } else {
+                // ❌ remainder = 0 → turn into occupied dummy
+                const int *zero = new int(0);
                 toAdd->getNext()->getValue()->setSize(zero);
 
-                const bool* markUsed = new bool(false);
+                const bool *markUsed = new bool(false);
                 toAdd->getNext()->getValue()->setFree(markUsed);
 
-                delete zero; // 🧹 cleanup
-                delete markUsed; // 🧹 cleanup
+                delete zero;
+                delete markUsed;
             }
 
             delete toExtract; // 🧹 cleanup
-            return true; // ✅ allocated!
+
+            // 🚨 Check for dangerous state after allocation
+            if (this->isInDanger()) {
+
+                // 🔄 --- UNDO: revert to original state ---
+                pos->setNext(oldNext);                          // restore pointer link
+                oldNext->getValue()->setSize(&oldSize);         // restore size
+                oldNext->getValue()->setFree(&oldFree);         // restore free flag
+
+                delete toAdd; // 💥 remove inserted block
+
+                return false; // ❌ undo + deny
+            }
+
+            return true; // ✅ success in middle
         }
 
         pos = pos->getNext(); // 🚶 move forward
     }
 
-    // ❌ CASE 3️⃣ — End reached & no suitable free block found
-    // ❌ According to rules: MUST return false (cannot append at end)
+    // ❌ Case 3️⃣ — NO free block found → return false
     return false;
 }
+
 
 
