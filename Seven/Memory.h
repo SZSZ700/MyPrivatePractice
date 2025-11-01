@@ -27,7 +27,11 @@ public:
     // ✅ Move assignment – free old list, steal pointer
     Memory& operator=(Memory&& other) noexcept;
 
-    // ✅ (future) print/debug memory method could go here
+    // ✅ Dangerous state - Check if memory is in dangerous state (free memory < 10%)
+    bool isInDanger() const;
+
+    // ✅ first fit algorithem
+    bool firstFit(const int *num);
 };
 
 #endif

@@ -125,3 +125,149 @@ Memory& Memory::operator=(Memory&& other) noexcept {
     // Return reference to allow chaining
     return *this;
 }
+
+// ✅ Check if memory is in dangerous state (free memory < 10%)
+bool Memory::isInDanger() const {
+
+    // ✅ Get the size of the first memory block (total memory size)
+    const auto totalSize = *this->start->getValue()->getSize();
+
+    // ✅ Variable to accumulate total free memory size
+    int sumFree = 0;
+
+    // ✅ Pointer to traverse memory list starting from second block
+    const Node<Data*>* pos = this->start->getNext();
+
+    // ✅ Iterate through all memory blocks
+    while (pos) {
+
+        // ✅ Get pointer to the Data object stored in this node
+        const Data* currentData = pos->getValue();
+
+        // ✅ Get pointer to size value of current block
+        const int *size = currentData->getSize();
+
+        // ✅ Get pointer to free flag of current block
+        // ReSharper disable once CppTooWideScopeInitStatement
+        const bool *free = currentData->isFree();
+
+        // ✅ If block is free, add its size to free memory sum
+        if (free && *free == true) {
+            sumFree += *size;
+        }
+
+        // ✅ Move to the next memory block
+        pos = pos->getNext();
+    }
+
+    // ✅ Calculate threshold for danger (10% of total memory)
+    const double threshold = totalSize * 0.10;
+
+    // ✅ Return true if free memory is less than 10%
+    return sumFree < threshold;
+}
+
+// ✅ First-Fit allocation – finds first free block >= num and splits it
+bool Memory::firstFit(const int *num) {
+
+    // 🛑 Check dangerous memory state (free < 10%) → no allocation allowed
+    if (this->isInDanger()) {  return false;  }
+
+    if (!num){ return false; }
+
+    // 🧱 Create a new allocated block (with size = *num)
+    const auto toAdd = new Node(new Data(num));
+
+    // 🔒 Set the block as occupied (free = false)
+    const bool* markOccupied = new bool(false);
+    toAdd->getValue()->setFree(const_cast<bool*>(markOccupied));
+    delete markOccupied; // 🧹 free temp flag (deep copied inside)
+
+    // ✅ CASE 1️⃣ — Try fitting at the first memory block
+    if (this->start->getValue()->getSize()) {
+
+        // ReSharper disable once CppTooWideScopeInitStatement
+        const bool *firstFree = this->start->getValue()->isFree(); // 🔎 check if first is free
+
+        // ✅ only if free AND size >= num
+        if (firstFree && *firstFree == true && *num <= *this->start->getValue()->getSize()) {
+
+            // 🔗 insert at start
+            toAdd->setNext(this->start);
+            this->start = toAdd;
+
+            // ✂️ compute remainder
+            int* toExtract = toAdd->getNext()->getValue()->getSize() ?
+                new int(*toAdd->getNext()->getValue()->getSize() - *num) : nullptr;
+
+            // ✅ remainder positive → resize free block
+            if (toExtract && *toExtract > 0) {
+                this->start->getNext()->getValue()->setSize(toExtract);
+            }
+            // ❌ no remainder → convert next block to 0-sized occupied
+            else {
+                const int* zero = new int(0);
+                this->start->getNext()->getValue()->setSize(zero);
+
+                const bool* markUsed = new bool(false);
+                this->start->getNext()->getValue()->setFree(markUsed);
+
+                delete zero; // 🧹 clean up
+                delete markUsed; // 🧹 clean up
+            }
+
+            delete toExtract; // 🧹 clean up
+            return true; // ✅ allocated!
+        }
+    }
+
+    // ✅ CASE 2️⃣ — Search in the list (First-Fit)
+    Node<Data*>* pos = this->start;
+
+    while (pos->getNext() != nullptr) {
+
+        // 👉 grab block data
+        const Data* nextData = pos->getNext()->getValue();
+        const int* blockSize = nextData->getSize();
+
+        // 🎯 condition: free AND size >= requested
+        if (const bool* isFree = nextData->isFree();
+            isFree && *isFree == true && blockSize && *blockSize >= *num) {
+
+            // 🔗 insert toAdd BEFORE the found block
+            toAdd->setNext(pos->getNext());
+            pos->setNext(toAdd);
+
+            // ✂️ compute remainder
+            int* toExtract = toAdd->getNext()->getValue()->getSize() ?
+                new int(*toAdd->getNext()->getValue()->getSize() - *num) : nullptr;
+
+            if (toExtract && *toExtract > 0) {
+                // ➕ shrink the free block to leftover size
+                toAdd->getNext()->getValue()->setSize(toExtract);
+            }
+            else {
+                // ❌ zero remainder → turn next into occupied dummy block
+                const int* zero = new int(0);
+                toAdd->getNext()->getValue()->setSize(const_cast<int*>(zero));
+
+                const bool* markUsed = new bool(false);
+                toAdd->getNext()->getValue()->setFree(const_cast<bool*>(markUsed));
+
+                delete zero; // 🧹 cleanup
+                delete markUsed; // 🧹 cleanup
+            }
+
+            delete toExtract; // 🧹 cleanup
+            return true; // ✅ allocated!
+        }
+
+        pos = pos->getNext(); // 🚶 move forward
+    }
+
+    // ❌ CASE 3️⃣ — End reached & no suitable free block found
+    // ❌ According to rules: MUST return false (cannot append at end)
+    return false;
+}
+
+
