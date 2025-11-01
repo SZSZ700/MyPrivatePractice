@@ -249,10 +249,10 @@ bool Memory::firstFit(const int *num) {
             else {
                 // ❌ zero remainder → turn next into occupied dummy block
                 const int* zero = new int(0);
-                toAdd->getNext()->getValue()->setSize(const_cast<int*>(zero));
+                toAdd->getNext()->getValue()->setSize(zero);
 
                 const bool* markUsed = new bool(false);
-                toAdd->getNext()->getValue()->setFree(const_cast<bool*>(markUsed));
+                toAdd->getNext()->getValue()->setFree(markUsed);
 
                 delete zero; // 🧹 cleanup
                 delete markUsed; // 🧹 cleanup
