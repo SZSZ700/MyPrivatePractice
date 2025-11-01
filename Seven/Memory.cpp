@@ -1,23 +1,23 @@
 #include "Memory.h"                                   // Include the header file for Memory class
 
 // ✅ Constructor: create a single free node with given size
-Memory::Memory(int totalSize) {
+Memory::Memory(const int totalSize) {
     // Allocate a new Data object dynamically with given size
-    Data* d = new Data(&totalSize);
+    const auto d = new Data(&totalSize);
 
     // Create the first node in the memory list holding this block
-    this->start = new Node<Data*>(d);
+    this->start = new Node(d);
 }
 
 // ✅ Destructor: delete all nodes & their stored Data blocks
 Memory::~Memory() {
     // Start iterating from the first node
-    Node<Data*>* curr = this->start;
+    const Node<Data*>* curr = this->start;
 
     // Loop through the entire linked list
     while (curr != nullptr) {
         // Save pointer to the next node before deleting current
-        Node<Data*>* temp = curr->getNext();
+        const Node<Data*>* temp = curr->getNext();
 
         // Delete the Data object stored in the current node
         delete curr->getValue();
@@ -42,7 +42,7 @@ Memory::Memory(const Memory& other) {
     }
 
     // Create a new node by deep-copying the first memory block
-    this->start = new Node<Data*>(new Data(*other.start->getValue()));
+    this->start = new Node(new Data(*other.start->getValue()));
 
     // Source pointer for traversal
     const Node<Data*>* src = other.start->getNext();
