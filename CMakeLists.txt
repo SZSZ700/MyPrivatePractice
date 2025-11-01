@@ -34,4 +34,8 @@ add_executable(untitled1 Main/main.cpp
         Reminder/DailyReminder.h
         Reminder/WeeklyReminder.cpp
         Reminder/WeeklyReminder.h
+        Seven/Data.cpp
+        Seven/Data.h
+        Seven/Memory.cpp
+        Seven/Memory.h
 )
