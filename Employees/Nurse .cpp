@@ -1,8 +1,8 @@
 #include "Nurse .h"
 
 // 👉 Default constructor - Allocate default type
-Nurse::Nurse() { type = new string("Practical");
-}
+// ReSharper disable once CppRedundantBaseClassInitializer
+Nurse::Nurse() : Employee() { this->type = new string("Practical"); }
 
 // 👉 Parameter constructor - Deep-copy nurse type
 Nurse::Nurse(const string* n, const string* t) : Employee(n) { this->type = new string(*t); }
