@@ -1,11 +1,8 @@
 #include "Doctor.h"
 
-// 👉 Default constructor
+// 👉 Default constructor - Allocate default specialization
 // ReSharper disable once CppRedundantBaseClassInitializer
-Doctor::Doctor() : Employee() {
-    // Allocate default specialization
-    this->specialization = new string("General");
-}
+Doctor::Doctor() : Employee() { this->specialization = new string("General"); }
 
 // 👉 Parameter constructor
 Doctor::Doctor(const string* n, const string* s) : Employee(n) {
@@ -13,22 +10,18 @@ Doctor::Doctor(const string* n, const string* s) : Employee(n) {
     this->specialization = new string(*s);
 }
 
-// 👉 Destructor
-Doctor::~Doctor() {
-    // Free specialization memory
-    delete this->specialization;
-}
+// 👉 Destructor - Free specialization memory
+Doctor::~Doctor() { delete this->specialization; }
 
-// 👉 Copy constructor
+// 👉 Copy constructor - Deep-copy specialization
 Doctor::Doctor(const Doctor& other) : Employee(other) {
-    // Deep-copy specialization
     this->specialization = new string(*other.specialization);
 }
 
 // 👉 Move constructor
 Doctor::Doctor(Doctor&& other) noexcept : Employee(std::move(other)) {
     // Steal pointer
-    specialization = other.specialization;
+    this->specialization = other.specialization;
     // Null out source
     other.specialization = nullptr;
 }
@@ -69,9 +62,7 @@ Doctor& Doctor::operator=(Doctor&& other) noexcept {
 }
 
 // 👉 Getter for specialization
-const string* Doctor::getSpecialization() const {
-    return this->specialization;
-}
+const string* Doctor::getSpecialization() const { return this->specialization; }
 
 // 👉 Setter for specialization
 void Doctor::setSpecialization(const string* s) {

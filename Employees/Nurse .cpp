@@ -14,7 +14,7 @@ Nurse::~Nurse() { delete this->type; }
 Nurse::Nurse(const Nurse& other) : Employee(other) { this->type = new string(*other.type); }
 
 // 👉 Copy assignment
-Nurse& Nurse::operator=(const Nurse& other) {
+Nurse& Nurse::operator=(const Nurse& other){
     // Guard self
     if (this == &other) return *this;
 

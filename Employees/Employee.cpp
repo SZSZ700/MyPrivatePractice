@@ -6,25 +6,25 @@ int Employee::counter = 0;
 // 👉 Default constructor
 Employee::Employee() {
     // Allocate new name with placeholder
-    name = new string("No Name");
+    this->name = new string("No Name");
     // Increase counter and assign ID
-    num = new int(++counter);
+    this->num = new int(++this->counter);
 }
 
 // 👉 Parameter constructor
 Employee::Employee(const string* n) {
     // Allocate and deep copy name
-    name = new string(*n);
+    this->name = new string(*n);
     // Increase counter and assign ID
-    num = new int(++counter);
+    this->num = new int(++this->counter);
 }
 
 // 👉 Destructor
 Employee::~Employee() {
     // Free name memory
-    delete name;
+    delete this->name;
     // Free num memory
-    delete num;
+    delete this->num;
 }
 
 // 👉 Copy constructor

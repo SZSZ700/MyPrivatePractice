@@ -44,4 +44,6 @@ add_executable(untitled1 Main/main.cpp
         "Employees/Nurse .h"
         Employees/Doctor.cpp
         Employees/Doctor.h
+        Employees/Supervisor.cpp
+        Employees/Supervisor.h
 )
