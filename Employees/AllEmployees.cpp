@@ -40,17 +40,16 @@ AllEmployees::AllEmployees(const AllEmployees &other) {
 
     // 🔁 Deep copy each employee (by dynamic cast)
     for (int i = 0; i < *this->current; i++) {
-        if (auto* d = dynamic_cast<Doctor*>(other.allEmployees[i]))
+        if (const auto* d = dynamic_cast<Doctor*>(other.allEmployees[i]))
             this->allEmployees[i] = new Doctor(*d);
-        else if (auto* n = dynamic_cast<Nurse*>(other.allEmployees[i]))
+        else if (const auto* n = dynamic_cast<Nurse*>(other.allEmployees[i]))
             this->allEmployees[i] = new Nurse(*n);
         else
             this->allEmployees[i] = nullptr;
     }
 
     // 🧹 Set remaining slots to null
-    for (int i = *this->current; i < 200; i++)
-        this->allEmployees[i] = nullptr;
+    for (int i = *this->current; i < 200; i++) { this->allEmployees[i] = nullptr; }
 }
 
 // ✍️ Copy assignment
@@ -58,33 +57,33 @@ AllEmployees& AllEmployees::operator=(const AllEmployees &other) {
     // 🔒 Self-assignment check
     if (this == &other) return *this;
 
+    // delete old data //
     // 🧹 Delete existing employees
-    for (int i = 0; i < *this->current; i++)
-        delete this->allEmployees[i];
-
+    for (int i = 0; i < *this->current; i++) { delete this->allEmployees[i]; }
     // ❌ Delete old array + counter
     delete[] this->allEmployees;
     delete this->current;
 
-    // 🧠 Allocate new memory
-    this->allEmployees = new Employee*[200];
 
-    // 🔢 Copy count
-    this->current = new int(*other.current);
+    // copy new data //
+    this->allEmployees = new Employee*[200]; // 🧠 Allocate new memory
+    this->current = new int(*other.current); // 🔢 Copy count
 
     // 🔁 Copy employee objects (deep)
     for (int i = 0; i < *this->current; i++) {
-        if (auto* d = dynamic_cast<Doctor*>(other.allEmployees[i]))
+        if (const auto* d = dynamic_cast<Doctor*>(other.allEmployees[i])) {
             this->allEmployees[i] = new Doctor(*d);
-        else if (auto* n = dynamic_cast<Nurse*>(other.allEmployees[i]))
+        }
+
+        else if (const auto* n = dynamic_cast<Nurse*>(other.allEmployees[i])) {
             this->allEmployees[i] = new Nurse(*n);
-        else
-            this->allEmployees[i] = nullptr;
+        }
+
+        else { this->allEmployees[i] = nullptr; }
     }
 
     // 🧹 Fill remain with null
-    for (int i = *this->current; i < 200; i++)
-        this->allEmployees[i] = nullptr;
+    for (int i = *this->current; i < 200; i++) { this->allEmployees[i] = nullptr; }
 
     // ✅ Return self
     return *this;
@@ -106,9 +105,8 @@ AllEmployees& AllEmployees::operator=(AllEmployees &&other) noexcept {
     // 🔒 Self-assign guard
     if (this == &other) return *this;
 
-    // 🧹 Clean my data
-    for (int i = 0; i < *this->current; i++)
-        delete this->allEmployees[i];
+    // 🧹 delete old data
+    for (int i = 0; i < *this->current; i++) { delete this->allEmployees[i]; }
     delete[] this->allEmployees;
     delete this->current;
 
@@ -124,11 +122,10 @@ AllEmployees& AllEmployees::operator=(AllEmployees &&other) noexcept {
 }
 
 // 🧾 Getter for employee array (read only)
-const Employee* const* AllEmployees::getEmployeesArray() const {
-    return this->allEmployees;
-}
+const Employee* const* AllEmployees::getEmployeesArray() const { return this->allEmployees; }
 
 // ➕ Add employee to array
+// ReSharper disable once CppMemberFunctionMayBeConst
 bool AllEmployees::addEmployee(Employee* emp) {
     // 🚫 If full or null input → fail
     if (*this->current >= 200 || emp == nullptr)
@@ -139,17 +136,15 @@ bool AllEmployees::addEmployee(Employee* emp) {
 
     // 🔢 Increase count
     (*this->current)++;
+
     return true;
 }
 
 // 🔢 Return number of employees
-int AllEmployees::getCurrentCount() const {
-    return *this->current;
-}
+int AllEmployees::getCurrentCount() const { return *this->current; }
 
 // 🖨️ Print all employees
 void AllEmployees::printAll() const {
     // 🖨️ Loop & print each object
-    for (int i = 0; i < *this->current; i++)
-        this->allEmployees[i]->print();
+    for (int i = 0; i < *this->current; i++) { this->allEmployees[i]->print(); }
 }
