@@ -45,21 +45,34 @@ Supervisor::~Supervisor() {
 // =======================
 Supervisor::Supervisor(const Supervisor& other): Doctor(other) {
     // ✨ Copy Doctor base class
-    this->team = new Employee*[10];              // 🆕 Allocate new pointer array
-    this->current = new int(*other.current);     // 📥 Copy # employees
+    this->team = new Employee*[10];              // Allocate new []
+    this->current = new int(*other.current);     // num of all employees
 
-    for (int i = 0; i < 10; i++) {               // 🔁 Copy each employee pointer
+    // 🔁 Copy all employees
+    for (int i = 0; i < 10; i++) {
         if (i < *this->current && other.team[i]) {
 
-            if (const auto* d = dynamic_cast<Doctor*>(other.team[i]))    // 👨‍⚕️ If Doctor
-                this->team[i] = new Doctor(*d);                    // 🧬 Deep-copy doctor
-            else if (const auto* n = dynamic_cast<Nurse*>(other.team[i]))// 👩‍⚕️ If Nurse
-                this->team[i] = new Nurse(*n);                     // 🧬 Deep-copy nurse
-            else
-                this->team[i] = nullptr;                           // ❓ Should not happen
-        } else {
-            this->team[i] = nullptr;                               // 🧹 Empty slot
+            // 👨‍⚕️ If Doctor(try to cast --other.team[i]-- other employee to Doctor)
+            // , 🧬 than Deep-copy the doctor
+            if (const Doctor* d = dynamic_cast<Doctor*>(other.team[i])) {
+                // if other.team[i] instanceof Doctor -> [IS DOCTOR ? ]
+                // Doctor d = (Doctor) other.team[i] [CAST]
+                // tema[i] = new Doctor(d) [COPY CONSTRUCTOR]
+                this->team[i] = new Doctor(*d);
+            }
+
+            // 👩‍⚕️ If Nurse, 🧬 Deep-copy nurse
+            else if (const auto* n = dynamic_cast<Nurse*>(other.team[i])) {
+
+                this->team[i] = new Nurse(*n);
+            }
+
+            // ❓ Should not happen
+            else { this->team[i] = nullptr; }
+
         }
+        // 🧹 Empty slot
+        else { this->team[i] = nullptr; }
     }
 }
 
