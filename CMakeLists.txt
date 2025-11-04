@@ -40,10 +40,12 @@ add_executable(untitled1 Main/main.cpp
         Seven/Memory.h
         Employees/Employee.cpp
         Employees/Employee.h
-        "Employees/Nurse .cpp"
-        "Employees/Nurse .h"
+        "Employees/Nurse.cpp"
+        "Employees/Nurse.h"
         Employees/Doctor.cpp
         Employees/Doctor.h
         Employees/Supervisor.cpp
         Employees/Supervisor.h
+        Employees/AllEmployees.cpp
+        Employees/AllEmployees.h
 )

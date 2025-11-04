@@ -55,8 +55,11 @@ Supervisor::Supervisor(const Supervisor& other): Doctor(other) {
             // 👨‍⚕️ If Doctor(try to cast --other.team[i]-- other employee to Doctor)
             // , 🧬 than Deep-copy the doctor
             if (const Doctor* d = dynamic_cast<Doctor*>(other.team[i])) {
+                // 1
                 // if other.team[i] instanceof Doctor -> [IS DOCTOR ? ]
                 // Doctor d = (Doctor) other.team[i] [CAST]
+
+                // 2
                 // tema[i] = new Doctor(d) [COPY CONSTRUCTOR]
                 this->team[i] = new Doctor(*d);
             }
@@ -217,4 +220,3 @@ void Supervisor::print() const {
     for (int i = 0; i < *current; i++)              // 🔁 Print each employee
         team[i]->print();
 }
-

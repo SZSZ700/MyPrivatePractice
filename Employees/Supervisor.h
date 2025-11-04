@@ -1,7 +1,7 @@
 #ifndef UNTITLED1_SUPERVISOR_H
 #define UNTITLED1_SUPERVISOR_H
 #include "Doctor.h"
-#include "Nurse .h"
+#include "Nurse.h"
 #include <iostream>
 // 🧑‍⚕️👑 Supervisor = Doctor with a managed team
 // ReSharper disable once CppClassCanBeFinal

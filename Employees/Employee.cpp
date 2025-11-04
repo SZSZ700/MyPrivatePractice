@@ -105,4 +105,3 @@ string Employee::toString() const {
 void Employee::print() const {
     cout << toString() << endl;
 }
-
