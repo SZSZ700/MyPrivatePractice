@@ -1,7 +1,5 @@
 #include "AllEmployees.h"
 #include "Doctor.h"
-#include "Nurse.h"
-#include <iostream>
 using namespace std;
 
 // 🏗️ Default constructor
@@ -147,4 +145,46 @@ int AllEmployees::getCurrentCount() const { return *this->current; }
 void AllEmployees::printAll() const {
     // 🖨️ Loop & print each object
     for (int i = 0; i < *this->current; i++) { this->allEmployees[i]->print(); }
+}
+
+// 👑 Count number of Supervisors
+int AllEmployees::numSupervisors() const {
+    // 🔢 Counter
+    int count = 0;
+
+    // 🔁 Loop employees
+    for (int i = 0; i < *this->current; i++) {
+        // ✅ If this employee is Supervisor
+        if (dynamic_cast<Supervisor*>(this->allEmployees[i])) {
+            count++;
+        }
+    }
+    // ↩️ Return total supervisors
+    return count;
+}
+
+// 👩‍⚕️ Find the newest Nurse by type (highest ID)
+Nurse* AllEmployees::getNewNurse(const string* type) const {
+    // 👉 Pointer to the newest nurse found
+    Nurse* result = nullptr;
+
+    // 🔁 Search across employees
+    for (int i = 0; i < *this->current; i++) {
+        // 🧪 Try cast to Nurse
+        const auto n = dynamic_cast<Nurse*>(this->allEmployees[i]);
+
+        // ❌ Skip if not Nurse
+        if (!n) continue;
+
+        // ❌ Skip if type mismatch
+        if (*n->getType() != *type) continue;
+
+        // ✅ First match OR newer nurse
+        if (!result || *n->getNum() > *result->getNum()) {
+            result = n;
+        }
+    }
+
+    // ↩️ Return newest nurse or null
+    return result;
 }

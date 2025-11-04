@@ -1,7 +1,8 @@
 #ifndef UNTITLED1_ALLEMPLOYEES_H
 #define UNTITLED1_ALLEMPLOYEES_H
-
 #include "Employee.h"
+#include "Supervisor.h"
+#include <iostream>
 
 // 🏢 Class storing all hospital employees (up to 200)
 class AllEmployees {
@@ -41,6 +42,12 @@ public:
 
     // 📋 Print all employees
     void printAll() const;
+
+    // 🧮 num of all supervisors
+    int numSupervisors() const;
+
+    // 👩‍⚕️ returns spacific nurse
+    Nurse* getNewNurse(const string* type) const;
 };
 
 #endif //UNTITLED1_ALLEMPLOYEES_H
