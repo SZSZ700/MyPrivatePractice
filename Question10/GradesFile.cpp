@@ -89,12 +89,12 @@ GradesFile& GradesFile::operator=(const GradesFile& other) {
         this->lists[i] = nullptr;
     }
 
-    // 🧠 Copy new data
     // 🔁 Copy each linked list
     for (int i = 0; i < 100; i++) {
-        if (!other.lists[i]) {
-            this->lists[i] = nullptr; // 🚫 Empty
-        }else {
+        // 🚫 if list at index [i] is not exist
+        if (!other.lists[i]) { this->lists[i] = nullptr; }
+
+        else {
             // ReSharper disable once CppLocalVariableMayBeConst
             Node<Student*>* pos = other.lists[i];
 
