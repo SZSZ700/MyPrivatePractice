@@ -48,4 +48,8 @@ add_executable(untitled1 Main/main.cpp
         Employees/Supervisor.h
         Employees/AllEmployees.cpp
         Employees/AllEmployees.h
+        Question10/Student.cpp
+        Question10/Student.h
+        Question10/GradesFile.cpp
+        Question10/GradesFile.h
 )
