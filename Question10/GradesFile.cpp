@@ -73,8 +73,7 @@ GradesFile::GradesFile(const GradesFile& other) {
 // ✍️ Copy assignment
 GradesFile& GradesFile::operator=(const GradesFile& other) {
     // 🚫 Self-assignment check
-    if (this == &other)
-        return *this;
+    if (this == &other) { return *this; }
 
     // 💣 Delete current data
     for (int i = 0; i < 100; i++) {
