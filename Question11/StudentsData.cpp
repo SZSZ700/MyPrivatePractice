@@ -190,3 +190,121 @@ std::string StudentData::toString() const {
     // 🧾 Return the whole formatted string
     return out.str();
 }
+
+// erase student from the collection
+void StudentData::eraseStudent(const string *id) {
+    if (!this->chain) return;
+    // remove from start
+    // ReSharper disable once CppTooWideScopeInitStatement
+    const string *ID = this->chain->getValue()->getId();
+
+    if (*ID == *id) {
+        // ReSharper disable once CppLocalVariableMayBeConst
+        Node<Student*>* temp = this->chain;
+        // now the list pointer, points to the next node
+        this->chain = this->chain->getNext();
+
+        // delete student
+        delete temp->getValue();
+        // delete the node itself
+        delete temp;
+        // stop, get out of the function
+        return;
+    }
+
+    // remove from between
+    Node<Student*>* pos = this->chain;
+    Node<Student*> *prev = nullptr;
+
+    while (pos->getNext() != nullptr) {
+        if (*id == *pos->getNext()->getValue()->getId()) {
+            // ReSharper disable once CppLocalVariableMayBeConst
+            Node<Student*>* temp = pos->getNext();
+            pos->setNext(pos->getNext()->getNext());
+
+            // delete student
+            delete temp->getValue();
+            // delete the node itself
+            delete temp;
+            // stop, get out of the function
+            return;
+        }
+        prev = pos;
+        pos = pos->getNext();
+    }
+
+    // remove from end
+    if (*pos->getValue()->getId() == *id) {
+        // ReSharper disable once CppLocalVariableMayBeConst
+        Node<Student*>* temp = pos;
+        // ReSharper disable once CppDFANullDereference
+        prev->setNext(pos->getNext());
+
+        // delete student
+        delete temp->getValue();
+        // delete the node itself
+        delete temp;
+    }
+}
+
+// 🖨️ Print all students living in the given city and speaking the given language
+void StudentData::print(const string* city, const string* lang) const {
+    // 🚫 If chain is empty or parameters are null
+    if (!this->chain || !city || !lang) return;
+
+    // 🧮 Counter to check if someone matched
+    int count = 0;
+
+    // 🔁 Traverse the linked list
+    const Node<Student*>* pos = this->chain;
+    while (pos) {
+        // 🎓 Current student
+        if (const Student* s = pos->getValue(); s && s->getCity() && s->getMainLanguage()) {
+            // ✅ Match city AND language
+            if (*s->getCity() == *city && *s->getMainLanguage() == *lang) {
+                cout << "🧍 " << *s->getName() << endl;
+                count++;
+            }
+        }
+        pos = pos->getNext();
+    }
+
+    // ⚠️ If no match found
+    if (count == 0) {
+        cout << "\nNo volunteers found in " << *city << " speaking " << *lang << "." << endl;
+        cout << "🚗 Volunteers who speak " << *lang << " and have a car:" << endl;
+
+        // 🔁 Traverse again for fallback
+        pos = this->chain;
+        while (pos) {
+            if (const Student* s = pos->getValue(); s && s->getMainLanguage() && s->getHasCar()) {
+                if (*s->getMainLanguage() == *lang && *s->getHasCar()) {
+                    cout << "🧍 " << *s->getName() << endl;
+                }
+            }
+            pos = pos->getNext();
+        }
+    }
+}
+
+// 🧮 Count how many students live in the given city
+int StudentData::countByCity(const string* city) const {
+    // 🚫 Validate input
+    if (!this->chain || !city) return 0;
+
+    // 🔢 Initialize counter
+    int count = 0;
+
+    // 🔁 Traverse the list
+    const Node<Student*>* pos = this->chain;
+    while (pos) {
+        if (const Student* s = pos->getValue(); s && s->getCity()) {
+            if (*s->getCity() == *city)
+                count++;
+        }
+        pos = pos->getNext();
+    }
+
+    // 📤 Return total
+    return count;
+}

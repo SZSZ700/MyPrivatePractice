@@ -34,5 +34,14 @@ class StudentData {
     // toString
     // 🧮 toString — returns formatted info of all students in the chain
     std::string toString() const;
+
+    // remove student from the collection
+    void eraseStudent(const string *id);
+
+    // 🖨️ Print all students living in the given city and speaking the given language
+    void print(const string* city, const string* lang) const;
+
+    // 🧮 Count how many students live in the given city
+    int countByCity(const string* city) const;
 };
 #endif //UNTITLED1_STUDENTSDATA_H
