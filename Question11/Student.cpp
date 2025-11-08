@@ -1,6 +1,7 @@
 #include "Student.h"
-
 #include <sstream>
+
+using namespace Question11;
 
 // constructor
 Student::Student(const string *id, const string *name,

@@ -2,6 +2,7 @@
 #define UNTITLED1_STUDENTSDATA_H
 #include "Student.h"
 #include "..//Node/Node.h"
+using namespace Question11;
 
 class StudentData {
     Node<Student*>* chain;

@@ -5,63 +5,64 @@
 #include <string>
 using namespace std;
 
-// 🎓 Class representing a student with ID and grade
-class Student {
-    int *studentId;   // 🔢 Pointer to student ID
-    int *grade;       // 🧮 Pointer to student's grade
+namespace Question10 {
+    // 🎓 Class representing a student with ID and grade
+    class Student {
+        int *studentId;   // 🔢 Pointer to student ID
+        int *grade;       // 🧮 Pointer to student's grade
 
-public:
-    // ===========================
-    // 🏗️ Constructors / Rule of Five
-    // ===========================
+    public:
+        // ===========================
+        // 🏗️ Constructors / Rule of Five
+        // ===========================
 
-    // 🧱 Parameterized constructor (deep copy from provided values)
-    Student(const int *studentId, const int *grade);
+        // 🧱 Parameterized constructor (deep copy from provided values)
+        Student(const int *studentId, const int *grade);
 
-    // 💣 Destructor (releases heap memory)
-    ~Student();
+        // 💣 Destructor (releases heap memory)
+        ~Student();
 
-    // 🧬 Copy constructor (deep copy)
-    Student(const Student &student);
+        // 🧬 Copy constructor (deep copy)
+        Student(const Student &student);
 
-    // ✍️ Copy assignment (deep copy)
-    Student &operator=(const Student &student);
+        // ✍️ Copy assignment (deep copy)
+        Student &operator=(const Student &student);
 
-    // 🚚 Move constructor (steals ownership)
-    Student(Student &&student) noexcept;
+        // 🚚 Move constructor (steals ownership)
+        Student(Student &&student) noexcept;
 
-    // 🚚 Move assignment (steals ownership)
-    Student &operator=(Student &&student) noexcept;
+        // 🚚 Move assignment (steals ownership)
+        Student &operator=(Student &&student) noexcept;
 
-    // ===========================
-    // ✏️ Setters
-    // ===========================
+        // ===========================
+        // ✏️ Setters
+        // ===========================
 
-    // ⚙️ Set new student ID (deep copy)
-    void setStudentId(const int *studentId);
+        // ⚙️ Set new student ID (deep copy)
+        void setStudentId(const int *studentId);
 
-    // ⚙️ Set new grade (deep copy)
-    void setGrade(const int *grade);
+        // ⚙️ Set new grade (deep copy)
+        void setGrade(const int *grade);
 
-    // ===========================
-    // 🎯 Getters (read-only)
-    // ===========================
+        // ===========================
+        // 🎯 Getters (read-only)
+        // ===========================
 
-    // 📖 Get ID (const pointer)
-    const int* getStudentId() const;
+        // 📖 Get ID (const pointer)
+        const int* getStudentId() const;
 
-    // 📖 Get grade (const pointer)
-    const int* getGrade() const;
+        // 📖 Get grade (const pointer)
+        const int* getGrade() const;
 
-    // ===========================
-    // 🧾 Utility
-    // ===========================
+        // ===========================
+        // 🧾 Utility
+        // ===========================
 
-    // 📜 Convert to string representation
-    string toString() const;
+        // 📜 Convert to string representation
+        string toString() const;
 
-    // 🖨️ Print student info
-    void print() const;
-};
-
+        // 🖨️ Print student info
+        void print() const;
+    };
+}
 #endif //UNTITLED1_STUDENT_H

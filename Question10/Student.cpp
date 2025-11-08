@@ -1,4 +1,5 @@
 #include "Student.h"
+using namespace Question10;
 
 // 🧱 Constructor - allocates and deep copies student ID and grade
 Student::Student(const int *studentId, const int *grade) {
