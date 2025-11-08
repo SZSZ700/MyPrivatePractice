@@ -43,5 +43,7 @@ class StudentData {
 
     // 🧮 Count how many students live in the given city
     int countByCity(const string* city) const;
+
+    std::string* cityName(const string **cities, int size) const;
 };
 #endif //UNTITLED1_STUDENTSDATA_H

@@ -1,5 +1,7 @@
 #include "StudentsData.h"
 
+#include <unordered_map>
+
 // 🏗️ Default constructor
 StudentData::StudentData() {
     // 🧠 Allocate empty chain (no students yet)
@@ -276,6 +278,7 @@ void StudentData::print(const string* city, const string* lang) const {
 
         // 🔁 Traverse again for fallback
         pos = this->chain;
+
         while (pos) {
             if (const Student* s = pos->getValue(); s && s->getMainLanguage() && s->getHasCar()) {
                 if (*s->getMainLanguage() == *lang && *s->getHasCar()) {
@@ -297,6 +300,7 @@ int StudentData::countByCity(const string* city) const {
 
     // 🔁 Traverse the list
     const Node<Student*>* pos = this->chain;
+
     while (pos) {
         if (const Student* s = pos->getValue(); s && s->getCity()) {
             if (*s->getCity() == *city)
@@ -307,4 +311,34 @@ int StudentData::countByCity(const string* city) const {
 
     // 📤 Return total
     return count;
+}
+
+// 🏙️ Returns the city name that has the highest number of students
+string* StudentData::cityName(const string** cities, const int size) const {
+    // 🚫 Validate input
+    if (size <= 0 || !cities) return nullptr;
+
+    // 📍 Track city with max students
+    string* maxCity = nullptr;
+    int max = 0;
+
+    // 🔁 Iterate through given cities
+    for (int i = 0; i < size; i++) {
+        // 👉 Current city pointer
+        const string* temp = cities[i];
+
+        // 🚫 Skip invalid pointers
+        if (!temp) continue;
+
+        // 🔢 Count how many students live in this city
+        // 🧠 If this city has more students, update
+        if (const int count = this->countByCity(temp); count > max) {
+            max = count;
+            delete maxCity;            // 🧹 Free previous best
+            maxCity = new string(*temp); // 🆕 Deep copy current name
+        }
+    }
+
+    // 📤 Return name of the most populated city (nullptr if none)
+    return maxCity;
 }
