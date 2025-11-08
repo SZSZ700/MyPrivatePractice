@@ -119,6 +119,8 @@ const string *Student::getMainLanguage()const { return this->mainLanguage; }
 
 const string *Student::getSubLanguage()const { return this->subLanguage; }
 
+const bool *Student::getHasCar()const { return this->hasCar; }
+
 // setters
 // ReSharper disable once CppParameterNamesMismatch
 void Student::setId(const string *idd) {
@@ -148,6 +150,12 @@ void Student::setMainLanguage(const string *mainLanguagee) {
 void Student::setSubLanguage(const string *subLanguagee) {
     delete this->subLanguage;
     this->subLanguage = new string(*subLanguagee);
+}
+
+// ReSharper disable once CppParameterNamesMismatch
+void Student::setHasCar(const bool *hasCarr) {
+    delete this->hasCar;
+    this->hasCar = new bool(*hasCarr);
 }
 
 // toString

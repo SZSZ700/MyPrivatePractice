@@ -54,4 +54,6 @@ add_executable(untitled1 Main/main.cpp
         Question10/GradesFile.h
         Question11/Student.cpp
         Question11/Student.h
+        Question11/StudentsData.cpp
+        Question11/StudentsData.h
 )

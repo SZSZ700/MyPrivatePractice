@@ -40,6 +40,7 @@ class Student {
     const string *getCity()const;
     const string *getMainLanguage()const;
     const string *getSubLanguage()const;
+    const bool *getHasCar()const;
 
     // setters
     void setId(const string *id);
@@ -47,5 +48,6 @@ class Student {
     void setCity(const string *city);
     void setMainLanguage(const string *mainLanguage);
     void setSubLanguage(const string *subLanguage);
+    void setHasCar(const bool *hasCarr);
 };
 #endif //UNTITLED1_STUDENT_H
