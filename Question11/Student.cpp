@@ -79,7 +79,7 @@ Student::Student(Student &&other) noexcept {
 }
 
 // move assignment
-Student& Student::operator=(Student &&other) {
+Student& Student::operator=(Student &&other) noexcept{
     if (this != &other) {
         // delete old data
         delete this->id;
