@@ -1753,6 +1753,71 @@ void mipmap() {
 
 }
 
+// Tree of upList
+bool isUpTreeList(BinNode<int*> *root) {
+    // bfs queue
+    const auto q = new queue<BinNode<int*>*>();
+    // push root : BinNode to the search queue
+    q->push(root);
+
+    // iteration
+    while (!q->empty()) {
+        // pointer to the current first BinNode from the search queue
+        const BinNode<int*> *currentBin = q->front();
+        // remove current first BinNode from the search queue
+        q->pop();
+
+        // ever BinNode value should be positive, and should be even
+        if (const int *currentValue = currentBin->getValue();
+            *currentValue % 2 == 1 || *currentValue < 0) {
+            // delete queue
+            delete q;
+            // return false, value is not positive or is not even
+            return false;
+        }
+
+        // if this BinNode is a parent, it should have only one child
+        if (currentBin->getLeft() || currentBin->getRight()) {
+
+            // if current parent have two children, return false
+            if (currentBin->getLeft() && currentBin->getRight()) {
+                // delete queue
+                delete q;
+                // return false, parent can't have two children, it should have only one
+                return false;
+            }
+
+            // son BinNode value should be bigger than its father BinNode value: //
+            // if current parrent have left child
+            // check this statement for left child
+            if (currentBin->getLeft() && currentBin->getLeft()->getValue()) {
+                if (currentBin->getLeft()->getValue() < currentBin->getValue()) {
+                    // delete queue
+                    delete q;
+                    // return false, son BinNode value can't be smaller than father BinNode value
+                    return false;
+                }
+            }
+
+            // if current parrent have right child
+            // check this statement for right child
+            if (currentBin->getRight() && currentBin->getRight()->getValue()) {
+                if (currentBin->getRight()->getValue() < currentBin->getValue()) {
+                    // delete queue
+                    delete q;
+                    // return false, son BinNode value can't be smaller than father BinNode value
+                    return false;
+                }
+            }
+        }
+    }
+
+    // delete queue
+    delete q;
+    // tree is valid
+    return true;
+}
+
 int main() {
     system("chcp 65001 > nul"); // 💡 Change console to UTF-8 mode (Windows CMD command)
     someTry0();
