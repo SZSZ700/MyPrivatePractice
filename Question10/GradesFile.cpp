@@ -226,3 +226,73 @@ int GradesFile::calculateIndex(const int* id) const {
     const int mid = (val / 1000) % 100;
     return mid;
 }
+
+// 🔍 return first student in array[k]
+const Student* GradesFile::getStudent(const int k) const {
+    if (k < 1 || k > 100) { return nullptr; }
+
+    if (!this->lists[k]){ return nullptr; }
+
+    // return the first student in the list at index k
+    return this->lists[k]->getValue();
+}
+
+// ⁉️ if at index k there is no list
+bool GradesFile::isEmpty(const int k) const {
+    if (k < 0 || k >= 100 || !this->lists[k]) { return true; }
+    return false;
+}
+
+// check if all the students in the collection at position k
+// in the array match this position according to their studentId.
+bool GradesFile::listIsGood (const int k) const {
+    // If k is out of the array bounds or the collection at position k is empty,
+    // the function returns "true".
+    if (this->isEmpty(k)) { return true; }
+
+    const Node<Student*>* pos = this->lists[k];
+
+    while (pos) {
+        if (const Student *currentStudent = pos->getValue()) {
+            if (const int *id = currentStudent->getStudentId()) {
+                if (const int calculationIndex = calculateIndex(id); calculationIndex != k) {
+                    return false;
+                }
+            }
+        }
+        pos = pos->getNext();
+    }
+
+    return true;
+}
+
+// The function moves the first student from the collection located at position k in the array
+// to become the last student in the collection located at position j in the array.
+// ReSharper disable once CppMemberFunctionMayBeConst
+void GradesFile::moveStudent(const int k, const int j) {
+    if (k < 0 || k >= 100 || !this->lists[k] || j < 0 || j >= 100){ return; }
+
+    // keep the first student from the collection located at position k
+    // ReSharper disable once CppLocalVariableMayBeConst
+    Student *first = this->lists[k]->getValue();
+    this->lists[k] = this->lists[k]->getNext();
+
+    // delete the first Node itself (delete the wrap not the *value in it)
+    delete this->lists[k];
+
+    // pointer for iteration on the list
+    if (Node<Student*>* pos = this->lists[j]; pos != nullptr) {
+        // iterate till we reach the end of the list at index j
+        while (pos->getNext() != nullptr) {
+            pos = pos->getNext();
+        }
+
+        // now pos points to the tail of the collection at index j
+        // so now we can add new Node<Student*>* at the end
+        // ReSharper disable once CppTemplateArgumentsCanBeDeduced
+        pos->setNext(new Node<Student*>(first));
+    }else {
+        // ReSharper disable once CppTemplateArgumentsCanBeDeduced
+        this->lists[j] = new Node<Student*>(first);
+    }
+}

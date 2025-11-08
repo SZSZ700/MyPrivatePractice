@@ -39,6 +39,20 @@ public:
     // 🖨️ Print all data
     void printAll() const;
 
+    // 🔍 return first student in array[k]
+    const Student* getStudent(int k) const;
+
+    // ⁉️ if at index k there is no list
+    bool isEmpty(const int k) const;
+
+    // check if all the students in the collection at position k
+    // in the array match this position according to their studentId.
+    bool listIsGood (const int k) const;
+
+    // The function moves the first student from the collection located at position k in the array
+    // to become the last student in the collection located at position j in the array.
+    void moveStudent(int k, int j);
+
 private:
     // 🧮 Calculate index from middle two digits of ID
     int calculateIndex(const int* id) const;
