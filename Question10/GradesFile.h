@@ -53,7 +53,12 @@ public:
     // to become the last student in the collection located at position j in the array.
     void moveStudent(int k, int j);
 
-private:
+    // 🧾 Getter — returns a read-only pointer to the entire 100-list array
+    const Node<Student*>* const* getCollection() const;
+
+    // ✏️ Setter — replaces the entire collection (100-list array) with a new one
+    void setCollection(Node<Student*>** newCollection);
+
     // 🧮 Calculate index from middle two digits of ID
     int calculateIndex(const int* id) const;
 };
