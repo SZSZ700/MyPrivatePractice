@@ -1818,6 +1818,145 @@ bool isUpTreeList(BinNode<int*> *root) {
     return true;
 }
 
+// 🧠 Returns the value at position 'pos' in the queue without removing it.
+// If there is no such position, returns -1.
+int* valueAt(std::queue<int*> *q, const int pos) {
+    // Counter starts from 1 because the first element is at position 1
+    int count = 1;
+
+    // Temporary queue for restoration
+    const auto temp = new std::queue<int*>();
+
+    // Will hold the value at position 'pos' (copied)
+    int *valAtPos = nullptr;
+
+    // Iterate through the original queue
+    while (!q->empty()) {
+        // Get pointer to current front element
+        int *x = q->front();
+
+        // Remove it from the original queue
+        q->pop();
+
+        // If we reached the desired position, copy its value
+        // ReSharper disable once CppDFAMemoryLeak
+        if (count == pos) { valAtPos = new int(*x); }
+
+        // Increase position counter
+        count++;
+
+        // Push the element into the temporary restoration queue
+        temp->push(x);
+    }
+
+    // Restore all elements back to the original queue
+    while (!temp->empty()) {
+        q->push(temp->front());
+        temp->pop();
+    }
+
+    // Delete the temporary queue to free memory
+    delete temp;
+
+    // If position not found, return -1
+    if (!valAtPos)
+        // ReSharper disable once CppDFAMemoryLeak
+        valAtPos = new int(-1);
+
+    // Return the found (or default) value
+    return valAtPos;
+}
+
+// 🧩 Creates and returns a new queue that merges q1 and q2 by the following rule:
+// First element from q1, last element from q2, second element from q1,
+// element before last from q2, and so on.
+// Assumes both queues have the same size.
+std::queue<int*>* merge (std::queue<int*> *q1, std::queue<int*> *q2) {
+    // Create a new queue for the merged result
+    const auto merged = new std::queue<int*>();
+
+    // Get sizes of both queues
+    const int size1 = q1->size();
+    // ReSharper disable once CppTooWideScopeInitStatement
+    const int size2 = q2->size();
+
+    // If sizes are not equal, return nullptr (invalid case)
+    if (size1 != size2) { return nullptr; }
+
+    // Iterate through both queues by position
+    for (int i = 1; i <= size1; i++) {
+        // Push i-th element from q1 (1-based index)
+        merged->push(valueAt(q1, i));
+
+        // Push (size - i + 1)-th element from q2 (reverse order)
+        merged->push(valueAt(q2, size1 - i + 1));
+    }
+
+    // Return the new merged queue
+    // ReSharper disable once CppDFAMemoryLeak
+    return merged;
+}
+
+// 🔍 Get value from an array (vector-like) at given position (1-based index)
+int* valueAt(int** arr, const int size, const int pos) {
+    // ⚠️ Check invalid position
+    if (pos < 1 || pos > size) return nullptr;
+
+    // ✅ Return a copy of the value at that position (1-based)
+    // ReSharper disable once CppDFAMemoryLeak
+    return new int(*arr[pos - 1]);
+}
+
+// 🔄 Merge two queues into a new one (based on position logic)
+std::queue<int*>* merge2(std::queue<int*>* q1, std::queue<int*>* q2) {
+    // 🚫 Check if any queue is null
+    if (!q1 || !q2) return nullptr;
+
+    // 🧠 Create new empty queue to store merged result
+    // ReSharper disable once CppDFAMemoryLeak
+    auto* merged = new std::queue<int*>();
+
+    // 📏 Get sizes of both queues
+    const int size1 = q1->size();
+    const int size2 = q2->size();
+
+    // ⚠️ If not same size, return nullptr (invalid merge)
+    if (size1 != size2) return nullptr;
+
+    // 🧩 Create dynamic arrays to store queue elements
+    const auto arr1 = new int*[size1];
+    const auto arr2 = new int*[size2];
+
+    // 🔁 Copy q1 → arr1
+    for (int i = 0; i < size1; i++) {
+        arr1[i] = q1->front();
+        q1->pop();
+    }
+
+    // 🔁 Copy q2 → arr2
+    for (int i = 0; i < size2; i++) {
+        arr2[i] = q2->front();
+        q2->pop();
+    }
+
+    // ⚡ Merge using valueAt() with O(1) access
+    for (int i = 1; i <= size1; i++) {
+        // 👈 Add i-th element from arr1
+        merged->push(valueAt(arr1, size1, i));
+
+        // 👉 Add (reverse) element from arr2
+        merged->push(valueAt(arr2, size2, size2 - i + 1));
+    }
+
+    // 🧹 Free arrays (not values, they belong to queues)
+    delete[] arr1;
+    delete[] arr2;
+
+    // ✅ Return merged queue
+    // ReSharper disable once CppDFAMemoryLeak
+    return merged;
+}
+
 int main() {
     system("chcp 65001 > nul"); // 💡 Change console to UTF-8 mode (Windows CMD command)
     someTry0();
