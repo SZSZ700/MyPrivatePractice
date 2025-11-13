@@ -2023,7 +2023,7 @@ void twentyTwentyTwoSummerA(){
         }
 
 
-        // ⚠️ FREE_MEMORY_AREA ⚠️ // ⚠️ FREE_MEMORY_AREA ⚠️ //
+        // ⚠️ FREE_MEMORY_AREA ⚠️ // ⚠️ FREE_MEMORY_AREA ⚠️ // ⚠️ FREE_MEMORY_AREA ⚠️ //
         // delete all created list - NO_MEMORY_LEAK
         for (int i = 1; i <= index; i++) {
             const Node<int*> *pos = arr[i];
@@ -2036,7 +2036,7 @@ void twentyTwentyTwoSummerA(){
             }
         }
         delete[] arr;
-        // ⚠️ FREE_MEMORY_AREA ⚠️ // ⚠️ FREE_MEMORY_AREA ⚠️ //
+        // ⚠️ FREE_MEMORY_AREA ⚠️ // ⚠️ FREE_MEMORY_AREA ⚠️ // ⚠️ FREE_MEMORY_AREA ⚠️ //
     };
 
 }
