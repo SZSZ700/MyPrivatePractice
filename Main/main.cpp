@@ -1957,6 +1957,90 @@ std::queue<int*>* merge2(std::queue<int*>* q1, std::queue<int*>* q2) {
     return merged;
 }
 
+void twentyTwentyTwoSummerA(){
+
+    // 1-a
+    // ReSharper disable once CppDFAUnreadVariable
+    // ReSharper disable once CppDeclaratorNeverUsed
+    // ReSharper disable once CppDFAUnusedValue
+    auto HefreshimList = [] (const Node<int*> *chain) -> Node<int*>* {
+        Node<int*> *head = nullptr;
+        Node<int*> *tail = nullptr;
+
+        const Node<int*> *pos = chain;
+
+        while (pos->getNext()) {
+            if (pos->getValue() && pos->getNext()->getValue()) {
+                const auto difference = new int(std::abs(pos->getValue() - pos->getNext()->getValue()));
+                // ReSharper disable once CppTemplateArgumentsCanBeDeduced
+                // ReSharper disable once CppDFAMemoryLeak
+                const auto toAdd = new Node<int*>(difference);
+
+                if (!head) {
+                    head = toAdd;
+                    tail = toAdd;
+                }else {
+                    // ReSharper disable once CppDFANullDereference
+                    tail->setNext(toAdd);
+                    tail = tail->getNext();
+                }
+            }
+
+            pos = pos->getNext();
+        }
+
+        return head;
+    };
+
+    // 1-b
+    // ReSharper disable once CppDFAUnreadVariable
+    // ReSharper disable once CppDeclaratorNeverUsed
+    // ReSharper disable once CppDFAUnusedValue
+    auto theSurvives = [&] (Node<int*> *chain) {
+        if (!chain) { return; }
+        // ReSharper disable once CppUseAuto
+        Node<int*> **arr = new Node<int*>*[0];
+        arr[0] = chain;
+        int index = 1;
+
+        while (true) {
+            if (!arr[index-1]->getNext()) { break; } // preventing infinte loop
+
+            // ReSharper disable once CppDFAMemoryLeak
+            arr[index++] = HefreshimList(arr[index - 1]); // keep new created list
+
+
+            // 🖨️ ..print chain.. 🖨️ //// 🖨️ ..print chain.. 🖨️ //// 🖨️ ..print chain.. 🖨️ //
+            const Node<int*> *pos = arr[index-1];
+            while (pos) {
+                if (pos->getValue())
+                    std::cout << pos->getValue() << "!" << endl;
+                else
+                    std::cout << "no value" << "!" << endl;
+                pos = pos->getNext();
+            }
+            // 🖨️ ..print chain.. 🖨️ //// 🖨️ ..print chain.. 🖨️ //// 🖨️ ..print chain.. 🖨️ //
+        }
+
+
+        // ⚠️ FREE_MEMORY_AREA ⚠️ // ⚠️ FREE_MEMORY_AREA ⚠️ //
+        // delete all created list - NO_MEMORY_LEAK
+        for (int i = 1; i <= index; i++) {
+            const Node<int*> *pos = arr[i];
+            // Delete all nodes in the linked list
+            while (pos) {
+                const Node<int*>* temp = pos->getNext();
+                delete pos->getValue();
+                delete pos;
+                pos = temp;
+            }
+        }
+        delete[] arr;
+        // ⚠️ FREE_MEMORY_AREA ⚠️ // ⚠️ FREE_MEMORY_AREA ⚠️ //
+    };
+
+}
+
 int main() {
     system("chcp 65001 > nul"); // 💡 Change console to UTF-8 mode (Windows CMD command)
     someTry0();
