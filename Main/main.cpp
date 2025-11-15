@@ -1958,12 +1958,10 @@ std::queue<int*>* merge2(std::queue<int*>* q1, std::queue<int*>* q2) {
 }
 
 void twentyTwentyTwoSummerA(){
-
     // 1-a
-    // ReSharper disable once CppDFAUnreadVariable
-    // ReSharper disable once CppDeclaratorNeverUsed
-    // ReSharper disable once CppDFAUnusedValue
     auto HefreshimList = [] (const Node<int*> *chain) -> Node<int*>* {
+        if (!chain) { return nullptr; }
+
         Node<int*> *head = nullptr;
         Node<int*> *tail = nullptr;
 
@@ -1971,7 +1969,9 @@ void twentyTwentyTwoSummerA(){
 
         while (pos->getNext()) {
             if (pos->getValue() && pos->getNext()->getValue()) {
-                const auto difference = new int(std::abs(pos->getValue() - pos->getNext()->getValue()));
+                // ✅ dereference values correctly
+                const auto difference = new int(std::abs(*pos->getValue() - *pos->getNext()->getValue()));
+
                 // ReSharper disable once CppTemplateArgumentsCanBeDeduced
                 // ReSharper disable once CppDFAMemoryLeak
                 const auto toAdd = new Node<int*>(difference);
@@ -1979,7 +1979,7 @@ void twentyTwentyTwoSummerA(){
                 if (!head) {
                     head = toAdd;
                     tail = toAdd;
-                }else {
+                } else {
                     // ReSharper disable once CppDFANullDereference
                     tail->setNext(toAdd);
                     tail = tail->getNext();
@@ -1993,58 +1993,108 @@ void twentyTwentyTwoSummerA(){
     };
 
     // 1-b
-    // ReSharper disable once CppDFAUnreadVariable
-    // ReSharper disable once CppDeclaratorNeverUsed
-    // ReSharper disable once CppDFAUnusedValue
-    auto theSurvives = [&] (Node<int*> *chain) {
-        if (!chain) { return; }
-        // ReSharper disable once CppUseAuto
-        Node<int*> **arr = new Node<int*>*[0];
-        arr[0] = chain;
-        int index = 1;
+    auto theSurvives = [&] (Node<int*> *chain) -> int {
+        if (!chain) { return -1; }
+
+        BinNode<Node<int*>*> *newey = nullptr;
+        BinNode<Node<int*>*> *tail = nullptr;
+
+        auto toAdd = new BinNode(chain);
+        newey = toAdd;
+        tail = toAdd;
 
         while (true) {
-            if (!arr[index-1]->getNext()) { break; } // preventing infinte loop
-
             // ReSharper disable once CppDFAMemoryLeak
-            arr[index++] = HefreshimList(arr[index - 1]); // keep new created list
 
+            if (tail && tail->getValue()) {
+                // preventing infinite loop
+                if (!tail->getValue()->getNext()) { break; }
 
-            // 🖨️ ..print chain.. 🖨️ //// 🖨️ ..print chain.. 🖨️ //// 🖨️ ..print chain.. 🖨️ //
-            const Node<int*> *pos = arr[index-1];
-            while (pos) {
-                if (pos->getValue())
-                    std::cout << pos->getValue() << "!" << endl;
-                else
-                    std::cout << "no value" << "!" << endl;
-                pos = pos->getNext();
-            }
-            // 🖨️ ..print chain.. 🖨️ //// 🖨️ ..print chain.. 🖨️ //// 🖨️ ..print chain.. 🖨️ //
+                tail->setRight(new BinNode(HefreshimList(tail->getValue())));
+                // ReSharper disable once CppDFANullDereference
+                tail->getRight()->setLeft(tail);
+
+                // ✅ print chain values
+                const Node<int*>* pos = tail->getValue();
+                while (pos) {
+                    std::cout << *pos->getValue() << " ";
+                    pos = pos->getNext();
+                }
+                std::cout << std::endl;
+
+                tail = tail->getRight();
+            } else { break; }
         }
 
-
-        // ⚠️ FREE_MEMORY_AREA ⚠️ // ⚠️ FREE_MEMORY_AREA ⚠️ // ⚠️ FREE_MEMORY_AREA ⚠️ //
-        // delete all created list - NO_MEMORY_LEAK
-        for (int i = 1; i <= index; i++) {
-            const Node<int*> *pos = arr[i];
-            // Delete all nodes in the linked list
-            while (pos) {
-                const Node<int*>* temp = pos->getNext();
-                delete pos->getValue();
-                delete pos;
-                pos = temp;
-            }
+        // ✅ Save survivor value before deletion
+        int survivor = -1;
+        // ReSharper disable once CppDFANullDereference
+        if (const Node<int*>* lastList = tail->getValue(); lastList && lastList->getValue()) {
+            survivor = *lastList->getValue();
         }
-        delete[] arr;
-        // ⚠️ FREE_MEMORY_AREA ⚠️ // ⚠️ FREE_MEMORY_AREA ⚠️ // ⚠️ FREE_MEMORY_AREA ⚠️ //
+
+        // ✅ FREE_MEMORY_AREA
+        const BinNode<Node<int*>*> *pos = newey; // delete all created lists - NO_MEMORY_LEAK
+
+        while (pos) {
+            const BinNode<Node<int*>*> *next = pos->getRight(); //🔁
+
+            //❗❗DELETE POS->GETVALUE()❗❗//
+            const Node<int*> *current = pos->getValue();
+
+            while (current) {
+                const Node<int*> *nextToCurrent = current->getNext(); //🔁
+                delete current->getValue(); // delete integer
+                delete current; // delete node
+                current = nextToCurrent; //🔁
+            }
+
+            delete pos; // delete BinNode
+            pos = next; //🔁
+        }
+
+        // ✅ return survivor
+        // ReSharper disable once CppDFAMemoryLeak
+        return survivor;
     };
 
+    auto example = [theSurvives] () {
+        // create Node-list
+        // ReSharper disable once CppDFAMemoryLeak
+        auto *a = new Node(new int(5));
+        // ReSharper disable once CppDFAMemoryLeak
+        auto *b = new Node(new int(20));
+        // ReSharper disable once CppDFAMemoryLeak
+        auto *c = new Node(new int(9));
+        // ReSharper disable once CppDFAMemoryLeak
+        auto *d = new Node(new int(6));
+        // ReSharper disable once CppDFAMemoryLeak
+        auto *e = new Node(new int(5));
+        // ReSharper disable once CppDFAMemoryLeak
+        auto *f = new Node(new int(8));
+        // ReSharper disable once CppDFAMemoryLeak
+        auto *g = new Node(new int(2));
+        a->setNext(b);
+        b->setNext(c);
+        c->setNext(d);
+        d->setNext(e);
+        e->setNext(f);
+        f->setNext(g);
+        int lastSurvivor = theSurvives(a);
+        std::cout << lastSurvivor << std::endl;
+
+
+    };
+
+    example();
 }
 
 int main() {
     system("chcp 65001 > nul"); // 💡 Change console to UTF-8 mode (Windows CMD command)
     someTry0();
     TryMe();
+    cout<<""<<endl;
+    twentyTwentyTwoSummerA();
     // program finished successfully
     return 0;
 }
