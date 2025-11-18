@@ -56,4 +56,6 @@ add_executable(untitled1 Main/main.cpp
         Question11/Student.h
         Question11/StudentsData.cpp
         Question11/StudentsData.h
+        ClownyPy/Clown.cpp
+        ClownyPy/Clown.h
 )
