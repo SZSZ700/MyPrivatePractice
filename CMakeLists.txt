@@ -58,4 +58,6 @@ add_executable(untitled1 Main/main.cpp
         Question11/StudentsData.h
         ClownyPy/Clown.cpp
         ClownyPy/Clown.h
+        ClownyPy/Pyramid.cpp
+        ClownyPy/Pyramid.h
 )
