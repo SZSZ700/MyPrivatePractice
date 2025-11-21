@@ -1959,7 +1959,7 @@ std::queue<int*>* merge2(std::queue<int*>* q1, std::queue<int*>* q2) {
 
 void twentyTwentyTwoSummerA() {
     // 1-a
-    auto HefreshimList = [] (const Node<int*> *chain) -> Node<int*>* {
+    auto HefreshimList = [&] (const Node<int*> *chain) -> Node<int*>* {
         if (!chain) { return nullptr; }
 
         Node<int*> *head = nullptr;
@@ -2055,6 +2055,7 @@ void twentyTwentyTwoSummerA() {
 
         // ✅ return survivor
         // ReSharper disable once CppDFAMemoryLeak
+        // ReSharper disable once CppDFAMemoryLeak
         return survivor;
     };
 
@@ -2082,8 +2083,6 @@ void twentyTwentyTwoSummerA() {
         f->setNext(g);
         int lastSurvivor = theSurvives(a);
         std::cout << lastSurvivor << std::endl;
-
-
     };
 
     example();
@@ -2123,6 +2122,11 @@ void twentyTwentyTwoSummerA() {
             temp->push(tempNum);
         }
 
+        while (!temp->empty()) {
+            q->push(temp->front());
+            temp->pop();
+        }
+
         delete temp;
         return last;
     };
@@ -2148,7 +2152,7 @@ void twentyTwentyTwoSummerA() {
         return q;
     };
 
-
+    // 10
 }
 
 int main() {
