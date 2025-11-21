@@ -1957,7 +1957,7 @@ std::queue<int*>* merge2(std::queue<int*>* q1, std::queue<int*>* q2) {
     return merged;
 }
 
-void twentyTwentyTwoSummerA(){
+void twentyTwentyTwoSummerA() {
     // 1-a
     auto HefreshimList = [] (const Node<int*> *chain) -> Node<int*>* {
         if (!chain) { return nullptr; }
@@ -2087,6 +2087,68 @@ void twentyTwentyTwoSummerA(){
     };
 
     example();
+
+    [[maybe_unused]] auto sumQ = [] (std::queue<int*>*q) -> int {
+        if (!q) { return -1; }
+
+        const auto temp = new queue<int*>();
+        auto sum_q = 0;
+
+        while (!q->empty()) {
+            const auto tempNum = q->front();
+            sum_q += *tempNum;
+            q->pop();
+            temp->push(tempNum);
+        }
+
+        while (!temp->empty()) {
+            q->push(temp->front());
+            temp->pop();
+        }
+
+        delete temp;
+        return sum_q;
+    };
+
+    [[maybe_unused]] auto lastValue = [] (std::queue<int*>*q) -> int {
+        if (!q) { return -1; }
+
+        int last = 0;
+        const auto temp = new queue<int*>();
+
+        while (!q->empty()) {
+            auto tempNum = q->front();
+            q->pop();
+            last = *tempNum;
+            temp->push(tempNum);
+        }
+
+        delete temp;
+        return last;
+    };
+
+    [[maybe_unused]] auto qList = [&] (const Node<std::queue<int*>*> *chain) -> std::queue<int*>* {
+        const auto q = new std::queue<int*>();
+        auto pos = chain;
+
+        while (pos) {
+            const auto currentQueue = pos->getValue();
+            // ReSharper disable once CppTooWideScopeInitStatement
+            const auto firstValue = currentQueue->front();
+
+            if (firstValue && *firstValue % 2 == 1) {
+                q->push(new int(sumQ(currentQueue)));
+            }else if (firstValue && *firstValue % 2 == 0) {
+                q->push(new int(lastValue(currentQueue)));
+            }
+
+            pos = pos->getNext();
+        }
+
+        return q;
+    };
+
+
 }
 
 int main() {
