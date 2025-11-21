@@ -163,3 +163,71 @@ void Pyramid::setSize(const int* sizee) {
     this->size = new int(*sizee);
 }
 
+bool Pyramid::isStable() const {
+    const Node<Clown *> *pos = this->head;
+
+    while (pos->getNext() != nullptr) {
+        // current clown
+        const Clown *currentClown = pos->getValue();
+        // current clown weight
+        const int *weight = currentClown->getWeight();
+
+        // next clown
+        const Clown *nextClown = pos->getValue();
+        // next clown weight
+        // ReSharper disable once CppTooWideScopeInitStatement
+        const int *nextWeight = nextClown->getWeight();
+
+        if (weight != nullptr && nextWeight != nullptr) {
+            if (*weight > *nextWeight) {
+                return false;
+            }
+        }
+
+        pos = pos->getNext();
+    }
+
+    return true;
+}
+
+bool Pyramid::addClown(const Clown *clown) {
+    if (!clown) { return false; }
+
+    // add in start
+    if (clown->getWeight() != nullptr &&
+        clown->getWeight() < this->head->getValue()->getWeight()) {
+        // ReSharper disable once CppTemplateArgumentsCanBeDeduced
+        const auto toAdd = new Node<Clown*>(new Clown(*clown));
+        toAdd->setNext(this->head);
+        this->head = toAdd;
+        return true;
+    }
+
+    // add between
+    Node<Clown*> *pos = this->head;
+
+    while (pos->getNext() != nullptr) {
+        const Clown *currentClown = pos->getValue();
+        const int *weight = currentClown->getWeight();
+
+        const Clown *nextClown = pos->getValue();
+        // ReSharper disable once CppTooWideScopeInitStatement
+        const int *nextWeight = nextClown->getWeight();
+
+        if (weight && nextWeight) {
+            // ReSharper disable once CppTemplateArgumentsCanBeDeduced
+            const auto toAdd = new Node<Clown*>(new Clown(*clown));
+            toAdd->setNext(pos->getNext());
+            pos->setNext(toAdd);
+            return true;
+        }
+
+        pos = pos->getNext();
+    }
+
+    // add at end - bottom
+    // ReSharper disable once CppTemplateArgumentsCanBeDeduced
+    pos->setNext(new Node<Clown*>(new Clown(*clown)));
+    return true;
+}
+

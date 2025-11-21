@@ -43,6 +43,10 @@ public:
     void setHead(Node<Clown*>* head);
 
     void setSize(const int *size);
+
+    bool isStable() const;
+
+    bool addClown(const Clown *clown);
 };
 
 #endif // UNTITLED1_PYRAMID_H
