@@ -1,4 +1,5 @@
 package org.example.QrGenerator;
+
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.qrcode.QRCodeWriter;
@@ -23,16 +24,16 @@ public class QrGenerator {
                         500
                 );
 
-        // A Path represents a path that is hierarchical and composed
-        // of a sequence of directory and file name elements separated by "/"
-        Path path = FileSystems.getDefault()
-                .getPath(
-                        "System.getProperty(\"user.home\") + \"/Desktop/MY_QR.png\""
-                );
+        // build the full path to Desktop
+        String filePath = System.getProperty("user.home") + "/Desktop/MYQR.png";
 
-        // object that create picture out of BitMatrix (that represent the QR code)
+        // create Path object from the string path
+        Path path = FileSystems.getDefault().getPath(filePath);
+
         // write the Qr into PNG file
         MatrixToImageWriter.writeToPath(bitMatrix, "PNG", path);
 
+        System.out.println("QR saved to: " + path.toAbsolutePath());
     }
 }
+
