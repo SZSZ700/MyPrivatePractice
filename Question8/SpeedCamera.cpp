@@ -163,6 +163,7 @@ const int* SpeedCamera::getCode() const {
 // =======================
 // Setters
 // =======================
+// ReSharper disable once CppParameterNamesMismatch
 void SpeedCamera::setPlates(const Node<string*> *platess) {
     const Node<string*>* del = this->plates; // Iterator pointer for current plates list
     while (del != nullptr) { // Traverse current list
@@ -245,9 +246,9 @@ void SpeedCamera::addCar(const std::string &plateNumber, const int carSpeed) {
     // Check that maxSpeed is not null and the car speed is higher than the allowed maximum speed
     if (this->maxSpeed && carSpeed > *this->maxSpeed) {
         // Allocate a new string on the heap that holds the given plate number
-        string* newPlate = new string(plateNumber);
+        const auto newPlate = new string(plateNumber);
         // Allocate a new Node that stores the pointer to the newPlate string
-        Node<string*>* newNode = new Node<string*>(newPlate);
+        const auto newNode = new Node(newPlate);
         // Set the next pointer of the new node to the current head of the plates list
         newNode->setNext(this->plates);
         // Update the head of the plates list to point to the new node
