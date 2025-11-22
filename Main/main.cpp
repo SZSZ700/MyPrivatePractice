@@ -2152,8 +2152,6 @@ void twentyTwentyTwoSummerA() {
 
         return q;
     };
-
-    // 10
 }
 
 int main() {
