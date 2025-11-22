@@ -1993,8 +1993,9 @@ void twentyTwentyTwoSummerA() {
     };
 
     // 1-b
-    auto theSurvives = [&] (Node<int*> *chain) -> int {
-        if (!chain) { return -1; }
+    auto theSurvives = [&] (Node<int*> *chain) -> int* {
+        // ReSharper disable once CppDFAMemoryLeak
+        if (!chain) { return new int(-1); }
 
         BinNode<Node<int*>*> *newey = nullptr;
         BinNode<Node<int*>*> *tail = nullptr;
@@ -2005,7 +2006,6 @@ void twentyTwentyTwoSummerA() {
 
         while (true) {
             // ReSharper disable once CppDFAMemoryLeak
-
             if (tail && tail->getValue()) {
                 // preventing infinite loop
                 if (!tail->getValue()->getNext()) { break; }
@@ -2027,10 +2027,11 @@ void twentyTwentyTwoSummerA() {
         }
 
         // ✅ Save survivor value before deletion
-        int survivor = -1;
+        // ReSharper disable once CppDFAMemoryLeak
+        const auto survivor = new int(-1);
         // ReSharper disable once CppDFANullDereference
         if (const Node<int*>* lastList = tail->getValue(); lastList && lastList->getValue()) {
-            survivor = *lastList->getValue();
+            *survivor = *lastList->getValue();
         }
 
         // ✅ FREE_MEMORY_AREA
@@ -2054,7 +2055,6 @@ void twentyTwentyTwoSummerA() {
         }
 
         // ✅ return survivor
-        // ReSharper disable once CppDFAMemoryLeak
         // ReSharper disable once CppDFAMemoryLeak
         return survivor;
     };
@@ -2081,8 +2081,9 @@ void twentyTwentyTwoSummerA() {
         d->setNext(e);
         e->setNext(f);
         f->setNext(g);
-        int lastSurvivor = theSurvives(a);
+        int *lastSurvivor = theSurvives(a);
         std::cout << lastSurvivor << std::endl;
+        delete lastSurvivor;
     };
 
     example();
