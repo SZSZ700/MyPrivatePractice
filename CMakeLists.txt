@@ -60,4 +60,6 @@ add_executable(untitled1 Main/main.cpp
         ClownyPy/Clown.h
         ClownyPy/Pyramid.cpp
         ClownyPy/Pyramid.h
+        Question8/SpeedCamera.cpp
+        Question8/SpeedCamera.h
 )
