@@ -1,4 +1,5 @@
 #include "SpeedCameraNetwork.h" // Include the SpeedCameraNetwork header
+#include <iostream> // For std::cout and std::endl
 
 // =======================
 // Constructor
@@ -375,3 +376,150 @@ std::string SpeedCameraNetwork::toString() const {
     // Return the final string built by the stringstream
     return ss.str(); // Convert the stringstream to std::string and return
 }
+
+void SpeedCameraNetwork::addSpeedCamera(const SpeedCamera *sc) { // Adds a new speed camera to the network if there is free capacity
+    if (!sc) return; // If the given camera pointer is null, do nothing
+    if (!this->maxCameras || !this->currentCameras) return; // If counters are not initialized, do nothing
+    if (*this->currentCameras >= *this->maxCameras) return; // If the network reached its maximum capacity, do nothing
+
+    const auto newCam = new SpeedCamera(*sc); // Allocate a new SpeedCamera by copying the given camera
+    const auto newNode = new Node(newCam); // Create a new node that stores the SpeedCamera pointer
+
+    newNode->setNext(this->cameras); // Link the new node before the current head of the list
+    this->cameras = newNode; // Update the head pointer to the new node
+
+    (*this->currentCameras)++; // Increase the number of cameras stored in the network
+}
+
+void SpeedCameraNetwork::printHighEnforcementRoads() const { // Prints road numbers that require high enforcement (more than 200 violations)
+    const Node<SpeedCamera*>* outer = this->cameras; // Start from the head of the cameras list
+
+    while (outer) { // Traverse each camera in the network
+        const SpeedCamera* cam = outer->getValue(); // Get the SpeedCamera* stored in the current node
+
+        if (!cam || !cam->getNumOfRoot()) { // If the camera or its road number pointer is null, skip this node
+            outer = outer->getNext(); // Move to the next camera node
+            continue; // Continue with the next iteration of the outer loop
+        }
+
+        const int roadNumber = *cam->getNumOfRoot(); // Read the road number value from the camera
+        bool alreadyProcessed = false; // Flag that indicates whether this road was already processed
+
+        const Node<SpeedCamera*>* check = this->cameras; // Start checking from the head of the list
+
+        while (check != outer) { // Only inspect nodes before the current 'outer' node
+            // ReSharper disable once CppTooWideScopeInitStatement
+            const SpeedCamera* prevCam = check->getValue(); // Get the SpeedCamera* from the previous node
+
+            // If we already saw this road number
+            if (prevCam && prevCam->getNumOfRoot() && *prevCam->getNumOfRoot() == roadNumber) {
+                alreadyProcessed = true; // Mark this road as already processed
+                break; // Stop searching in the previous nodes
+            }
+            check = check->getNext(); // Move to the next previous node
+        }
+
+        if (alreadyProcessed) { // If this road was already handled earlier
+            outer = outer->getNext(); // Move to the next camera node
+            continue; // Skip aggregation for this road
+        }
+
+        int totalViolations = 0; // Counter for total violations on this road
+        const Node<SpeedCamera*>* inner = this->cameras; // Start a full traversal over all cameras
+
+        while (inner) { // Traverse the full cameras list
+            // ReSharper disable once CppTooWideScopeInitStatement
+            const SpeedCamera* currentCam = inner->getValue(); // Get the SpeedCamera* stored in the current node
+
+            if (currentCam && currentCam->getNumOfRoot() && *currentCam->getNumOfRoot() == roadNumber) { // If this camera is on the same road
+                const Node<string*>* plateNode = currentCam->getPlates(); // Get the head of the plates list for this camera
+
+                while (plateNode) { // Traverse all plates (violations) for this camera
+                    totalViolations++; // Increase the total violations counter
+                    plateNode = plateNode->getNext(); // Move to the next plate node
+                }
+            }
+
+            inner = inner->getNext(); // Move to the next camera node
+        }
+
+        if (totalViolations > 200) { // If the total number of violations on this road is more than 200
+            std::cout << roadNumber << std::endl; // Print the road number that requires high enforcement
+        }
+
+        outer = outer->getNext(); // Move to the next camera in the outer loop
+    }
+}
+
+bool SpeedCameraNetwork::checkCar(const std::string& plateNumber) const { // Checks if the given car plate was recorded speeding in the network
+    Node<int>* cameraCodes = nullptr; // Dynamic linked list that stores all camera codes that recorded this plate
+    const Node<SpeedCamera*>* camNode = this->cameras; // Start from the head of the cameras list
+
+    while (camNode) { // Traverse all camera nodes in the network
+        // ReSharper disable once CppTooWideScopeInitStatement
+        const SpeedCamera* cam = camNode->getValue(); // Get the SpeedCamera* stored in the current node
+
+        if (cam && cam->getCode()) { // Make sure the camera and its code pointer are not null
+            const Node<std::string*>* plateNode = cam->getPlates(); // Get the head of the plates list for this camera
+            bool cameraAlreadyAdded = false; // Indicates whether this camera has already been added to the dynamic list
+
+            while (plateNode && !cameraAlreadyAdded) { // Traverse plates for this camera until we either find a match or reach the end
+                // ReSharper disable once CppTooWideScopeInitStatement
+                const std::string* platePtr = plateNode->getValue(); // Get the pointer to the plate string in the current node
+
+                // Check if the stored plate matches the requested plate
+                if (platePtr && *platePtr == plateNumber) {
+                    // Read the camera code value from the camera
+                    const int camCodeValue = *cam->getCode();
+
+                    // Allocate a new node that stores this camera code
+                    // ReSharper disable once CppDFAMemoryLeak
+                    const auto newNode = new Node(camCodeValue);
+
+                    // Insert the new node at the head of the dynamic list
+                    newNode->setNext(cameraCodes);
+                    // Update the head pointer of the dynamic list
+                    cameraCodes = newNode;
+                    // Mark that this camera was already added
+                    cameraAlreadyAdded = true;
+                }
+
+                plateNode = plateNode->getNext(); // Move to the next plate node
+            }
+        }
+
+        camNode = camNode->getNext(); // Move to the next camera node in the network
+    }
+
+    int count = 0; // Counter for how many cameras recorded this plate
+    const Node<int>* countNode = cameraCodes; // Pointer used to count the nodes in the dynamic list
+    while (countNode) { // Traverse the dynamic list
+        count++; // Increase the counter for each node
+        countNode = countNode->getNext(); // Move to the next node
+    }
+
+    bool result = false; // Final return value
+
+    if (count == 0) { // No camera recorded this plate
+        result = false; // Car was not recorded speeding
+    } else if (count == 1) { // Exactly one camera recorded this plate
+        result = true; // Car was recorded speeding, but only in one camera, so we do not print anything
+    } else { // More than one camera recorded this plate
+        const Node<int>* printNode = cameraCodes; // Pointer used to print all camera codes
+        while (printNode) { // Traverse the dynamic list again
+            std::cout << printNode->getValue() << std::endl; // Print the camera code that recorded the plate
+            printNode = printNode->getNext(); // Move to the next node
+        }
+        result = true; // Car was recorded speeding (in multiple cameras)
+    }
+
+    const Node<int>* del = cameraCodes; // Pointer used to free the dynamic list
+    while (del) { // Traverse the dynamic list and delete all nodes
+        const Node<int>* temp = del->getNext(); // Store the next node before deleting the current one
+        delete del; // Delete the current node
+        del = temp; // Move to the next node
+    }
+
+    return result; // Return true if the car was recorded speeding in at least one camera, otherwise false
+}
+

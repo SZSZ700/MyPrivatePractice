@@ -58,6 +58,15 @@ public:
 
     // Converts the whole network to a string (summary of cameras and their data)
     std::string toString() const;
+
+    // Adds a new speed camera using a pointer (performs deep copy, does not take ownership of the given pointer)
+    void addSpeedCamera(const SpeedCamera *sc);
+
+    // Prints road numbers that require high enforcement (more than 200 violations)
+    void printHighEnforcementRoads() const;
+
+    // Checks if the given car plate was recorded speeding; prints camera codes if found
+    bool checkCar(const std::string& plateNumber) const;
 };
 
 #endif //UNTITLED1_SPEEDCAMERANETWORK_H           // End of the include guard
