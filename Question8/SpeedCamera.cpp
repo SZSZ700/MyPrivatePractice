@@ -241,7 +241,7 @@ std::string SpeedCamera::toString() const {
 }
 
 // Adds a car plate to the list if the given speed is above the allowed maximum speed
-void SpeedCamera::addCar(const std::string &plateNumber, int carSpeed) {
+void SpeedCamera::addCar(const std::string &plateNumber, const int carSpeed) {
     // Check that maxSpeed is not null and the car speed is higher than the allowed maximum speed
     if (this->maxSpeed && carSpeed > *this->maxSpeed) {
         // Allocate a new string on the heap that holds the given plate number

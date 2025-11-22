@@ -46,7 +46,7 @@ public:
     std::string toString() const;
 
     // Adds a car to the plates list if its speed is above the allowed maximum speed
-    void addCar(const std::string &plateNumber, int carSpeed);
+    void addCar(const std::string &plateNumber, const int carSpeed);
 };
 
 #endif //UNTITLED1_SPEEDCAMERA_H               // End of the include guard
