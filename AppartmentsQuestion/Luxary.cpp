@@ -72,9 +72,8 @@ int Luxary::getRealPrice() const { // Returns the total price of a luxury apartm
     int basePrice = Appartment::getRealPrice(); // Get the base apartment price from the base class
 
     // Read the terrace area or use 0 if pointer is null
-    const int terraceVal = this->terraceArea ? *this->terraceArea : 0;
-
-    basePrice += terraceVal * COST_TERRACE; // Add the price of the terrace
+    // Add the price of the terrace
+    basePrice += (this->terraceArea ? *this->terraceArea : 0) * COST_TERRACE;
 
     return basePrice; // Return the total price
 }
