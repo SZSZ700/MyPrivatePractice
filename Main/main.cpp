@@ -2171,7 +2171,7 @@ void twentyTwentyTwoSummerA() {
         if (!apps || size <= 0) return; // If the array is null or size is not positive, there is nothing to count
 
         for (int i = 0; i < size; i++) { // Iterate over all apartments in the array
-            Appartment* app = apps[i]; // Get pointer to the current apartment
+            const auto app = apps[i]; // Get pointer to the current apartment
             if (!app) continue; // If the pointer is null, skip this element
 
             if (dynamic_cast<GardenApp*>(app)) { // If the object is a GardenApp
