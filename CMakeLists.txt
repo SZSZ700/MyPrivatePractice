@@ -64,4 +64,12 @@ add_executable(untitled1 Main/main.cpp
         Question8/SpeedCamera.h
         Question8/SpeedCameraNetwork.cpp
         Question8/SpeedCameraNetwork.h
+        AppartmentsQuestion/Appartment.cpp
+        AppartmentsQuestion/Appartment.h
+        AppartmentsQuestion/GardenApp.cpp
+        AppartmentsQuestion/GardenApp.h
+        AppartmentsQuestion/Penthouse.cpp
+        AppartmentsQuestion/Penthouse.h
+        AppartmentsQuestion/Luxary.cpp
+        AppartmentsQuestion/Luxary.h
 )
