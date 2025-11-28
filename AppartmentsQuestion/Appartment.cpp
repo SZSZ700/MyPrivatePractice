@@ -147,15 +147,17 @@ void printAvailableAppartmentsWithinBudget(Appartment* const* apps, const int si
     if (!apps || size <= 0) return; // Safety check: if the array pointer is null or size is not positive, do nothing
 
     for (int i = 0; i < size; i++) { // Iterate over all apartments in the array
-        const Appartment* app = apps[i]; // Get the pointer to the current apartment
+        const auto app = apps[i]; // Get the pointer to the current apartment
 
         if (!app) continue; // If the current pointer is null, skip it
 
         // ReSharper disable once CppTooWideScopeInitStatement
-        const string* owner = app->getOwner(); // Get pointer to the owner name
-        if (!owner || *owner != "FREE") continue; // If there is no owner string or the apartment is not free, skip it
+        const auto owner = app->getOwner(); // Get pointer to the owner name
+        // If there is no owner string or the apartment is not free, skip it
+        if (!owner || *owner != "FREE") continue;
 
-        const int price = app->getRealPrice(); // Calculate the price of the apartment using virtual dispatch
+        // Calculate the price of the apartment using virtual dispatch
+        const auto price = app->getRealPrice();
         if (price > maxBudget) continue; // If the price is higher than the client's budget, skip it
 
         std::cout << app->toString() << ", price=" << price << std::endl; // Print the apartment details and its price
