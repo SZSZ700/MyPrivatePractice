@@ -2184,7 +2184,6 @@ void twentyTwentyTwoSummerA() {
                     regularCount++; // Count it as a regular Appartment
             }
         }
-
     };
 }
 
