@@ -2152,6 +2152,40 @@ void twentyTwentyTwoSummerA() {
 
         return q;
     };
+
+    #include "..//AppartmentsQuestion/Appartment.h"
+    #include "..//AppartmentsQuestion/GardenApp.h"
+    #include "..//AppartmentsQuestion/Luxary.h"
+    #include "..//AppartmentsQuestion/Penthouse.h"
+    [[maybe_unused]] auto checkOp = [&] (Appartment* const* apps, const int size, int& regularCount,
+        int& gardenCount,
+        int& penthouseCount,
+        int& luxaryCount) -> void{
+
+        // Counts how many apartments of each type exist in the given array
+        regularCount = 0; // Initialize regular apartment counter
+        gardenCount = 0; // Initialize garden apartment counter
+        penthouseCount = 0; // Initialize penthouse apartment counter
+        luxaryCount = 0; // Initialize luxury apartment counter
+
+        if (!apps || size <= 0) return; // If the array is null or size is not positive, there is nothing to count
+
+        for (int i = 0; i < size; i++) { // Iterate over all apartments in the array
+            Appartment* app = apps[i]; // Get pointer to the current apartment
+            if (!app) continue; // If the pointer is null, skip this element
+
+            if (dynamic_cast<GardenApp*>(app)) { // If the object is a GardenApp
+                    gardenCount++; // Increase garden apartment counter
+            } else if (dynamic_cast<Penthouse*>(app)) { // If the object is a Penthouse
+                    penthouseCount++; // Increase penthouse counter
+            } else if (dynamic_cast<Luxary*>(app)) { // If the object is a Luxary
+                    luxaryCount++; // Increase luxury apartment counter
+            } else { // If it is not any of the derived types
+                    regularCount++; // Count it as a regular Appartment
+            }
+        }
+
+    };
 }
 
 int main() {
