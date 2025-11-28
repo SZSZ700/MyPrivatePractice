@@ -23,6 +23,8 @@ public:
     void setTerraceArea(int terraceAreaVal); // Setter for terrace area
 
     string toString() const override; // Override toString to include terrace details
+
+    int getRealPrice() const override; // calc price
 };
 
 #endif // LUXARY_H // End of include guard

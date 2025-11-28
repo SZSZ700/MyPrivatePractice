@@ -29,6 +29,8 @@ public:
     void setSeaView(bool seaViewVal); // Setter for sea view flag
 
     string toString() const override; // Override toString to include penthouse details
+
+    int getRealPrice() const override; // calc price
 };
 
 #endif // UNTITLED1_PENTHOUSE_H // End of include guard

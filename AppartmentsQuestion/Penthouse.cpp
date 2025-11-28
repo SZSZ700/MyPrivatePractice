@@ -113,3 +113,22 @@ string Penthouse::toString() const { // Build string describing penthouse
     ss << ", seaView=" << (this->seaView ? (*this->seaView ? "true" : "false") : "NULL"); // Append sea view flag
     return ss.str(); // Return final string
 }
+
+int Penthouse::getRealPrice() const { // Returns the total price of a penthouse apartment
+    int basePrice = Appartment::getRealPrice(); // Get the base apartment price from the base class
+
+    // Read the total terrace area or use 0 if pointer is null
+    const int terraceVal = this->terraceArea ? *this->terraceArea : 0;
+
+    basePrice += terraceVal * COST_TERRACE; // Add the price of all terraces
+
+    // Read the sea view flag, default to false if pointer is null
+    // ReSharper disable once CppTooWideScopeInitStatement
+    const bool hasSeaView = this->seaView ? *this->seaView : false;
+
+    if (!hasSeaView) { // If the penthouse does not have a sea view
+        basePrice = basePrice * 95 / 100; // Apply a 5% discount
+    }
+
+    return basePrice; // Return the final price after discount if applied
+}

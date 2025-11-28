@@ -22,6 +22,8 @@ public:
     void setGardenArea(int gardenAreaVal); // Setter for garden area
 
     string toString() const override; // Override toString to include garden details
+
+    int getRealPrice() const override; // Returns the total price including the garden area
 };
 
 #endif // UNTITLED1_GARDENAPP_H

@@ -37,6 +37,9 @@ public:
     void setArea(int areaVal); // Setter for area
 
     virtual string toString() const; // Virtual toString for printing apartment details
+
+    // calc price
+    virtual int getRealPrice() const;
 };
 
 #endif //UNTITLED1_APPARTMENT_H

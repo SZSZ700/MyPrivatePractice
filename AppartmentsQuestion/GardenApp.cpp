@@ -61,9 +61,21 @@ void GardenApp::setGardenArea(const int gardenAreaVal) { // Setter for garden ar
 }
 
 string GardenApp::toString() const { // Build a string describing the garden apartment
-    string base = Appartment::toString(); // Get base apartment description
+    const string base = Appartment::toString(); // Get base apartment description
+
     stringstream ss; // String stream to build extended description
     ss << base; // Start with base description
     ss << ", gardenArea=" << (this->gardenArea ? *this->gardenArea : -1); // Append garden area or -1
+
     return ss.str(); // Return the final string
+}
+
+int GardenApp::getRealPrice() const { // Returns the total price of a garden apartment
+    int basePrice = Appartment::getRealPrice(); // Get the base apartment price from the base class
+
+    const int gardenVal = this->gardenArea ? *this->gardenArea : 0; // Read the garden area or use 0 if pointer is null
+
+    basePrice += gardenVal * COST_GARDEN; // Add the price for the garden area
+
+    return basePrice; // Return the total price including garden
 }

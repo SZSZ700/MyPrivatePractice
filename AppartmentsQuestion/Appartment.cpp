@@ -135,3 +135,12 @@ string Appartment::toString() const { // Build a string describing the apartment
 
     return ss.str(); // Return the final string
 }
+
+int Appartment::getRealPrice() const { // Returns the total price of a regular apartment
+    const int areaVal = this->area ? *this->area : 0; // Read the apartment area or use 0 if pointer is null
+    const int price = areaVal * COST_APP; // Calculate base price using apartment area
+
+    return price; // Return the total price
+}
+
+
