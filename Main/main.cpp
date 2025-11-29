@@ -64,7 +64,7 @@ public:
     // virtual method: can be overridden by derived classes
     virtual void speak() { std::cout << "Person speaking: " << this->name << std::endl; }
 
-    // virtual method: string representation of the object
+    // virtual method: string representation of the Obj
     virtual std::string toString() {
         std::stringstream ss;
         ss << "name: " << this->name << ", age: " << this->age << ", bmi: " << this->bmi << ".";
@@ -2198,28 +2198,22 @@ void twentyTwentyTwoSummerA() {
     };
 
     [[maybe_unused]] auto checkOp = [&] (Appartment* const* apps, const int size, int& regularC,
-        int& gardenC, int& penthouseC, int& luxaryCount) -> void{
+        int& gardenC, int& penthouseC, int& luxaryC) -> void{
 
-        // Counts how many apartments of each type exist in the given array
-        // Initialize all apartments types counters to 0
-        regularC = gardenC = penthouseC = luxaryCount = 0;
+        // Counts how many apts of each type are in the []
+        // init' all apt types counters to 0
+        regularC = gardenC = penthouseC = luxaryC = 0;
 
-        if (!apps || size <= 0) return; // if the array is null or size is not positiv -> EXIT
+        if (!apps || size <= 0) return; // if [] = nullptr or size is 0 or negative => EXIT
 
         for (auto i = 0; i < size; i++) { // iterate over all apartments in the array
             const auto app = apps[i]; // get pointer to the current apartment
             if (!app) continue; // if no appartment
 
-            // if the object is a GardenApp, Increase garden apartment counter
-            if (dynamic_cast<GardenApp*>(app)) gardenC++;
-
-            // if the object is a Penthouse, Increase penthouse counter
-            else if (dynamic_cast<Penthouse*>(app)) penthouseC++;
-
-            // if the object is a Luxary, Increase luxury apartment counter
-            else if (dynamic_cast<Luxary*>(app)) luxaryCount++;
-
-            else regularC++; // if it is not any of the derived types, Count it as a regular Appartment
+            if (dynamic_cast<GardenApp*>(app)) gardenC++; // GardenApp? => inc' gardenC
+            else if (dynamic_cast<Penthouse*>(app)) penthouseC++; // Penthouse? => inc' penthouseC
+            else if (dynamic_cast<Luxary*>(app)) luxaryC++; // Luxary? => inc' luxuryC
+            else regularC++; // any? => inc' regularC
         }
     };
 }
