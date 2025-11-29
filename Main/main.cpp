@@ -1308,46 +1308,79 @@ void doItSuper(std::queue<int*>* q, const int n) {
 // Checks if there are two elements in the stack whose sum = num
 // ===========================================================
 bool ExistSum(std::stack<int*>* stk, const int num) {
-    // 🚨 Validation check
+    // 🚨 Validation check - make sure the stack pointer is not null
     if (!stk) return false;
 
     // 🧩 Temporary stack to preserve original stack state
     std::stack<int*> restore;
 
-    // 🔁 Outer loop: pick first number (a)
+    // 🔁 Outer loop: pick first number (a) until the stack becomes empty
     while (!stk->empty()) {
-        int* a = stk->top();   // 📥 Take top pointer
-        stk->pop();            // ⏩ Remove it temporarily
-        restore.push(a);       // 🧩 Save for later restoration
+        // 📥 Take top pointer as candidate 'a'
+        int* a = stk->top();
 
-        // 📦 Copy of remaining elements to compare with
-        std::stack<int*> temp = *stk;
+        // ⏩ Remove 'a' temporarily from the main stack
+        stk->pop();
 
-        // 🔁 Inner loop: compare with every other element (b)
-        while (!temp.empty()) {
+        // 🧩 Save 'a' in restore stack for later full restoration
+        restore.push(a);
+
+        // 🧱 Temporary stack for elements checked as 'b'
+        std::stack<int*> temp;
+
+        // 🔁 Inner loop: compare 'a' with every other element (b)
+        while (!stk->empty()) {
             // ReSharper disable once CppLocalVariableMayBeConst
-            int* b = temp.top();  // 📥 Take another pointer
-            temp.pop();           // ⏩ Move down
+            // 📥 Take another pointer from the top as candidate 'b'
+            int* b = stk->top();
 
-            // ✅ Check if both valid and their sum == num
+            // 🧩 Push 'b' into temp stack so we can restore it later
+            temp.push(b);
+
+            // ⏩ Remove 'b' from the main stack to move deeper
+            stk->pop();
+
+            // ✅ Check if both pointers are valid and their sum equals num
             if (a && b && *a + *b == num) {
-                // ♻️ Restore before returning
+                // 🌀 First restore elements scanned in inner loop back to main stack
+                while (!temp.empty()) {
+                    // 🔙 Push element from temp back to main stack
+                    stk->push(temp.top());
+                    // 🧹 Remove the element from temp stack
+                    temp.pop();
+                }
+
+                // 🌀 Then restore elements saved in restore stack back to main stack
                 while (!restore.empty()) {
+                    // 🔙 Push element from restore back to main stack
                     stk->push(restore.top());
+                    // 🧹 Remove the element from restore stack
                     restore.pop();
                 }
+
+                // 🏁 Matching pair found - stack is fully restored, return true
                 return true;
             }
         }
+
+        // 🌀 Restore elements from temp after full inner loop (no pair with current 'a')
+        while (!temp.empty()) {
+            // 🔙 Push element from temp back to main stack
+            stk->push(temp.top());
+            // 🧹 Remove the element from temp stack
+            temp.pop();
+        }
     }
 
-    // ♻️ Restore original stack order (nothing found)
+    // 🌀 Restore all elements from restore stack if no pair was found at all
     while (!restore.empty()) {
+        // 🔙 Push element from restore back to main stack
         stk->push(restore.top());
+        // 🧹 Remove the element from restore stack
         restore.pop();
     }
 
-    // ❌ No matching pair found
+    // ❌ No matching pair found - return false
     return false;
 }
 
@@ -1369,13 +1402,14 @@ int MaxSum(std::stack<int*>* stk) {
         restore.push(a);       // 🧩 Save for restore later
 
         // 📦 Copy of remaining elements
-        std::stack<int*> temp = *stk;
+        std::stack<int*> temp;
 
         // 🔁 Compare with all others
-        while (!temp.empty()) {
+        while (!stk->empty()) {
             // ReSharper disable once CppLocalVariableMayBeConst
-            int* b = temp.top();
-            temp.pop();
+            int* b = stk->top();
+            temp.push(b);
+            stk->pop();
 
             // ✅ Both valid pointers
             if (a && b) {
@@ -1383,6 +1417,12 @@ int MaxSum(std::stack<int*>* stk) {
                 if (int sum = *a + *b; sum > maxSum)        // 🔼 Update max if larger
                     maxSum = sum;
             }
+        }
+
+        // ♻️ Restore original stack
+        while (!temp.empty()) {
+            stk->push(temp.top());
+            temp.pop();
         }
     }
 
