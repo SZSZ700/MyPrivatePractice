@@ -729,7 +729,7 @@ bool isPerfectTreeOfQueues(BinNode<std::queue<int*>*>* root) {
             if (currentFatherBinNode->getLeft() == nullptr || currentFatherBinNode->getRight() == nullptr) {
                 // If only one child exists → not perfect, clear queue and return false
                 while (!q->empty()) { q->pop(); }
-                // ReSharper disable once CppDFAMemoryLeak
+                delete q;
                 return false;
             }
 
@@ -744,7 +744,7 @@ bool isPerfectTreeOfQueues(BinNode<std::queue<int*>*>* root) {
                 !isAllValuesInFirstQueueSmllerThanAllValuesInSecondQueue(lefty, fatherQueue)
                     || !isAllValuesInFirstQueueSmllerThanAllValuesInSecondQueue(fatherQueue, righty)) {
                         while (!q->empty()) { q->pop(); } // clear queue before exit
-                        // ReSharper disable once CppDFAMemoryLeak
+                        delete q;
                         return false;
             }
         }
@@ -1393,7 +1393,7 @@ int MaxSum(std::stack<int*>* stk) {
     if (!stk || stk->size() < 2) return -1;
 
     int maxSum = std::numeric_limits<int>::min(); // 🧮 Start with the smallest int
-    std::stack<int*> restore;                     // 📦 To restore later
+    std::stack<int*> restore; // 📦 To restore later
 
     // 🔁 Outer loop: choose first number (a)
     while (!stk->empty()) {
