@@ -2194,13 +2194,14 @@ void twentyTwentyFiveSummerA() {
         const auto temp = new std::queue<string*>();
         // bool flag to detect if the function could add the new string to the queue
         bool added = false;
-        // first charcter in the new string
-        const string firstOfSt = st[0];
+        // first character in the new string
+        const char firstOfSt = (*st)[0];
 
         // iteration 🔁
         while (!q->empty()) {
+            // get first character of the current string in the queue
             // ReSharper disable once CppTooWideScopeInitStatement
-            string currentChar = q->front()[0];
+            const char currentChar = (*q->front())[0];
 
             if (currentChar == firstOfSt) {
                 added = true; // the new string added successfully to the restoration queue
@@ -2214,7 +2215,7 @@ void twentyTwentyFiveSummerA() {
                 break; // EXIT - stop the loop
             }
 
-            // else keep moving all string to the restoration queue
+            // else keep moving all strings to the restoration queue
             temp->push(q->front());
             q->pop();
         }
@@ -2226,10 +2227,178 @@ void twentyTwentyFiveSummerA() {
         }
 
         // if the function couldn't add the string, add it at the end of the original queue
-        if (!added) { q->push(new string(firstOfSt)); }
+        if (!added) { q->push(st); }
 
         delete temp; // free allocated queue from memory
     };
+
+    // 1 - b
+    [[maybe_unused]] auto isProperQueue = [&] (std::queue<string*> *q) -> bool {
+        // 🚨 Validation - if queue pointer is null or queue is empty, it is considered proper
+        if (!q || q->empty()) return true;
+
+        // 📦 Temporary queue used for restoration
+        const auto temp = new std::queue<string*>();
+
+        // 🧠 Flag that marks if the queue is not valid
+        bool notValid = false;
+
+        // 🔤 First character of the first string in the queue
+        const char currentChar = (*q->front())[0];
+
+        // 🔁 Move all strings that start with the same first character to the temp queue
+        while (!q->empty() && (*q->front())[0] == currentChar) {
+            temp->push(q->front());
+            q->pop();
+        }
+
+        // 🔁 Iterate over the rest of the strings in the original queue
+        while (!q->empty()) {
+            // 🔤 Get first character of current word
+            // ReSharper disable once CppTooWideScopeInitStatement
+            const char currentFirstCharFromWord = (*q->front())[0];
+
+            // ❌ If we find again the same first character, the queue is not proper
+            if (currentFirstCharFromWord == currentChar) {
+                notValid = true;
+            }
+
+            // 📦 Move current string to the temp queue
+            temp->push(q->front());
+            q->pop();
+        }
+
+        // 🔁 Restore all elements back from temp to the original queue
+        while (!temp->empty()) {
+            q->push(temp->front());
+            temp->pop();
+        }
+
+        // 🧹 Free allocated queue from memory
+        delete temp;
+
+        // ✅ Return true if queue is proper, false otherwise
+        return !notValid;
+    };
+
+    // 1 -c
+
+    // 🔧 Lambda that fixes the queue so it becomes a "proper queue"
+    [[maybe_unused]] auto fixIt = [&] (std::queue<string*> *q) -> void {
+        // 🧠 If the queue is already proper, do nothing and exit
+        if (isProperQueue(q)) return;
+
+        // 🅲 Helper lambda: finds the most common first character in the queue
+        [[maybe_unused]] auto mostChar = [&] (std::queue<string*> *queue) -> char {
+            // 🧠 Hash map that counts how many times each first character appears
+            unordered_map<char, int> map; // hashmap: key = char, value = count
+
+            // 📦 Temporary queue used to restore the original queue after scanning
+            const auto temp = new std::queue<string*>(); // restoration queue
+
+            // 🔁 Iterate over all elements in the queue and fill the map
+            while (!queue->empty()) {
+                // 📥 Get pointer to the string at the front of the queue
+                string* s = queue->front();
+                // ✅ If the pointer is valid and the string is not empty
+                if (s && !s->empty()) {
+                    // 🔤 Take the first character of the current string
+                    char currentChar = (*s)[0];
+                    // 🔼 Increase the counter for this character in the map
+                    map[currentChar]++;
+                }
+
+                // 📦 Move the current element from the original queue to the temp queue
+                temp->push(s);
+                // ⏩ Remove the current element from the original queue
+                queue->pop();
+            }
+
+            // ♻️ Restore all elements back from temp queue to the original queue
+            while (!temp->empty()) {
+                // 🔙 Push the element from temp back to the original queue
+                queue->push(temp->front());
+                // 🧹 Remove the element from the temp queue
+                temp->pop();
+            }
+            // 🧹 Free the temporary queue from memory
+            delete temp;
+
+            // 🔍 Variable that stores the maximum count found so far
+            int max = 0;
+            // 🔤 Variable that stores the character with the maximum count
+            char maxChar = '\0';
+
+            // 🔁 Iterate over all entries in the map to find the most frequent character
+            for (const pair<char, int> entry : map) {
+                // 🔤 Current character from the map entry
+                const char currentChar = entry.first;
+                // 🔢 How many times this character appeared in the queue
+                const int howMany = entry.second;
+
+                // 🔼 If this character appears more times than the current max
+                if (howMany > max) {
+                    // 📌 Update the max count
+                    max = howMany;
+                    // 📌 Update the character with the highest frequency
+                    maxChar = currentChar;
+                }
+            }
+
+            // ✅ Return the character that appeared most as the first character
+            return maxChar; // ✅ return the character that appeared most
+        };
+
+        // 📦 Queue that will hold all strings starting with the most common character
+        const auto same = new std::queue<string*>();
+        // 📦 Queue that will hold all other strings
+        const auto notsame = new std::queue<string*>();
+
+        // 🔤 Get the most common first character in the original queue
+        const char mostchar = mostChar(q);
+
+        // 🔁 Split the original queue into "same" (matching) and "notsame" (non-matching)
+        while (!q->empty()) {
+            // 📥 Get pointer to the string at the front of the original queue
+            string *s = q->front();
+            // 🔤 Get the first character of this string
+            const char currentChar = (*s)[0];
+
+            // ✅ If the first character matches the most common character
+            if (currentChar == mostchar) {
+                // 📦 Put this string into the "same" queue
+                same->push(s);
+            } else {
+                // 📦 Otherwise, put this string into the "notsame" queue
+                notsame->push(s);
+            }
+
+            // ⏩ Remove the current element from the original queue
+            q->pop(); // 👈 move forward in the original queue
+        }
+
+        // 🔁 Rebuild the original queue: first all matching strings ("same")
+        while (!same->empty()) {
+            // 🔙 Push element from "same" back to the original queue
+            q->push(same->front());
+            // 🧹 Remove element from the "same" queue
+            same->pop();
+        }
+
+        // 🔁 Then add all non-matching strings ("notsame") to the end
+        while (!notsame->empty()) {
+            // 🔙 Push element from "notsame" back to the original queue
+            q->push(notsame->front());
+            // 🧹 Remove element from the "notsame" queue
+            notsame->pop();
+        }
+
+        // 🧹 Free the "same" helper queue from memory
+        delete same;
+        // 🧹 Free the "notsame" helper queue from memory
+        delete notsame;
+    };
+
 
     // ... ...
 }
