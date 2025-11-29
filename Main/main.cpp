@@ -2169,8 +2169,8 @@ void twentyTwentyTwoSummerA() {
         return q;
     };
 
-    [[maybe_unused]] auto checkOp = [&] (Appartment* const* apps, const int size, int& regularC,
-        int& gardenC, int& penthouseC, int& luxaryC) -> void{
+    [[maybe_unused]] auto checkOp = [&] (auto* const* apps, const auto size, auto& regularC,
+        auto& gardenC, auto& penthouseC, auto& luxaryC) -> void{
         regularC = gardenC = penthouseC = luxaryC = 0; // init' all apt types counters to 0
 
         if (!apps || size <= 0) return; // if the [] = nullptr or size is 0 or negative => EXIT
@@ -2179,10 +2179,10 @@ void twentyTwentyTwoSummerA() {
             const auto app = apps[i]; // get pointer to the current apt
             if (!app) continue; // if no apt
 
-            if (dynamic_cast<GardenApp*>(app)) gardenC++; // GardenApp? => inc' gardenC
-            else if (dynamic_cast<Penthouse*>(app)) penthouseC++; // Penthouse? => inc' penthouseC
-            else if (dynamic_cast<Luxary*>(app)) luxaryC++; // Luxary? => inc' luxuryC
-            else regularC++; // any? => inc' regularC
+            if (dynamic_cast<GardenApp*>(app)) ++gardenC; // GardenApp? => inc' gardenC
+            else if (dynamic_cast<Penthouse*>(app)) ++penthouseC; // Penthouse? => inc' penthouseC
+            else if (dynamic_cast<Luxary*>(app)) ++luxaryC; // Luxary? => inc' luxuryC
+            else ++regularC; // any? => inc' regularC
         }
     };
 }
