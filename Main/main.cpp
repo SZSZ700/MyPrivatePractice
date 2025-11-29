@@ -2187,6 +2187,53 @@ void twentyTwentyTwoSummerA() {
     };
 }
 
+void twentyTwentyFiveSummerA() {
+    // 1 - a
+    [[maybe_unused]] auto addToProperQueue = [&] (std::queue<string*> *q, string *st) -> void {
+        // restoration queue
+        const auto temp = new std::queue<string*>();
+        // bool flag to detect if the function could add the new string to the queue
+        bool added = false;
+        // first charcter in the new string
+        const string firstOfSt = st[0];
+
+        // iteration 🔁
+        while (!q->empty()) {
+            // ReSharper disable once CppTooWideScopeInitStatement
+            string currentChar = q->front()[0];
+
+            if (currentChar == firstOfSt) {
+                added = true; // the new string added successfully to the restoration queue
+                temp->push(st);
+
+                // 🔁 relocate all left strings from the original queue to the restoration queue
+                while (!q->empty()) {
+                    temp->push(q->front());
+                    q->pop();
+                }
+                break; // EXIT - stop the loop
+            }
+
+            // else keep moving all string to the restoration queue
+            temp->push(q->front());
+            q->pop();
+        }
+
+        // restoration 🔁 - restore the original queue
+        while (!temp->empty()) {
+            q->push(temp->front());
+            temp->pop();
+        }
+
+        // if the function couldn't add the string, add it at the end of the original queue
+        if (!added) { q->push(new string(firstOfSt)); }
+
+        delete temp; // free allocated queue from memory
+    };
+
+    // ... ...
+}
+
 int main() {
     system("chcp 65001 > nul"); // 💡 Change console to UTF-8 mode (Windows CMD command)
     someTry0();
