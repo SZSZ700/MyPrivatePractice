@@ -2037,9 +2037,9 @@ void twentyTwentyTwoSummerA() {
     };
 
     // 1-b
-    auto theSurvives = [&] (Node<int*> *chain) -> int* {
+    [[maybe_unused]] auto theSurvives = [&] (Node<int*> *chain) -> void {
         // ReSharper disable once CppDFAMemoryLeak
-        if (!chain) { return new int(-1); }
+        if (!chain) { return; }
 
         BinNode<Node<int*>*> *newey = nullptr;
         BinNode<Node<int*>*> *tail = nullptr;
@@ -2072,10 +2072,10 @@ void twentyTwentyTwoSummerA() {
 
         // ✅ Save survivor value before deletion
         // ReSharper disable once CppDFAMemoryLeak
-        const auto survivor = new int(-1);
+        auto survivor = -1;
         // ReSharper disable once CppDFANullDereference
         if (const Node<int*>* lastList = tail->getValue(); lastList && lastList->getValue()) {
-            *survivor = *lastList->getValue();
+            survivor = *lastList->getValue();
         }
 
         // ✅ FREE_MEMORY_AREA
@@ -2100,37 +2100,9 @@ void twentyTwentyTwoSummerA() {
 
         // ✅ return survivor
         // ReSharper disable once CppDFAMemoryLeak
-        return survivor;
+        cout<< survivor;
+        // ReSharper disable once CppDFAMemoryLeak
     };
-
-    auto example = [theSurvives] () {
-        // create Node-list
-        // ReSharper disable once CppDFAMemoryLeak
-        auto *a = new Node(new int(5));
-        // ReSharper disable once CppDFAMemoryLeak
-        auto *b = new Node(new int(20));
-        // ReSharper disable once CppDFAMemoryLeak
-        auto *c = new Node(new int(9));
-        // ReSharper disable once CppDFAMemoryLeak
-        auto *d = new Node(new int(6));
-        // ReSharper disable once CppDFAMemoryLeak
-        auto *e = new Node(new int(5));
-        // ReSharper disable once CppDFAMemoryLeak
-        auto *f = new Node(new int(8));
-        // ReSharper disable once CppDFAMemoryLeak
-        auto *g = new Node(new int(2));
-        a->setNext(b);
-        b->setNext(c);
-        c->setNext(d);
-        d->setNext(e);
-        e->setNext(f);
-        f->setNext(g);
-        int *lastSurvivor = theSurvives(a);
-        std::cout << lastSurvivor << std::endl;
-        delete lastSurvivor;
-    };
-
-    example();
 
     [[maybe_unused]] auto sumQ = [] (std::queue<int*>*q) -> int {
         if (!q) { return -1; }
