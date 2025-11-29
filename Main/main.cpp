@@ -2197,35 +2197,29 @@ void twentyTwentyTwoSummerA() {
         return q;
     };
 
-    [[maybe_unused]] auto checkOp = [&] (Appartment* const* apps, const int size, int& regularCount,
-        int& gardenCount,
-        int& penthouseCount,
-        int& luxaryCount) -> void{
+    [[maybe_unused]] auto checkOp = [&] (Appartment* const* apps, const int size, int& regularC,
+        int& gardenC, int& penthouseC, int& luxaryCount) -> void{
 
         // Counts how many apartments of each type exist in the given array
-        regularCount = 0; // Initialize regular apartment counter
-        gardenCount = 0; // Initialize garden apartment counter
-        penthouseCount = 0; // Initialize penthouse apartment counter
-        luxaryCount = 0; // Initialize luxury apartment counter
+        // Initialize all apartments types counters to 0
+        regularC = gardenC = penthouseC = luxaryCount = 0;
 
-        if (!apps || size <= 0) return; // If the array is null or size is not positive, there is nothing to count
+        if (!apps || size <= 0) return; // if the array is null or size is not positiv -> EXIT
 
-        for (auto i = 0; i < size; i++) { // Iterate over all apartments in the array
-            const auto app = apps[i]; // Get pointer to the current apartment
+        for (auto i = 0; i < size; i++) { // iterate over all apartments in the array
+            const auto app = apps[i]; // get pointer to the current apartment
+            if (!app) continue; // if no appartment
 
-            if (!app) continue; // If the pointer is null, skip this element
+            // if the object is a GardenApp, Increase garden apartment counter
+            if (dynamic_cast<GardenApp*>(app)) gardenC++;
 
-            // If the object is a GardenApp, Increase garden apartment counter
-            if (dynamic_cast<GardenApp*>(app)) gardenCount++;
+            // if the object is a Penthouse, Increase penthouse counter
+            else if (dynamic_cast<Penthouse*>(app)) penthouseC++;
 
-            // If the object is a Penthouse, Increase penthouse counter
-            else if (dynamic_cast<Penthouse*>(app)) penthouseCount++;
-
-            // If the object is a Luxary, Increase luxury apartment counter
+            // if the object is a Luxary, Increase luxury apartment counter
             else if (dynamic_cast<Luxary*>(app)) luxaryCount++;
 
-            // If it is not any of the derived types, Count it as a regular Appartment
-            else regularCount++;
+            else regularC++; // if it is not any of the derived types, Count it as a regular Appartment
         }
     };
 }
