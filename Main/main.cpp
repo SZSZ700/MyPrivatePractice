@@ -2199,16 +2199,13 @@ void twentyTwentyTwoSummerA() {
 
     [[maybe_unused]] auto checkOp = [&] (Appartment* const* apps, const int size, int& regularC,
         int& gardenC, int& penthouseC, int& luxaryC) -> void{
+        regularC = gardenC = penthouseC = luxaryC = 0; // init' all apt types counters to 0
 
-        // Counts how many apts of each type are in the []
-        // init' all apt types counters to 0
-        regularC = gardenC = penthouseC = luxaryC = 0;
+        if (!apps || size <= 0) return; // if the [] = nullptr or size is 0 or negative => EXIT
 
-        if (!apps || size <= 0) return; // if [] = nullptr or size is 0 or negative => EXIT
-
-        for (auto i = 0; i < size; i++) { // iterate over all apartments in the array
-            const auto app = apps[i]; // get pointer to the current apartment
-            if (!app) continue; // if no appartment
+        for (auto i = 0; i < size; i++) { // loop over all apts in the []
+            const auto app = apps[i]; // get pointer to the current apt
+            if (!app) continue; // if no apt
 
             if (dynamic_cast<GardenApp*>(app)) gardenC++; // GardenApp? => inc' gardenC
             else if (dynamic_cast<Penthouse*>(app)) penthouseC++; // Penthouse? => inc' penthouseC
