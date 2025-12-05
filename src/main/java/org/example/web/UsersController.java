@@ -55,13 +55,19 @@ public class UsersController {
         return firebaseService.signup(user).thenApply(result -> {
             if ("User created successfully".equals(result)) {
                 // Return HTTP 201 if success
-                return ResponseEntity.status(HttpStatus.CREATED).body(result);
+                return ResponseEntity
+                        .status(HttpStatus.CREATED)
+                        .body(result);
             } else if ("Username already exists".equals(result)) {
                 // Return HTTP 409 if username exists
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(result);
+                return ResponseEntity
+                        .status(HttpStatus.CONFLICT)
+                        .body(result);
             } else {
                 // Return HTTP 500 for generic errors
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
+                return ResponseEntity
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(result);
             }
         });
     }
