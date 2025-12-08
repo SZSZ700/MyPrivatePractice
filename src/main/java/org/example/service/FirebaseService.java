@@ -927,4 +927,69 @@ public class FirebaseService {
         return fut;
         // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
     }
+
+    // ------------------------------ BMI DISTRIBUTION (GLOBAL) --------------------------
+    // Calculates how many users are in each BMI category:
+    // Underweight (<18.5), Normal (18.5–24.9), Overweight (25–29.9), Obese (>=30).
+    // Returns a CompletableFuture<Map<String, Integer>> like:
+    // {"Underweight": 3, "Normal": 12, "Overweight": 5, "Obese": 2}
+    public CompletableFuture<Map<String, Integer>> getBmiDistribution() {
+        // Future that will hold the final distribution map
+        CompletableFuture<Map<String, Integer>> future = new CompletableFuture<>();
+
+        // Read all users once from Firebase
+        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+
+                // Counters for each BMI category
+                int underweight = 0; // BMI < 18.5
+                int normal = 0;      // 18.5 <= BMI < 25
+                int overweight = 0;  // 25   <= BMI < 30
+                int obese = 0;       // BMI >= 30
+
+                // Iterate over all user nodes
+                for (DataSnapshot child : snapshot.getChildren()) {
+
+                    // Read "bmi" field as Double
+                    Double bmi = child.child("bmi").getValue(Double.class);
+
+                    // If no BMI recorded for this user → skip (not counted)
+                    if (bmi == null) { continue; }
+
+                    double value = bmi.doubleValue();
+
+                    // Classify into category
+                    if (value < 18.5) { underweight++; }
+                    else if (value < 25.0) { normal++; }
+                    else if (value < 30.0) { overweight++; }
+                    else { obese++; }
+                }
+
+                // Use LinkedHashMap to preserve insertion order
+                Map<String, Integer> distribution = new LinkedHashMap<>();
+                distribution.put("Underweight", underweight);
+                distribution.put("Normal", normal);
+                distribution.put("Overweight", overweight);
+                distribution.put("Obese", obese);
+
+                // Debug print
+                System.out.println("DEBUG getBmiDistribution -> " + distribution);
+
+                // Complete future with the calculated map
+                future.complete(distribution);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // If query fails, complete with exception
+                System.err.println("ERROR getBmiDistribution -> " + error.getMessage());
+                future.completeExceptionally(error.toException());
+            }
+        });
+
+        // Return future immediately (will be completed asynchronously)
+        return future;
+    }
+
 }
