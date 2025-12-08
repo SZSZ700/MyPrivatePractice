@@ -478,5 +478,40 @@ public class UsersController {
                             );
                 });
     }
+
+    // ---------------------------------------------------------------------
+    // BMI DISTRIBUTION (GET /api/users/stats/bmiDistribution)
+    // Returns aggregated statistics of how many users fall into each BMI category.
+    // Example response:
+    // {
+    //   "Underweight": 3,
+    //   "Normal": 12,
+    //   "Overweight": 5,
+    //   "Obese": 2
+    // }
+    // ---------------------------------------------------------------------
+    @GetMapping("/stats/bmiDistribution")
+    public CompletableFuture<ResponseEntity<Map<String, Integer>>> getBmiDistribution() {
+
+        // Debug log: endpoint triggered
+        System.out.println("DEBUG UsersController.getBmiDistribution called");
+
+        // Call Firebase service to calculate BMI distribution
+        return firebaseService.getBmiDistribution()
+                .thenApply(result -> {
+                    // Never null – always at least empty map
+                    return ResponseEntity
+                            .ok(result);
+                })
+                .exceptionally(ex -> {
+                    // On failure -> 500 Internal Server Error
+                    System.err.println("ERROR UsersController.getBmiDistribution -> " + ex.getMessage());
+
+                    return ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(Collections.emptyMap());
+                });
+    }
+
 }
 
