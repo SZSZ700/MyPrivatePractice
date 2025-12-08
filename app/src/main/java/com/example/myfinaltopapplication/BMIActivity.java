@@ -22,8 +22,25 @@ import androidx.appcompat.app.AppCompatActivity;
 // Import CompletableFuture for async calls to server
 import java.util.concurrent.CompletableFuture;
 
+// Import logging for debug messages
+import android.util.Log;
+
+// Import MPAndroidChart classes for BMI PieChart
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.utils.ColorTemplate;
+
+// Import JSON for BMI distribution response
+import org.json.JSONObject;
+
+// Import Java util for list handling
+import java.util.ArrayList;
+
 // -------------------------------------------------------------
 // BMIActivity - calculates Body Mass Index and syncs with server
+// Also shows global BMI distribution in a PieChart
 // -------------------------------------------------------------
 public class BMIActivity extends AppCompatActivity {
     // Input field for weight (kg)
@@ -36,6 +53,8 @@ public class BMIActivity extends AppCompatActivity {
     private TextView resultText;
     // Back button to go home
     private ImageButton backHome;
+    // PieChart to show global BMI distribution
+    private PieChart bmiPieChart;
 
     // Currently logged-in user (loaded from SharedPreferences)
     private String currentUser;
@@ -73,6 +92,8 @@ public class BMIActivity extends AppCompatActivity {
         calcButton = findViewById(R.id.calcButton);
         resultText = findViewById(R.id.resultText);
         backHome = findViewById(R.id.imageButton3);
+        // Bind PieChart for global BMI distribution
+        bmiPieChart = findViewById(R.id.bmiPieChart);
 
         // ---------------------------------------------------------------------
         // Try to load saved BMI from server
@@ -128,6 +149,9 @@ public class BMIActivity extends AppCompatActivity {
 
                         // Show confirmation toast
                         Toast.makeText(BMIActivity.this, "BMI saved successfully", Toast.LENGTH_SHORT).show();
+
+                        // Optionally reload global chart after save (comment out if you don't want this)
+                        loadBmiDistributionChart();
                     } else {
                         // If failed → show error toast
                         Toast.makeText(BMIActivity.this, "Failed to save BMI", Toast.LENGTH_SHORT).show();
@@ -147,5 +171,97 @@ public class BMIActivity extends AppCompatActivity {
             Intent bhome = new Intent(BMIActivity.this, HomePage.class);
             startActivity(bhome);
         });
+
+        // ---------------------------------------------------------------------
+        // Load global BMI distribution for PieChart (does not affect old logic)
+        // ---------------------------------------------------------------------
+        loadBmiDistributionChart();
+    }
+
+    // -------------------------------------------------------------------------
+    // loadBmiDistributionChart - fetches global BMI distribution and renders it
+    // in a PieChart using RestClient.getBmiDistribution()
+    // -------------------------------------------------------------------------
+    private void loadBmiDistributionChart() {
+        // If PieChart view is not found in layout → avoid crash
+        if (bmiPieChart == null) {
+            Log.w("BMI_CHART", "PieChart view is null – check activity_bmiactivity.xml");
+            return;
+        }
+
+        // Show default text if there is no data yet
+        bmiPieChart.setNoDataText("No BMI statistics available");
+
+        // Call REST API to get global BMI distribution
+        CompletableFuture<JSONObject> future = RestClient.getBmiDistribution();
+
+        // Handle async response
+        future.thenAccept(obj -> runOnUiThread(() -> {
+            try {
+                // If null → keep "no data" state
+                if (obj == null) {
+                    Log.w("BMI_CHART", "getBmiDistribution returned null");
+                    return;
+                }
+
+                // Prepare entries for each BMI category
+                ArrayList<PieEntry> entries = new ArrayList<>();
+
+                // Read counts from JSON (0 if missing)
+                int under = obj.optInt("Underweight", 0);
+                int normal = obj.optInt("Normal", 0);
+                int over = obj.optInt("Overweight", 0);
+                int obese = obj.optInt("Obese", 0);
+
+                // Add only categories with at least one user
+                if (under > 0) {
+                    entries.add(new PieEntry(under, "Underweight"));
+                }
+                if (normal > 0) {
+                    entries.add(new PieEntry(normal, "Normal"));
+                }
+                if (over > 0) {
+                    entries.add(new PieEntry(over, "Overweight"));
+                }
+                if (obese > 0) {
+                    entries.add(new PieEntry(obese, "Obese"));
+                }
+
+                // If still empty → no BMI recorded yet
+                if (entries.isEmpty()) {
+                    bmiPieChart.clear();
+                    bmiPieChart.setNoDataText("No BMI statistics yet");
+                    return;
+                }
+
+                // Create data set for PieChart
+                PieDataSet dataSet = new PieDataSet(entries, "");
+                // Use built-in color template
+                dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
+                // Text size for values on slices
+                dataSet.setValueTextSize(12f);
+
+                // Create PieData object from dataset
+                PieData data = new PieData(dataSet);
+
+                // Assign data to chart
+                bmiPieChart.setData(data);
+
+                // Optional appearance configs
+                bmiPieChart.getDescription().setEnabled(false);
+                bmiPieChart.setUsePercentValues(false);
+                bmiPieChart.setEntryLabelTextSize(10f);
+
+                // Enable legend to show categories
+                bmiPieChart.getLegend().setEnabled(true);
+
+                // Refresh chart
+                bmiPieChart.invalidate();
+
+            } catch (Exception e) {
+                // Log any unexpected error
+                Log.e("BMI_CHART", "Error rendering BMI PieChart", e);
+            }
+        }));
     }
 }

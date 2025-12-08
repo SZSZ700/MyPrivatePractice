@@ -44,7 +44,7 @@
         android:text=""
         android:textSize="18sp"
         android:layout_marginTop="30dp"
-        android:gravity="center"/>
+        android:gravity="center" />
 
     <ImageButton
         android:id="@+id/imageButton3"
@@ -52,5 +52,11 @@
         android:layout_height="wrap_content"
         android:backgroundTint="@color/white"
         app:srcCompat="?attr/homeAsUpIndicator" />
+
+    <com.github.mikephil.charting.charts.PieChart
+        android:id="@+id/bmiPieChart"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_marginTop="16dp" />
 
 </LinearLayout>
