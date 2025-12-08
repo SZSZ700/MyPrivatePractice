@@ -694,5 +694,60 @@ public class RestClient {
         return future;
     }
 
+    // ---------------------------------------------------------------------
+    // GET BMI DISTRIBUTION (GLOBAL)
+    // Calls: GET {BASE_URL}/stats/bmiDistribution
+    // Returns: CompletableFuture<JSONObject> like:
+    // {"Underweight":3,"Normal":12,"Overweight":5,"Obese":2}
+    // ---------------------------------------------------------------------
+    public static CompletableFuture<JSONObject> getBmiDistribution() {
+        // Future for async result
+        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+
+        // Build URL for the statistics endpoint
+        String url = BASE_URL + "/stats/bmiDistribution";
+
+        // Build GET request
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        // Send async request
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Log error and complete with null (or exceptionally if תרצה)
+                Log.e("HTTP", "❌ getBmiDistribution failed: " + e.getMessage());
+                future.complete(null);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try (ResponseBody body = response.body()) {
+                    // If not successful -> return null
+                    if (!response.isSuccessful()) {
+                        String resp = (body != null ? body.string() : "");
+                        Log.w("HTTP", "⚠️ Non-OK getBmiDistribution: " + response.code() + " body=" + resp);
+                        future.complete(null);
+                        return;
+                    }
+
+                    // Read JSON body
+                    String json = (body != null ? body.string() : "{}");
+                    Log.d("HTTP", "📥 getBmiDistribution response=" + json);
+
+                    // Parse into JSONObject and complete
+                    future.complete(new JSONObject(json));
+                } catch (Exception ex) {
+                    Log.e("HTTP", "❌ getBmiDistribution parse error", ex);
+                    future.complete(null);
+                }
+            }
+        });
+
+        return future;
+    }
+
 }
 
