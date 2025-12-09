@@ -992,4 +992,98 @@ public class FirebaseService {
         return future;
     }
 
+    // ------------------------------ GET CALORIES ------------------------------
+    // Returns the current calories field for a user.
+    // If user not found or field missing → returns 0.
+    public CompletableFuture<Integer> getCalories(String username) {
+        // Future that will hold the result (calories or default 0)
+        CompletableFuture<Integer> fut = new CompletableFuture<>();
+
+        // Query Firebase by username
+        usersRef.orderByChild("userName").equalTo(username)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snap) {
+                        // If user not found → return 0 (default)
+                        if (!snap.exists()) {
+                            System.out.println("DEBUG getCalories -> user not found: " + username);
+                            fut.complete(0);
+                            return;
+                        }
+
+                        // For each matching user (usually one)
+                        for (DataSnapshot userSnap : snap.getChildren()) {
+                            // Read "calories" as Integer
+                            Integer cals = userSnap.child("calories").getValue(Integer.class);
+                            // Default to 0 if null
+                            fut.complete(cals != null ? cals : 0);
+                            return; // Only first match
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        // Complete exceptionally so controller can handle as 5xx if it wants
+                        System.err.println("ERROR getCalories -> " + error.getMessage());
+                        fut.completeExceptionally(error.toException());
+                    }
+                });
+
+        return fut;
+    }
+
+    // ------------------------------ UPDATE CALORIES ---------------------------
+    // Updates the "calories" field for a user.
+    // Returns true if updated, false if user not found or invalid input.
+    public CompletableFuture<Boolean> updateCalories(String username, int calories) {
+        // Future that will hold true/false depending on update result
+        CompletableFuture<Boolean> fut = new CompletableFuture<>();
+
+        // Optional validation: we do not allow negative values
+        // (You can change max if you want)
+        if (calories < 0 || calories > 20000) {
+            System.out.println("DEBUG updateCalories -> invalid value: " + calories);
+            fut.complete(false);
+            return fut;
+        }
+
+        // Query Firebase for user by username
+        usersRef.orderByChild("userName").equalTo(username)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snap) {
+                        // If no user found, complete with false
+                        if (!snap.exists()) {
+                            System.out.println("DEBUG updateCalories -> user not found: " + username);
+                            fut.complete(false);
+                            return;
+                        }
+
+                        // For each match, update "calories" field
+                        for (DataSnapshot userSnap : snap.getChildren()) {
+                            userSnap.getRef().child("calories").setValue(calories, (err, ref) -> {
+                                if (err != null) {
+                                    System.err.println("ERROR updateCalories -> " + err.getMessage());
+                                    fut.complete(false);
+                                } else {
+                                    System.out.println("DEBUG updateCalories -> updated to " + calories +
+                                            " for user " + username);
+                                    fut.complete(true);
+                                }
+                            });
+
+                            return; // Stop after first update
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        // Complete exceptionally if query cancelled
+                        System.err.println("ERROR updateCalories onCancelled -> " + error.getMessage());
+                        fut.completeExceptionally(error.toException());
+                    }
+                });
+
+        return fut;
+    }
 }
