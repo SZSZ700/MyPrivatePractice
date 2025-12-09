@@ -76,4 +76,57 @@
         android:layout_height="wrap_content"
         android:backgroundTint="#E3F2FD"
         app:srcCompat="?attr/homeAsUpIndicator" />
+
+    <!-- **** חדש: סקשן סטטיסטיקת יעד **** -->
+
+    <TextView
+        android:id="@+id/goalSummaryTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Goal consistency (last 7 days)"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:textColor="#0D47A1" />
+
+    <TextView
+        android:id="@+id/goalSummaryText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginTop="4dp"
+        android:textColor="#0D47A1" />
+
+    <ProgressBar
+        android:id="@+id/goalProgressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="100"
+        android:progress="0"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/bestDayText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:textColor="#004D40" />
+
+    <TextView
+        android:id="@+id/lowestDayText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginTop="4dp"
+        android:textColor="#004D40" />
+
 </LinearLayout>

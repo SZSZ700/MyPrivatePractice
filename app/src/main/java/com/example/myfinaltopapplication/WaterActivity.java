@@ -6,15 +6,23 @@ import android.content.Intent;
 // Import SharedPreferences for saving and loading user session data locally
 import android.content.SharedPreferences;
 // Import Bundle for saving/restoring Activity state
+import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 // Import all UI widgets like TextView, Button, Spinner, Toast
 import android.widget.*;
 // Import AppCompatActivity as the base class for Activities
 import androidx.appcompat.app.AppCompatActivity;
 // Import CompletableFuture for handling async REST API calls
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 // Import Log for debugging
 import android.util.Log;
+
+import org.json.JSONObject;
 
 // -------------------------------------------------------------
 // WaterActivity - Activity to track and update water consumption
@@ -37,6 +45,17 @@ public class WaterActivity extends AppCompatActivity {
     private String currentUser;
     // Holds the total water consumed today
     private int totalDrank = 0;
+
+    // TextView to show goal consistency title
+    private TextView goalSummaryTitle;
+    // TextView to show "X days out of 7 ..."
+    private TextView goalSummaryText;
+    // ProgressBar to visualize percent of days reaching the goal
+    private ProgressBar goalProgressBar;
+    // TextView for best drinking day
+    private TextView bestDayText;
+    // TextView for lowest (non-zero) drinking day
+    private TextView lowestDayText;
 
     // -------------------------------------------------------------------------
     // onCreate - called when the Activity is first created
@@ -73,6 +92,13 @@ public class WaterActivity extends AppCompatActivity {
         drink200 = findViewById(R.id.drink200);
         drink1000 = findViewById(R.id.drink1000);
         bhome = findViewById(R.id.imageButton4);
+        // views for goal statistics and best/worst day
+        goalSummaryTitle = findViewById(R.id.goalSummaryTitle);
+        goalSummaryText = findViewById(R.id.goalSummaryText);
+        goalProgressBar = findViewById(R.id.goalProgressBar);
+        bestDayText = findViewById(R.id.bestDayText);
+        lowestDayText = findViewById(R.id.lowestDayText);
+
 
         // Load locally saved data for today and yesterday from SharedPreferences
         totalDrank = prefs.getInt("todayWater", 0);
@@ -120,6 +146,170 @@ public class WaterActivity extends AppCompatActivity {
             Intent bh = new Intent(WaterActivity.this, HomePage.class);
             startActivity(bh);
         });
+
+        // --------------------------------------------------
+        // Extra statistics: goal consistency + best/lowest day
+        // --------------------------------------------------
+
+        // Number of days to check for statistics (same as history graph: 7 last days)
+        int daysForStats = 7;
+
+        // Call backend to get daily totals for last N days
+        CompletableFuture<JSONObject> historyFuture =
+                RestClient.getWaterHistoryMap(currentUser, daysForStats);
+
+        // Handle async response for history
+        historyFuture.thenAccept(obj -> runOnUiThread(() -> {
+            try {
+                // If no data at all from server
+                if (obj == null || obj.length() == 0) {
+                    goalSummaryTitle.setText("Goal consistency (last " + daysForStats + " days)");
+                    goalSummaryText.setText("No history data available");
+                    goalProgressBar.setProgress(0);
+                    bestDayText.setText("Best day: no data");
+                    lowestDayText.setText("Lowest day: no data");
+                    return;
+                }
+
+                // Collect all date keys from JSON
+                Iterator<String> keys = obj.keys();
+                ArrayList<String> sortedKeys = new ArrayList<>();
+                while (keys.hasNext()) {
+                    sortedKeys.add(keys.next());
+                }
+
+                // Sort dates ascending (oldest -> newest) so indexes are stable
+                Collections.sort(sortedKeys, Comparator.naturalOrder());
+
+                // Number of days that actually exist in the JSON
+                int totalDays = sortedKeys.size();
+
+                // Array to store the total amount per day aligned with sortedKeys
+                int[] dailyAmounts = new int[totalDays];
+
+                // Fill the dailyAmounts array
+                for (int i = 0; i < totalDays; i++) {
+                    String date = sortedKeys.get(i);
+                    int amount = obj.optInt(date, 0);
+                    dailyAmounts[i] = amount;
+                }
+
+                // -------------------------------
+                // Find best day and lowest day
+                // -------------------------------
+
+                // Best day initialized as "no data"
+                int bestAmount = -1;
+                String bestDate = null;
+
+                // Lowest non-zero day initialized as max int
+                int lowestAmount = Integer.MAX_VALUE;
+                String lowestDate = null;
+
+                // Loop through all days and detect best / lowest
+                for (int i = 0; i < totalDays; i++) {
+                    int amount = dailyAmounts[i];
+                    String date = sortedKeys.get(i);
+
+                    // Update best day (max amount)
+                    if (amount > bestAmount) {
+                        bestAmount = amount;
+                        bestDate = date;
+                    }
+
+                    // Update lowest non-zero day (min amount > 0)
+                    if (amount > 0 && amount < lowestAmount) {
+                        lowestAmount = amount;
+                        lowestDate = date;
+                    }
+                }
+
+                // Prepare labels for display
+                String bestLabel = (bestDate != null) ? bestDate : "no data";
+                String lowestLabel = (lowestDate != null) ? lowestDate : "no data";
+
+                // Try to format dates from yyyy-MM-dd to MM-dd
+                try {
+                    SimpleDateFormat from = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    SimpleDateFormat to = new SimpleDateFormat("MM-dd", Locale.getDefault());
+
+                    if (bestDate != null) {
+                        bestLabel = to.format(from.parse(bestDate));
+                    }
+                    if (lowestDate != null) {
+                        lowestLabel = to.format(from.parse(lowestDate));
+                    }
+                } catch (Exception ignore) {
+                    // If parsing fails, keep original format
+                }
+
+                // Update UI for best day
+                if (bestDate != null) {
+                    bestDayText.setText("Best day: " + bestLabel + " (" + bestAmount + " ml)");
+                } else {
+                    bestDayText.setText("Best day: no data");
+                }
+
+                // Update UI for lowest day (non-zero)
+                if (lowestDate != null) {
+                    lowestDayText.setText("Lowest day: " + lowestLabel + " (" + lowestAmount + " ml)");
+                } else {
+                    lowestDayText.setText("Lowest day: no data");
+                }
+
+                // -----------------------------------------
+                // Now compute "days on target" vs goalMl
+                // -----------------------------------------
+
+                // Call backend to get current daily goal
+                RestClient.getGoal(currentUser).thenAccept(goalObj -> runOnUiThread(() -> {
+                    try {
+                        // If no goal is defined on server
+                        if (goalObj == null) {
+                            goalSummaryTitle.setText("Goal consistency (last " + totalDays + " days)");
+                            goalSummaryText.setText("Goal not available");
+                            goalProgressBar.setProgress(0);
+                            return;
+                        }
+
+                        // Extract goalMl from JSON (fallback = 3000ml)
+                        int goalMl = goalObj.optInt("goalMl", 3000);
+
+                        // Count days where daily total >= goalMl
+                        int daysReached = 0;
+                        for (int i = 0; i < totalDays; i++) {
+                            if (dailyAmounts[i] >= goalMl) {
+                                daysReached++;
+                            }
+                        }
+
+                        // Compute percentage of days that reached the goal
+                        int percent = (int) Math.round((daysReached * 100.0) / totalDays);
+
+                        // Update UI with summary and progress bar
+                        goalSummaryTitle.setText("Goal consistency (last " + totalDays + " days)");
+                        goalSummaryText.setText("Days on target: " + daysReached + " / " + totalDays + " (" + percent + "%)");
+                        goalProgressBar.setMax(100);
+                        goalProgressBar.setProgress(percent);
+
+                    } catch (Exception e2) {
+                        // If any error occurs while computing goal stats
+                        goalSummaryText.setText("Error computing goal stats");
+                        goalProgressBar.setProgress(0);
+                    }
+                }));
+
+            } catch (Exception e) {
+                // Any unexpected error in history processing
+                Log.e("WATER_STATS", "Error computing water statistics", e);
+                goalSummaryTitle.setText("Goal consistency");
+                goalSummaryText.setText("Error loading history");
+                goalProgressBar.setProgress(0);
+                bestDayText.setText("Best day: error");
+                lowestDayText.setText("Lowest day: error");
+            }
+        }));
+
     }
 
     // -------------------------------------------------------------------------
