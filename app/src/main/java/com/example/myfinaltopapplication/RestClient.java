@@ -749,5 +749,116 @@ public class RestClient {
         return future;
     }
 
+    // =========================================================
+    // GET CALORIES (GET /api/users/{username}/calories)
+    // Returns: CompletableFuture<Integer>
+    // - On success: the calories value from server (can be 0+)
+    // - On failure: null
+    // =========================================================
+    public static CompletableFuture<Integer> getCalories(String username) {
+        // Create future that will hold the Integer result (or null on error)
+        CompletableFuture<Integer> future = new CompletableFuture<>();
+
+        // Build GET request to /{username}/calories
+        Request request = new Request.Builder()
+                // Set target URL for calories endpoint
+                .url(BASE_URL + "/" + username + "/calories")
+                // Use GET method
+                .get()
+                // Build the request object
+                .build();
+
+        // Execute request asynchronously using OkHttp client
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Log error in case of network failure
+                Log.e("HTTP", "❌ getCalories request failed: " + e.getMessage());
+                // Complete future with null to indicate failure
+                future.complete(null);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    // If HTTP response is not in 200-299 range
+                    if (!response.isSuccessful()) {
+                        // Log warning with HTTP code
+                        Log.w("HTTP", "⚠️ getCalories non-OK HTTP: " + response.code());
+                        // Complete future with null (error)
+                        future.complete(null);
+                        // Stop processing
+                        return;
+                    }
+
+                    // Read response body as string (JSON text)
+                    String body = response.body() != null ? response.body().string() : "{}";
+                    // Log body for debugging
+                    Log.d("HTTP", "📥 getCalories body: " + body);
+
+                    // Parse JSON string into JSONObject
+                    JSONObject obj = new JSONObject(body);
+                    // Extract "calories" field, default = 0 if missing
+                    int cals = obj.optInt("calories", 0);
+
+                    // Complete future with parsed calories value
+                    future.complete(cals);
+                } catch (Exception ex) {
+                    // Log parsing error
+                    Log.e("HTTP", "❌ getCalories parse error: " + ex.getMessage());
+                    // Complete future with null on exception
+                    future.complete(null);
+                }
+            }
+        });
+
+        // Return future immediately (result will arrive asynchronously)
+        return future;
+    }
+
+    // =========================================================
+    // SET CALORIES (PUT /api/users/{username}/calories?calories=...)
+    // Returns: CompletableFuture<Boolean>
+    // - true  → server accepted and updated
+    // - false → bad request / user not found / other non-2xx
+    // =========================================================
+    public static CompletableFuture<Boolean> setCalories(String username, int calories) {
+        // Create future that will hold true/false result
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+
+        // Build URL with query parameter ?calories=...
+        String url = BASE_URL + "/" + username + "/calories?calories=" + calories;
+
+        // Build PUT request with empty body (data passes via query param)
+        Request request = new Request.Builder()
+                // Set target URL for update calories endpoint
+                .url(url)
+                // Use PUT method with empty body
+                .put(RequestBody.create(new byte[0]))
+                // Build the request object
+                .build();
+
+        // Execute request asynchronously
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Log error on network failure
+                Log.e("HTTP", "❌ setCalories request failed: " + e.getMessage());
+                // Complete future with false to indicate failure
+                future.complete(false);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) {
+                // Log HTTP status code for debugging
+                Log.d("HTTP", "⬅️ setCalories response code: " + response.code());
+                // Complete future with true if response is in 200-299 range
+                future.complete(response.isSuccessful());
+            }
+        });
+
+        // Return future immediately (result will be available later)
+        return future;
+    }
 }
 
