@@ -513,5 +513,45 @@ public class UsersController {
                 });
     }
 
+    // -------------------------------- GET CALORIES ----------------------------
+    // Returns JSON: {"calories": 1800}
+    @GetMapping("/{username}/calories")
+    public CompletableFuture<ResponseEntity<Map<String, Integer>>> getCalories(
+            @PathVariable String username) {
+
+        return firebaseService.getCalories(username)
+                .thenApply(cals -> {
+                    // Build a simple JSON map: {"calories": X}
+                    Map<String, Integer> body = Collections.singletonMap("calories",
+                            (cals != null ? cals : 0));
+
+                    return ResponseEntity
+                            .ok(body);
+                });
+    }
+
+    // -------------------------------- UPDATE CALORIES -------------------------
+    // Updates the "calories" field for this user.
+    // Example call: PUT /api/users/john/calories?calories=1800
+    @PutMapping("/{username}/calories")
+    public CompletableFuture<ResponseEntity<Void>> updateCalories(
+            @PathVariable String username,
+            @RequestParam int calories) {
+
+        return firebaseService.updateCalories(username, calories)
+                .thenApply(success -> {
+                    if (success) {
+                        // 204 No Content on success
+                        return ResponseEntity
+                                .noContent()
+                                .build();
+                    } else {
+                        // If invalid value or user not found → 400 Bad Request
+                        return ResponseEntity
+                                .badRequest()
+                                .build();
+                    }
+                });
+    }
 }
 
