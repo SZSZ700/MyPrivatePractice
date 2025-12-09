@@ -41,6 +41,7 @@ import java.util.ArrayList;
 // -------------------------------------------------------------
 // BMIActivity - calculates Body Mass Index and syncs with server
 // Also shows global BMI distribution in a PieChart
+// And manages a simple daily calories log
 // -------------------------------------------------------------
 public class BMIActivity extends AppCompatActivity {
     // Input field for weight (kg)
@@ -56,8 +57,25 @@ public class BMIActivity extends AppCompatActivity {
     // PieChart to show global BMI distribution
     private PieChart bmiPieChart;
 
+    // -------- Calories UI --------
+    // EditText where user types calories amount to add/remove
+    private EditText caloriesInput;
+    // Button to add calories
+    private Button addCaloriesButton;
+    // Button to subtract calories
+    private Button subtractCaloriesButton;
+    // Button to reset calories to 0
+    private Button resetCaloriesButton;
+    // TextView that shows today's calories and status vs target
+    private TextView caloriesStatusText;
+
     // Currently logged-in user (loaded from SharedPreferences)
     private String currentUser;
+
+    // Current daily calories value
+    private int currentCalories = 0;
+    // Simple static target for calories (you can tweak it later or make it BMI-based)
+    private static final int TARGET_CALORIES = 2000;
 
     // -------------------------------------------------------------------------
     // onCreate - lifecycle method called when Activity is created
@@ -95,6 +113,13 @@ public class BMIActivity extends AppCompatActivity {
         // Bind PieChart for global BMI distribution
         bmiPieChart = findViewById(R.id.bmiPieChart);
 
+        // Bind calories views
+        caloriesInput = findViewById(R.id.caloriesInput);
+        addCaloriesButton = findViewById(R.id.addCaloriesButton);
+        subtractCaloriesButton = findViewById(R.id.subtractCaloriesButton);
+        resetCaloriesButton = findViewById(R.id.resetCaloriesButton);
+        caloriesStatusText = findViewById(R.id.caloriesStatusText);
+
         // ---------------------------------------------------------------------
         // Try to load saved BMI from server
         // ---------------------------------------------------------------------
@@ -113,6 +138,24 @@ public class BMIActivity extends AppCompatActivity {
                     resultText.setText("Saved BMI: " + String.format("%.2f", savedBmi));
                 }
             }
+        }));
+
+        // ---------------------------------------------------------------------
+        // Load daily calories from server (simple single field "calories")
+        // ---------------------------------------------------------------------
+        RestClient.getCalories(currentUser).thenAccept(calories -> runOnUiThread(() -> {
+            if (calories != null) {
+                // If server returned value → use it
+                currentCalories = calories;
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putInt("lastCalories", calories);
+                editor.apply();
+            } else {
+                // Fallback to local stored value (if exists)
+                currentCalories = prefs.getInt("lastCalories", 0);
+            }
+            // Update status text to reflect current calories
+            updateCaloriesStatusText();
         }));
 
         // ---------------------------------------------------------------------
@@ -150,7 +193,7 @@ public class BMIActivity extends AppCompatActivity {
                         // Show confirmation toast
                         Toast.makeText(BMIActivity.this, "BMI saved successfully", Toast.LENGTH_SHORT).show();
 
-                        // Optionally reload global chart after save (comment out if you don't want this)
+                        // Optionally reload global chart after save
                         loadBmiDistributionChart();
                     } else {
                         // If failed → show error toast
@@ -165,6 +208,67 @@ public class BMIActivity extends AppCompatActivity {
         });
 
         // ---------------------------------------------------------------------
+        // Calories buttons - add / subtract / reset
+        // ---------------------------------------------------------------------
+        addCaloriesButton.setOnClickListener(v -> {
+            String txt = caloriesInput.getText().toString().trim();
+            if (txt.isEmpty()) {
+                Toast.makeText(BMIActivity.this, "Please enter calories amount", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            try {
+                int delta = Integer.parseInt(txt);
+                if (delta <= 0) {
+                    Toast.makeText(BMIActivity.this, "Amount must be positive", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                // Increase today's calories
+                currentCalories += delta;
+                // Update status text
+                updateCaloriesStatusText();
+                // Save to server
+                saveCaloriesToServer();
+            } catch (NumberFormatException e) {
+                Toast.makeText(BMIActivity.this, "Invalid calories number", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        subtractCaloriesButton.setOnClickListener(v -> {
+            String txt = caloriesInput.getText().toString().trim();
+            if (txt.isEmpty()) {
+                Toast.makeText(BMIActivity.this, "Please enter calories amount", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            try {
+                int delta = Integer.parseInt(txt);
+                if (delta <= 0) {
+                    Toast.makeText(BMIActivity.this, "Amount must be positive", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                // Decrease today's calories
+                currentCalories -= delta;
+                if (currentCalories < 0) {
+                    currentCalories = 0;
+                }
+                // Update status text
+                updateCaloriesStatusText();
+                // Save to server
+                saveCaloriesToServer();
+            } catch (NumberFormatException e) {
+                Toast.makeText(BMIActivity.this, "Invalid calories number", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        resetCaloriesButton.setOnClickListener(v -> {
+            // Reset calories to zero
+            currentCalories = 0;
+            // Update status text
+            updateCaloriesStatusText();
+            // Save to server
+            saveCaloriesToServer();
+        });
+
+        // ---------------------------------------------------------------------
         // Back button - return to HomePage
         // ---------------------------------------------------------------------
         backHome.setOnClickListener(v -> {
@@ -176,6 +280,46 @@ public class BMIActivity extends AppCompatActivity {
         // Load global BMI distribution for PieChart (does not affect old logic)
         // ---------------------------------------------------------------------
         loadBmiDistributionChart();
+    }
+
+    // -------------------------------------------------------------------------
+    // Helper: updateCaloriesStatusText
+    // Builds a message like:
+    // "Today calories: 1500 kcal (Below target, target 2000 kcal)"
+    // -------------------------------------------------------------------------
+    private void updateCaloriesStatusText() {
+        String status;
+        if (currentCalories < TARGET_CALORIES) {
+            status = "Below target";
+        } else if (currentCalories == TARGET_CALORIES) {
+            status = "At target";
+        } else {
+            status = "Above target";
+        }
+
+        String msg = "Today calories: " + currentCalories + " kcal (" +
+                status + ", target " + TARGET_CALORIES + " kcal)";
+        caloriesStatusText.setText(msg);
+    }
+
+    // -------------------------------------------------------------------------
+    // Helper: saveCaloriesToServer
+    // Uses RestClient.setCalories and also updates SharedPreferences backup
+    // -------------------------------------------------------------------------
+    private void saveCaloriesToServer() {
+        RestClient.setCalories(currentUser, currentCalories).thenAccept(success ->
+                runOnUiThread(() -> {
+                    if (success) {
+                        SharedPreferences prefs = getSharedPreferences(getString(R.string.myprefs), MODE_PRIVATE);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putInt("lastCalories", currentCalories);
+                        editor.apply();
+                        Toast.makeText(BMIActivity.this, "Calories saved", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(BMIActivity.this, "Failed to save calories", Toast.LENGTH_SHORT).show();
+                    }
+                })
+        );
     }
 
     // -------------------------------------------------------------------------

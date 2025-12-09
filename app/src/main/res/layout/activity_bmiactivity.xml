@@ -55,8 +55,67 @@
 
     <com.github.mikephil.charting.charts.PieChart
         android:id="@+id/bmiPieChart"
-        android:layout_width="match_parent"
-        android:layout_height="250dp"
+        android:layout_width="207dp"
+        android:layout_height="163dp"
         android:layout_marginTop="16dp" />
+
+    <!-- ====== Daily calories section ====== -->
+
+    <TextView
+        android:id="@+id/caloriesSectionTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Daily calories"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#1565C0"
+        android:layout_marginTop="24dp" />
+
+    <EditText
+        android:id="@+id/caloriesInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Calories amount (kcal)"
+        android:inputType="number" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/addCaloriesButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="+ Add" />
+
+        <Button
+            android:id="@+id/subtractCaloriesButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="- Remove" />
+
+        <Button
+            android:id="@+id/resetCaloriesButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="Reset" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/caloriesStatusText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Today calories: 0 kcal"
+        android:textSize="16sp"
+        android:layout_marginTop="8dp"
+        android:gravity="center" />
 
 </LinearLayout>
