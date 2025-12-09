@@ -517,7 +517,7 @@ public class UsersController {
     // Returns JSON: {"calories": 1800}
     @GetMapping("/{username}/calories")
     public CompletableFuture<ResponseEntity<Map<String, Integer>>> getCalories(
-            @PathVariable String username) {
+            @PathVariable("username") String username) {
 
         return firebaseService.getCalories(username)
                 .thenApply(cals -> {
@@ -535,8 +535,8 @@ public class UsersController {
     // Example call: PUT /api/users/john/calories?calories=1800
     @PutMapping("/{username}/calories")
     public CompletableFuture<ResponseEntity<Void>> updateCalories(
-            @PathVariable String username,
-            @RequestParam int calories) {
+            @PathVariable("username") String username,
+            @RequestParam("calories") int calories) {
 
         return firebaseService.updateCalories(username, calories)
                 .thenApply(success -> {
