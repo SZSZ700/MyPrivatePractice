@@ -26,12 +26,17 @@ public class User {
     // Key = date (yyyy-MM-dd), Value = list of 13 numbers [sum, cups...]
     private Map<String, List<Long>> waterLog;
 
+    // Total daily calories field (simple key-value, like bmi)
+    // This represents the total calories the user has eaten (for the current day / last update)
+    private int calories;
+
     // Constructor with all fields
     public User(String userName, String password, int age, String fullName) {
         this.userName = userName;
         this.password = password;
         this.age = age;
         this.fullName = fullName;
+        this.calories = 0;
     }
 
     // Constructor with username and password only
@@ -108,6 +113,16 @@ public class User {
         this.waterLog = waterLog;
     }
 
+    // Getter for calories
+    public int getCalories() {
+        return calories;
+    }
+
+    // Setter for calories
+    public void setCalories(int calories) {
+        this.calories = calories;
+    }
+
     // toString for debugging
     @Override
     public String toString() {
@@ -117,6 +132,7 @@ public class User {
                 ", age=" + age +
                 ", fullName='" + fullName + '\'' +
                 ", bmi=" + bmi +
+                ", calories=" + calories +
                 ", waterLog=" + (waterLog != null ? waterLog.toString() : "null") +
                 '}';
     }
