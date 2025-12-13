@@ -37,40 +37,87 @@ public class RestClient {
     // Define JSON MediaType for sending JSON data
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
+    // Static field to hold JWT auth token in memory
+    private static volatile String authToken;
+
+    // Public getter so other classes can read the token if needed
+    public static String getAuthToken() {
+        // Return the current saved token (can be null if not logged in)
+        return authToken;
+    }
+
+    // Optional helper to clear token on logout
+    public static void clearAuthToken() {
+        // Set token back to null when user logs out
+        authToken = null;
+    }
+
     // Reusable HTTP client for all network requests
     // Built with an interceptor that prints detailed logs for each request and response
+    // Create a single shared OkHttpClient instance for all HTTP requests
     private static final OkHttpClient client = new OkHttpClient.Builder()
+            // Add an interceptor that will run before every HTTP call
             .addInterceptor(chain -> {
-                // Capture the outgoing request
-                Request request = chain.request();
+                // Get the original HTTP request that is about to be sent
+                Request original = chain.request();
 
-                // Start timer for performance measurement
-                long t1 = System.nanoTime();
-                android.util.Log.d("HTTP", "➡️ Sending " + request.method() + " request to " + request.url());
+                // -----------------------------------------
+                // 1. Add Authorization header if we have JWT
+                // -----------------------------------------
 
-                // If request has a body, log its contents
-                if (request.body() != null) {
-                    Buffer buffer = new Buffer();
-                    request.body().writeTo(buffer);
-                    android.util.Log.d("HTTP", "📤 Request body: " + buffer.readUtf8());
+                // Create a new Request.Builder based on the original request
+                Request.Builder builder = original.newBuilder();
+
+                // Check if we already have a non-empty JWT token stored in authToken
+                if (authToken != null && !authToken.isEmpty()) {
+                    // Add Authorization header with Bearer + token to the request
+                    builder.header("Authorization", "Bearer " + authToken);
+                    // Log that we successfully attached the JWT token to this request
+                    Log.d("HTTP", "🔐 Added Authorization header with JWT");
                 }
 
-                // Proceed with the request and capture the response
+                // Build the final Request object (with or without Authorization header)
+                Request request = builder.build();
+
+                // -----------------------------------------
+                // 2. Logging (same as before)
+                // -----------------------------------------
+
+                // Capture current time (in nanoseconds) before sending request for timing measurement
+                long t1 = System.nanoTime();
+                // Log HTTP method and URL of the request being sent
+                Log.d("HTTP", "➡️ Sending " + request.method() + " request to " + request.url());
+
+                // If the request has a body (e.g., POST/PUT with JSON), log its content
+                if (request.body() != null) {
+                    // Create a temporary buffer to copy the request body into
+                    Buffer buffer = new Buffer();
+                    // Write the request body into the buffer
+                    request.body().writeTo(buffer);
+                    // Log the body content as UTF-8 string
+                    Log.d("HTTP", "📤 Request body: " + buffer.readUtf8());
+                }
+
+                // Proceed with the chain and actually send the HTTP request to the server
                 Response response = chain.proceed(request);
 
-                // End timer for performance measurement
+                // Capture current time again after receiving response
                 long t2 = System.nanoTime();
-                android.util.Log.d("HTTP", "⬅️ Received response for " + response.request().url() +
+                // Log URL, total time in ms, and HTTP status code of the response
+                Log.d("HTTP", "⬅️ Received response for " + response.request().url() +
                         " in " + ((t2 - t1) / 1e6d) + "ms, code = " + response.code());
 
-                // Print response body (peek to avoid consuming original stream)
+                // Peek the entire response body without consuming the original stream
                 ResponseBody responseBody = response.peekBody(Long.MAX_VALUE);
-                android.util.Log.d("HTTP", "📥 Response body: " + responseBody.string());
+                // Log the full response body as string for debugging
+                Log.d("HTTP", "📥 Response body: " + responseBody.string());
 
-                // Return the response so the client can use it
+                // Return the response back to the caller so the app can use it
                 return response;
             })
+            // Finish building the OkHttpClient instance
             .build();
+
 
     // =========================================================
     // REGISTER (POST /api/users/signup)
@@ -112,78 +159,125 @@ public class RestClient {
     // LOGIN (POST /api/users/login)
     // =========================================================
     public static CompletableFuture<User> login(String username, String password) {
-        // Future object that will complete with User if success
+        // Create future that will be completed with User object or null
         CompletableFuture<User> future = new CompletableFuture<>();
 
         try {
-            // Build JSON with login credentials
+            // Create new JSON object for request body
             JSONObject json = new JSONObject();
-            json.put("userName", username); // Add username
-            json.put("password", password); // Add password
+            // Put username into JSON under key "userName"
+            json.put("userName", username);
+            // Put password into JSON under key "password"
+            json.put("password", password);
 
-            // Create request body with JSON
+            // Create HTTP request body from JSON string using JSON media type
             RequestBody body = RequestBody.create(json.toString(), JSON);
 
-            // Build POST request for login endpoint
+            // Build POST request to /login endpoint
             Request request = new Request.Builder()
-                    .url(BASE_URL + "/login") // Target endpoint
-                    .post(body)               // Use POST
+                    // Set full URL for login endpoint
+                    .url(BASE_URL + "/login")
+                    // Use POST method with JSON body
+                    .post(body)
+                    // Build final Request object
                     .build();
 
-            // Send request asynchronously
+            // Execute HTTP call asynchronously using OkHttp client
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
+                    // Log network or IO error to Logcat
                     Log.e("HTTP", "❌ LOGIN request failed: " + e.getMessage());
-                    // If network error, return null
+                    // Complete future with null to indicate failure
                     future.complete(null);
                 }
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
+                    // Read full response body as string (or "null" if body is missing)
                     String responseBody = response.body() != null ? response.body().string() : "null";
 
+                    // Log HTTP status code for debugging
                     Log.d("HTTP", "⬅️ LOGIN response code: " + response.code());
+                    // Log raw response body for debugging
                     Log.d("HTTP", "⬅️ LOGIN response body: " + responseBody);
 
-                    // If server responded with success
+                    // Check if response code is in success range (2xx)
                     if (response.isSuccessful()) {
                         try {
-                            // Read response body
-
-                            // Parse JSON object from string
+                            // Parse response body into JSON object
                             JSONObject obj = new JSONObject(responseBody);
 
-                            // Create User object from response
+                            // Declare variable that will hold JSON of the user itself
+                            JSONObject userJson;
+
+                            // ---------------------------
+                            // NEW FORMAT: { "user": {...}, "token": "..." }
+                            // ---------------------------
+                            if (obj.has("user")) {
+                                // Extract inner "user" object
+                                userJson = obj.getJSONObject("user");
+
+                                // If server also sent "token" field
+                                if (obj.has("token")) {
+                                    // Read token string from JSON
+                                    String token = obj.getString("token");
+                                    // Save token in static field for later Authorization header
+                                    authToken = token;
+                                    // Log that token was saved
+                                    Log.d("HTTP", "✅ Saved JWT token: " + token);
+                                } else {
+                                    // Log that no token was found even though we had "user" object
+                                    Log.w("HTTP", "LOGIN: user object without token field");
+                                }
+                            }
+                            // ---------------------------
+                            // OLD FORMAT: { "userName": "...", "password": "...", ... }
+                            // (fallback for backward compatibility)
+                            // ---------------------------
+                            else {
+                                // In old format the user fields are at root level
+                                userJson = obj;
+                                // Log that we are using legacy login response format
+                                Log.d("HTTP", "LOGIN: legacy response (no wrapper 'user')");
+                            }
+
+                            // Create User model from userJson fields
                             User user = new User(
-                                    obj.getString("userName"), // Extract username
-                                    obj.getString("password"), // Extract password
-                                    obj.getInt("age"),         // Extract age
-                                    obj.getString("fullName")  // Extract full name
+                                    // Read userName string from JSON
+                                    userJson.getString("userName"),
+                                    // Read password string from JSON
+                                    userJson.getString("password"),
+                                    // Read age as integer from JSON
+                                    userJson.getInt("age"),
+                                    // Read fullName string from JSON
+                                    userJson.getString("fullName")
                             );
 
-                            // Complete with User object
+                            // Complete future successfully with created User object
                             future.complete(user);
 
                         } catch (Exception e) {
-                            Log.e("HTTP", "❌ LOGIN parsing error: " + e.getMessage());
-                            // If parsing fails -> complete with null
+                            // Log any JSON parsing or mapping error
+                            Log.e("HTTP", "❌ LOGIN parsing error: " + e.getMessage(), e);
+                            // On parsing error, complete with null
                             future.complete(null);
                         }
                     } else {
-                        // If response is not successful -> complete with null
+                        // For non-2xx responses (401, 500, etc.) complete with null
                         future.complete(null);
                     }
                 }
             });
 
         } catch (Exception e) {
-            Log.e("HTTP", "❌ LOGIN exception: " + e.getMessage());
-            // General exception -> complete with null
+            // Log any unexpected error building request
+            Log.e("HTTP", "❌ LOGIN exception: " + e.getMessage(), e);
+            // Complete future with null in case of error
             future.complete(null);
         }
 
-        // Return future
+        // Return the future immediately (will be completed later)
         return future;
     }
 
