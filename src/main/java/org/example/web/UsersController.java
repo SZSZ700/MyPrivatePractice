@@ -83,7 +83,6 @@ public class UsersController {
     // LOGIN (POST /api/users/login)
     // Android → RestClient.login(username,password) → here
     // =========================================================
-    // =========================================================
     @PostMapping("/login")
     public CompletableFuture<ResponseEntity<?>> login(@RequestBody User loginRequest) {
         // Extract username from request body
