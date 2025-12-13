@@ -8,7 +8,6 @@ import org.example.model.User;
 import org.example.service.FirebaseService;
 
 // Import Spring framework classes for HTTP status and response handling
-import org.example.service.JwtService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,16 +31,11 @@ public class UsersController {
     // ---------------------------------------------------------------------
     private final FirebaseService firebaseService;
 
-    // JwtService used for generating JWT tokens
-    private final JwtService jwtService;
-
     // Constructor for dependency injection
-    public UsersController(FirebaseService firebaseService, JwtService jwtService) {
+    public UsersController(FirebaseService firebaseService) {
         this.firebaseService = firebaseService;
-        // Save JwtService instance in a field
-        this.jwtService = jwtService;
-
     }
+
     // ---------------------------------------------------------------------
     // HEALTH CHECK (GET /api/users/health)
     // Simple endpoint to verify the server is alive
@@ -85,37 +79,24 @@ public class UsersController {
     // =========================================================
     @PostMapping("/login")
     public CompletableFuture<ResponseEntity<?>> login(@RequestBody User loginRequest) {
-        // Extract username from request body
+        // Extract username & password from request body
         String username = loginRequest.getUserName();
-        // Extract password from request body
         String password = loginRequest.getPassword();
 
-        // Call service.login() which validates credentials against Firebase
+        // Call service.login() which validates credentials
         return firebaseService.login(username, password).thenApply(user -> {
-            // If user object is not null → credentials are valid
             if (user != null) {
-                // Generate JWT token for this username
-                String token = jwtService.generateToken(username);
-
-                // Create a Map to hold both user data and token
-                Map<String, Object> responseBody = new HashMap<>();
-                // Put full user object under key "user"
-                responseBody.put("user", user);
-                // Put JWT token string under key "token"
-                responseBody.put("token", token);
-
-                // Return HTTP 200 OK with JSON: { "user": {...}, "token": "..." }
+                // Return HTTP 200 with user object if valid
                 return ResponseEntity
-                        .ok(responseBody);
+                        .ok(user);
             } else {
-                // If user is null → invalid credentials, return HTTP 401
+                // Return HTTP 401 if invalid
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body("Invalid username or password");
             }
         });
     }
-
 
     // ---------------------------------------------------------------------
     // GET ALL USERS (GET /api/users)
