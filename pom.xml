@@ -95,6 +95,26 @@
             <artifactId>javase</artifactId>
             <version>3.5.4</version>
         </dependency>
+
+        <!-- Test starter that brings JUnit 5, Mockito, Spring Test, etc. -->
+        <dependency>
+            <!-- Group ID for Spring Boot test starter -->
+            <groupId>org.springframework.boot</groupId>
+            <!-- Artifact ID for Spring Boot test starter -->
+            <artifactId>spring-boot-starter-test</artifactId>
+            <!-- Mark this dependency as test-only (not included in production build) -->
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Mockito inline allows mocking of final and static methods/classes if needed -->
+        <dependency>
+            <!-- Group ID for Mockito inline module -->
+            <groupId>org.mockito</groupId>
+            <!-- Artifact ID for Mockito inline implementation -->
+            <artifactId>mockito-inline</artifactId>
+            <!-- Scope is test because this is only used in unit tests -->
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
