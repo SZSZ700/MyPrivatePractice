@@ -108,13 +108,12 @@
 
         <!-- Mockito inline allows mocking of final and static methods/classes if needed -->
         <dependency>
-            <!-- Group ID for Mockito inline module -->
             <groupId>org.mockito</groupId>
-            <!-- Artifact ID for Mockito inline implementation -->
             <artifactId>mockito-inline</artifactId>
-            <!-- Scope is test because this is only used in unit tests -->
+            <version>5.2.0</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>
