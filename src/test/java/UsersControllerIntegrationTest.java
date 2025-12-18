@@ -40,6 +40,19 @@ import java.util.concurrent.CompletableFuture;
 // Import Java utilities for maps and collections
 import java.util.*;
 
+// UsersControllerIntegrationTest is an end-to-end integration test class that
+// verifies the REST API exposed by UsersController using a real embedded
+// Spring Boot web server. Instead of calling FirebaseService directly, these
+// tests use TestRestTemplate to perform real HTTP requests (GET, POST, PUT,
+// PATCH, DELETE, HEAD) against the /api/users endpoints and assert on both
+// the HTTP status codes and the response bodies. In this way, the class
+// validates that request mappings, URL paths, query parameters, JSON
+// serialization/deserialization, and error handling are all wired correctly
+// on the controller layer, while FirebaseServiceIntegrationTest already
+// ensures that the underlying FirebaseService logic works correctly with the
+// database. Together, they give full confidence that the API behaves as
+// expected from the client’s point of view.
+
 // RestTemplate is a Spring HTTP client that allows us to call REST endpoints
 // in a simple, type-safe way. Instead of manually opening connections,
 // writing JSON, and parsing responses, we use RestTemplate to send HTTP
