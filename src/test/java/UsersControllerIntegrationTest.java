@@ -1,6 +1,5 @@
 // Define the package for this integration test class
 package org.example.web;
-
 // Import JUnit 5 test annotations
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -8,23 +7,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 // Import the lifecycle enum for @TestInstance
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-
 // Import static assertions from JUnit for readability
 import static org.junit.jupiter.api.Assertions.*;
-
 // Import the Spring Boot test annotation to load the full application context
 import org.springframework.boot.test.context.SpringBootTest;
 // Import Autowired to inject beans into this test class
 import org.springframework.beans.factory.annotation.Autowired;
-
 // Import the FirebaseService to prepare data directly in Firebase for tests
 import org.example.service.FirebaseService;
 // Import the User model used in requests and responses
 import org.example.model.User;
-
 // Import Spring's TestRestTemplate for real HTTP calls to the running server
 import org.springframework.boot.test.web.client.TestRestTemplate;
-
 // Import ResponseEntity and HttpStatus for inspecting HTTP responses
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -32,7 +26,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpMethod;
 // Import HttpEntity to send request bodies for PUT/PATCH
 import org.springframework.http.HttpEntity;
-
 // Import Java TimeUnit for waiting on async FirebaseService operations in helpers
 import java.util.concurrent.TimeUnit;
 // Import CompletableFuture for handling async operations in helpers
