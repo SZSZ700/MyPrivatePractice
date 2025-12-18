@@ -15,7 +15,6 @@ import org.json.JSONObject;
 // Import reflection classes to override static client in RestClient
 import java.lang.reflect.Field;
 // Import collections for map-based responses
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 // Import concurrency utilities for waiting on CompletableFuture
