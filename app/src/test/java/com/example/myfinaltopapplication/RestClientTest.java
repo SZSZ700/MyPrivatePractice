@@ -35,6 +35,22 @@ import okhttp3.mockwebserver.RecordedRequest;
  *  1) The HTTP request that RestClient sends (method, path, body).
  *  2) The way RestClient parses and exposes the response via CompletableFuture.
  */
+
+/*
+ In these tests we use OkHttp’s MockWebServer to simulate the backend instead of
+ calling the real Spring Boot server. The call to mockWebServer.enqueue(new MockResponse(...))
+ pre-loads a fake HTTP response into a queue, so when RestClient sends its next HTTP
+ request, the mock server will return exactly the status code and JSON body that we
+ configured. This lets us control the server’s behavior in a predictable way.
+
+ After the client call finishes, we use mockWebServer.takeRequest(...) to read back
+ the HTTP request that RestClient actually sent. The RecordedRequest object contains
+ the HTTP method, path, headers, and body, so we can assert that the client built the
+ request correctly (for example: method = PUT, path = /myapp/api/users/john/goal?goalMl=3400).
+ In other words, enqueue(...) verifies how the client handles responses, and takeRequest(...)
+ verifies that the client sends the correct requests.
+*/
+
 @RunWith(AndroidJUnit4.class)
 public class RestClientTest {
 
