@@ -364,10 +364,18 @@ public class UsersControllerIntegrationTest {
 
         // Perform a PUT request to /api/users/{username} expecting String body
         ResponseEntity<String> response =
-                restTemplate.exchange("/api/users/{username}",
+                restTemplate.exchange(
+                        // url template
+                        "/api/users/{username}",
+                        // http method
                         HttpMethod.PUT,
+                        // the request
                         entity,
+                        // cast the body of the response to string
                         String.class,
+                        // add the parameter username to the url
+                        // "/api/users/{username}"  +  username
+                        // = "/api/users/patchNoSuch_12345"
                         username);
 
         // Assert that HTTP status is 404 Not Found
