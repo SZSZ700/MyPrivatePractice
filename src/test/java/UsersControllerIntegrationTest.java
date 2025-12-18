@@ -151,7 +151,6 @@ public class UsersControllerIntegrationTest {
 
         // Assert that the HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
-
         // Assert that the response body is exactly "OK"
         assertEquals("OK", response.getBody());
     }
@@ -163,13 +162,13 @@ public class UsersControllerIntegrationTest {
     void signup_createsUserAndRejectsDuplicate() {
         // Build a unique username using current timestamp to avoid collisions
         String username = "signupController_" + System.currentTimeMillis();
-
         // Build a User object for signup
         User user = buildUser(username, "signupPass");
 
         // Perform the first POST request to /api/users/signup sending the User as JSON
         ResponseEntity<String> firstResponse =
                 restTemplate.postForEntity("/api/users/signup", user, String.class);
+
         // Assert that the HTTP status is 201 Created
         assertEquals(HttpStatus.CREATED, firstResponse.getStatusCode());
         // Assert that the response body is the success message
@@ -181,6 +180,7 @@ public class UsersControllerIntegrationTest {
         // Perform the second POST request with the same username to test duplicate handling
         ResponseEntity<String> secondResponse =
                 restTemplate.postForEntity("/api/users/signup", user, String.class);
+
         // Assert that the HTTP status is 409 Conflict
         assertEquals(HttpStatus.CONFLICT, secondResponse.getStatusCode());
         // Assert that the response body is the duplicate username message
@@ -325,6 +325,7 @@ public class UsersControllerIntegrationTest {
         updated.setFullName("Updated Name");
         // Change the age to a different value
         updated.setAge(30);
+
         // Wrap the updated user into HttpEntity so it can be sent as request body
         HttpEntity<User> entity = new HttpEntity<>(updated);
 
