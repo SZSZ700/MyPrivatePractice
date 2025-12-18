@@ -48,6 +48,8 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 
+    androidTestImplementation("androidx.test:runner:1.6.2")
+
     // --- NEW: OkHttp MockWebServer for testing RestClient ---
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
