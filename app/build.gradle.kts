@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.firebase.crashlytics.buildtools)
     implementation(libs.okhttp)
+    implementation(libs.androidx.junit)
 
     // Unit tests (JVM)
     testImplementation(libs.junit)
