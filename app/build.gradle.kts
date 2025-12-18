@@ -38,8 +38,18 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.firebase.crashlytics.buildtools)
-    implementation(libs.okhttp)
     implementation(libs.androidx.junit)
+
+    // ============================
+    // OkHttp + MockWebServer 4.12.0
+    // (אותה גרסה ל-main, unit test, androidTest)
+    // ============================
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    testImplementation("com.squareup.okhttp3:okhttp:4.12.0")
+    androidTestImplementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 
     // Unit tests (JVM)
     testImplementation(libs.junit)
@@ -47,10 +57,5 @@ dependencies {
     // Android instrumented tests (includes AndroidJUnit4)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-
     androidTestImplementation("androidx.test:runner:1.6.2")
-
-    // --- NEW: OkHttp MockWebServer for testing RestClient ---
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 }

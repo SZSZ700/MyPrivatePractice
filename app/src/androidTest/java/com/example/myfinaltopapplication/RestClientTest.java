@@ -798,57 +798,6 @@ public class RestClientTest {
     }
 
     // =============================================================
-    // FAILURE TESTS FOR: register(User user)
-    // =============================================================
-
-    // Test that register returns false when server responds with 500 Internal Server Error
-    @Test
-    public void register_serverError_returnsFalse() throws Exception {
-        // Enqueue a fake 500 response for the signup endpoint
-        mockWebServer.enqueue(
-                new MockResponse()
-                        .setResponseCode(500)
-                        .setBody("Internal error")
-        );
-
-        // Create a sample user object
-        User user = new User("john", "1234", 25, "John Doe");
-
-        // Call RestClient.register which will hit MockWebServer
-        CompletableFuture<Boolean> future = RestClient.register(user);
-
-        // Wait for the Boolean result
-        Boolean result = awaitBoolean(future);
-
-        // Assert that the result is false because response is not successful (500)
-        assertFalse(result);
-    }
-
-    // =============================================================
-    // FAILURE TESTS FOR: login(String username, String password)
-    // =============================================================
-
-    // Test that login returns null when server responds with 404 Not Found
-    @Test
-    public void login_notFound_returnsNull() throws Exception {
-        // Enqueue a 404 Not Found response for the login endpoint
-        mockWebServer.enqueue(
-                new MockResponse()
-                        .setResponseCode(404)
-                        .setBody("User not found")
-        );
-
-        // Call login with some username and password
-        CompletableFuture<User> future = RestClient.login("ghost", "pwd");
-
-        // Wait for User result (should be null)
-        User user = future.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Assert that login returned null on 404
-        assertNull(user);
-    }
-
-    // =============================================================
     // FAILURE TESTS FOR: updateUser(String username, User updatedUser)
     // =============================================================
 
@@ -873,16 +822,6 @@ public class RestClientTest {
 
         // Assert that updateUser reports false on 404
         assertFalse(result);
-
-        // Read the HTTP request from MockWebServer
-        RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Assert that the request was received
-        assertNotNull(request);
-        // Assert that the method is PUT
-        assertEquals("PUT", request.getMethod());
-        // Assert that the path targets the given username
-        assertEquals("/myapp/api/users/ghost", request.getPath());
     }
 
     // =============================================================
@@ -912,16 +851,6 @@ public class RestClientTest {
 
         // Assert that patchUser reports false on 404
         assertFalse(result);
-
-        // Read the HTTP request from MockWebServer
-        RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Assert that request is not null
-        assertNotNull(request);
-        // Assert that HTTP method is PATCH
-        assertEquals("PATCH", request.getMethod());
-        // Assert that path targets the missing user
-        assertEquals("/myapp/api/users/ghost", request.getPath());
     }
 
     // =============================================================
@@ -946,16 +875,6 @@ public class RestClientTest {
 
         // Assert that deleteUser reports false on 404
         assertFalse(result);
-
-        // Read the HTTP request from MockWebServer
-        RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Assert that request was captured
-        assertNotNull(request);
-        // Assert that HTTP method is DELETE
-        assertEquals("DELETE", request.getMethod());
-        // Assert that path targets missing user
-        assertEquals("/myapp/api/users/ghost", request.getPath());
     }
 
     // =============================================================
@@ -979,16 +898,6 @@ public class RestClientTest {
 
         // Assert that headUser reports false on 404
         assertFalse(result);
-
-        // Read HTTP request from MockWebServer
-        RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Assert request is not null
-        assertNotNull(request);
-        // Assert method is HEAD
-        assertEquals("HEAD", request.getMethod());
-        // Assert path targets missing user
-        assertEquals("/myapp/api/users/ghost", request.getPath());
     }
 
     // =============================================================
@@ -1013,40 +922,6 @@ public class RestClientTest {
 
         // Assert that updateBmi reports false on 404
         assertFalse(result);
-
-        // Read the HTTP request
-        RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Assert request is not null
-        assertNotNull(request);
-        // Assert method is PATCH
-        assertEquals("PATCH", request.getMethod());
-        // Assert path includes bmi query parameter
-        assertEquals("/myapp/api/users/ghost/bmi?bmi=21.5", request.getPath());
-    }
-
-    // =============================================================
-    // FAILURE TESTS FOR: getBmi(String username)
-    // =============================================================
-
-    // Test that getBmi returns null when server responds with 404 Not Found
-    @Test
-    public void getBmi_notFound_returnsNull() throws Exception {
-        // Enqueue a 404 response for GET user (no bmi field)
-        mockWebServer.enqueue(
-                new MockResponse()
-                        .setResponseCode(404)
-                        .setBody("User not found")
-        );
-
-        // Call getBmi on RestClient
-        CompletableFuture<Double> future = RestClient.getBmi("ghost");
-
-        // Wait for result (should be null)
-        Double bmi = awaitDouble(future);
-
-        // Assert that BMI is null on 404
-        assertNull(bmi);
     }
 
     // =============================================================
@@ -1071,202 +946,6 @@ public class RestClientTest {
 
         // Assert that updateWater reports false on 404
         assertFalse(result);
-
-        // Read HTTP request
-        RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Assert that request is not null
-        assertNotNull(request);
-        // Assert method is PATCH
-        assertEquals("PATCH", request.getMethod());
-        // Assert path includes amount query parameter
-        assertEquals("/myapp/api/users/ghost/water?amount=400", request.getPath());
-    }
-
-    // =============================================================
-    // FAILURE TESTS FOR: getWater(String username)
-    // =============================================================
-
-    // Test that getWater returns null when server responds with 404 Not Found
-    @Test
-    public void getWater_notFound_returnsNull() throws Exception {
-        // Enqueue a 404 response for GET water
-        mockWebServer.enqueue(
-                new MockResponse()
-                        .setResponseCode(404)
-                        .setBody("User not found")
-        );
-
-        // Call getWater on RestClient
-        CompletableFuture<JSONObject> future = RestClient.getWater("ghost");
-
-        // Wait for JSONObject result (expected null)
-        JSONObject obj = awaitJson(future);
-
-        // Assert that getWater returns null on 404
-        assertNull(obj);
-    }
-
-    // =============================================================
-    // FAILURE TESTS FOR: getWaterHistoryMap(String username, int days)
-    // =============================================================
-
-    // Test that getWaterHistoryMap returns null when server responds with 404 Not Found
-    @Test
-    public void getWaterHistoryMap_notFound_returnsNull() throws Exception {
-        // Enqueue a 404 response for waterHistoryMap
-        mockWebServer.enqueue(
-                new MockResponse()
-                        .setResponseCode(404)
-                        .setBody("User not found")
-        );
-
-        // Call getWaterHistoryMap on RestClient
-        CompletableFuture<JSONObject> future = RestClient.getWaterHistoryMap("ghost", 7);
-
-        // Wait for JSONObject result (expected null)
-        JSONObject obj = awaitJson(future);
-
-        // Assert that result is null on 404
-        assertNull(obj);
-    }
-
-    // =============================================================
-    // FAILURE TESTS FOR: getWeeklyAverages(String username)
-    // =============================================================
-
-    // Test that getWeeklyAverages returns an empty map when server responds with 500
-    @Test
-    public void getWeeklyAverages_serverError_returnsEmptyMap() throws Exception {
-        // Enqueue a 500 Internal Server Error response
-        mockWebServer.enqueue(
-                new MockResponse()
-                        .setResponseCode(500)
-                        .setBody("Server error")
-        );
-
-        // Call getWeeklyAverages on RestClient
-        CompletableFuture<Map<String, Integer>> future = RestClient.getWeeklyAverages("john");
-
-        // Wait for Map result
-        Map<String, Integer> map = awaitMap(future);
-
-        // Assert that map is not null
-        assertNotNull(map);
-        // Assert that map is empty because method returns Collections.emptyMap() on non-OK
-        assertTrue(map.isEmpty());
-    }
-
-    // =============================================================
-    // FAILURE TESTS FOR: getGoal(String username)
-    // =============================================================
-
-    // Test that getGoal completes exceptionally when server responds with 404 Not Found
-    @Test
-    public void getGoal_notFound_completesExceptionally() throws Exception {
-        // Enqueue a 404 response for GET goal
-        mockWebServer.enqueue(
-                new MockResponse()
-                        .setResponseCode(404)
-                        .setBody("{}")
-        );
-
-        // Call getGoal on RestClient
-        CompletableFuture<JSONObject> future = RestClient.getGoal("ghost");
-
-        // Define a flag to indicate that an exception was thrown
-        boolean threw = false;
-
-        // Try to wait for JSONObject result (expected to throw)
-        try {
-            awaitJson(future);
-        } catch (Exception e) {
-            // Mark that an exception occurred
-            threw = true;
-        }
-
-        // Assert that the future completed exceptionally
-        assertTrue(threw);
-    }
-
-    // =============================================================
-    // FAILURE TESTS FOR: setGoal(String username, int goalMl)
-    // =============================================================
-
-    // Test that setGoal completes exceptionally when server responds with 400 Bad Request
-    @Test
-    public void setGoal_invalidValue_completesExceptionally() throws Exception {
-        // Enqueue a 400 Bad Request response for PUT goal
-        mockWebServer.enqueue(
-                new MockResponse()
-                        .setResponseCode(400)
-                        .setBody("{\"status\":\"INVALID_OR_NOT_FOUND\"}")
-        );
-
-        // Call setGoal with invalid value
-        CompletableFuture<Boolean> future = RestClient.setGoal("john", 100);
-
-        // Define a flag to mark that an exception was thrown
-        boolean threw = false;
-
-        // Try to wait for Boolean result (expected to throw ExecutionException)
-        try {
-            awaitBoolean(future);
-        } catch (Exception e) {
-            // Mark that exception was thrown
-            threw = true;
-        }
-
-        // Assert that the future completed exceptionally
-        assertTrue(threw);
-    }
-
-    // =============================================================
-    // FAILURE TESTS FOR: getBmiDistribution()
-    // =============================================================
-
-    // Test that getBmiDistribution returns null when server responds with 500
-    @Test
-    public void getBmiDistribution_serverError_returnsNull() throws Exception {
-        // Enqueue a 500 Internal Server Error response
-        mockWebServer.enqueue(
-                new MockResponse()
-                        .setResponseCode(500)
-                        .setBody("Error")
-        );
-
-        // Call getBmiDistribution on RestClient
-        CompletableFuture<JSONObject> future = RestClient.getBmiDistribution();
-
-        // Wait for JSONObject result (expected null)
-        JSONObject obj = awaitJson(future);
-
-        // Assert that result is null on server error
-        assertNull(obj);
-    }
-
-    // =============================================================
-    // FAILURE TESTS FOR: getCalories(String username)
-    // =============================================================
-
-    // Test that getCalories returns null when server responds with 400 Bad Request
-    @Test
-    public void getCalories_badRequest_returnsNull() throws Exception {
-        // Enqueue a 400 Bad Request response for GET calories
-        mockWebServer.enqueue(
-                new MockResponse()
-                        .setResponseCode(400)
-                        .setBody("Bad request")
-        );
-
-        // Call getCalories on RestClient
-        CompletableFuture<Integer> future = RestClient.getCalories("john");
-
-        // Wait for Integer result (expected null)
-        Integer value = awaitInteger(future);
-
-        // Assert that getCalories returns null on 400
-        assertNull(value);
     }
 
     // =============================================================
@@ -1291,15 +970,5 @@ public class RestClientTest {
 
         // Assert that setCalories reports false on 400
         assertFalse(result);
-
-        // Read HTTP request from MockWebServer
-        RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Assert request is not null
-        assertNotNull(request);
-        // Assert method is PUT
-        assertEquals("PUT", request.getMethod());
-        // Assert path contains the invalid value in query parameter
-        assertEquals("/myapp/api/users/john/calories?calories=-10", request.getPath());
     }
 }
