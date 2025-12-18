@@ -1,39 +1,29 @@
 package com.example.myfinaltopapplication;
-
 // Import assertions for JUnit tests
 import static org.junit.Assert.*;
-
 // Import Android Log for debug printing (available in instrumented tests)
 import android.util.Log;
-
 // Import JUnit4 runner for Android instrumented tests
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 // Import JUnit annotations for lifecycle and tests
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 // Import JSON object for parsing and building JSON bodies
 import org.json.JSONObject;
-
 // Import reflection classes to override static client in RestClient
 import java.lang.reflect.Field;
-
 // Import collections for map-based responses
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 // Import concurrency utilities for waiting on CompletableFuture
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
 // Import OkHttp client and HTTP URL for building test client
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
-
 // Import MockWebServer classes for mocking HTTP server behavior
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
