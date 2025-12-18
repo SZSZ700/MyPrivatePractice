@@ -38,8 +38,16 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.firebase.crashlytics.buildtools)
+    implementation(libs.okhttp)
+
+    // Unit tests (JVM)
     testImplementation(libs.junit)
+
+    // Android instrumented tests (includes AndroidJUnit4)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation(libs.okhttp)
+
+    // --- NEW: OkHttp MockWebServer for testing RestClient ---
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 }
