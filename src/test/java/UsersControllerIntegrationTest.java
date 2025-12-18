@@ -40,6 +40,15 @@ import java.util.concurrent.CompletableFuture;
 // Import Java utilities for maps and collections
 import java.util.*;
 
+// RestTemplate is a Spring HTTP client that allows us to call REST endpoints
+// in a simple, type-safe way. Instead of manually opening connections,
+// writing JSON, and parsing responses, we use RestTemplate to send HTTP
+// requests (GET, POST, PUT, PATCH, DELETE, etc.) and automatically map
+// the response into Java objects such as String, User, or Map. In this
+// test class we use TestRestTemplate (a specialized version for tests) to
+// simulate a real client calling our running Spring Boot server, so we can
+// verify the full HTTP behavior of our controllers end-to-end.
+
 // Mark this class as a Spring Boot integration test (loads the full context + web server)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 // Use a single test instance for the whole class (allows @BeforeAll non-static)
