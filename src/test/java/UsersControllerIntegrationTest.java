@@ -2,6 +2,7 @@
 package org.example.web;
 
 // Import JUnit 5 test annotations
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -56,6 +57,9 @@ public class UsersControllerIntegrationTest {
     // Define a constant timeout in seconds for FirebaseService helper calls
     private final long TIMEOUT_SECONDS = 20L;
 
+    // Keep track of all usernames created during this test class
+    private final List<String> createdUsernames = new ArrayList<>();
+
     // --------------------------- HELPER METHODS ---------------------------
 
     // Helper method to build a basic User instance with required fields
@@ -70,13 +74,14 @@ public class UsersControllerIntegrationTest {
         user.setFullName("Test User " + username);
         // Optionally set an age for this user
         user.setAge(25);
+
         // Return the prepared user object
         return user;
     }
 
     // Helper method to create a user in Firebase directly using FirebaseService
     private User createUserInFirebase(String username, String password) throws Exception {
-        // Build a User object using the helper method
+        // Create a new User object with the requested username and password
         User user = buildUser(username, password);
 
         // Call createUser on FirebaseService to persist this user
@@ -84,11 +89,34 @@ public class UsersControllerIntegrationTest {
         // Wait for the async result with a timeout
         Boolean created = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // Print debug log about the creation result (true/false)
+        // If user was created successfully, remember the username for cleanup
+        if (Boolean.TRUE.equals(created)) {
+            createdUsernames.add(username);
+        }
+
+        // Print debug log about the creation
         System.out.println("DEBUG createUserInFirebase -> username=" + username + " created=" + created);
 
         // Return the User object that was attempted to be created
         return user;
+    }
+
+    // Helper method to delete a user in Firebase safely (used for cleanup)
+    private void deleteUserInFirebase(String username) {
+        try {
+            // Call deleteUser on FirebaseService
+            CompletableFuture<Boolean> future = firebaseService.deleteUser(username);
+            // Wait for the async result with a timeout
+            Boolean deleted = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+            // Print debug log about the deletion result
+            System.out.println("DEBUG cleanup deleteUserInFirebase -> username="
+                    + username + " deleted=" + deleted);
+        } catch (Exception e) {
+            // Log a warning but do not fail the whole test suite because of cleanup
+            System.out.println("WARN cleanup failed for username=" + username
+                    + " message=" + e.getMessage());
+        }
     }
 
     // --------------------------- BASIC SETUP (OPTIONAL) ---------------------------
@@ -98,6 +126,18 @@ public class UsersControllerIntegrationTest {
     void beforeAll() {
         // Print a debug message indicating that UsersControllerIntegrationTest started
         System.out.println("DEBUG UsersControllerIntegrationTest (TestRestTemplate) -> starting integration tests");
+    }
+
+    @AfterAll
+    void cleanupAllTestUsers() {
+        // Print debug message before cleanup starts
+        System.out.println("DEBUG cleanupAllTestUsers -> deleting "
+                + createdUsernames.size() + " test users");
+
+        // Iterate over all created usernames and delete each one
+        for (String username : createdUsernames) {
+            deleteUserInFirebase(username);
+        }
     }
 
     // --------------------------- HEALTH CHECK TEST ---------------------------
@@ -134,6 +174,9 @@ public class UsersControllerIntegrationTest {
         assertEquals(HttpStatus.CREATED, firstResponse.getStatusCode());
         // Assert that the response body is the success message
         assertEquals("User created successfully", firstResponse.getBody());
+
+        // Remember this username for cleanup (only if first call succeeded)
+        createdUsernames.add(username);
 
         // Perform the second POST request with the same username to test duplicate handling
         ResponseEntity<String> secondResponse =
