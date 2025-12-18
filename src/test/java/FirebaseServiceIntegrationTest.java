@@ -1,6 +1,5 @@
 // Define the package for this test class
 package org.example.service;
-
 // Import assertion methods from JUnit Jupiter
 import org.junit.jupiter.api.AfterAll;
 // Import annotation to define methods that run before all tests
@@ -19,21 +18,30 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.context.SpringBootTest;
 // Import Autowired to inject Spring beans into the test class
 import org.springframework.beans.factory.annotation.Autowired;
-
 // Import static assertion methods for cleaner code
 import static org.junit.jupiter.api.Assertions.*;
-
 // Import the User model used by FirebaseService
 import org.example.model.User;
 // Import JSONObject used by getWater method
 import org.json.JSONObject;
-
 // Import standard Java concurrency utilities
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 // Import date and time utilities for building expected date keys
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+// FirebaseServiceIntegrationTest is an end-to-end integration test class that
+// verifies the behavior of FirebaseService against a real Firebase Realtime
+// Database. Instead of calling the REST controllers, these tests interact
+// directly with the service layer to ensure that all low-level operations
+// (such as creating users, updating BMI, managing water and calories, and
+// reading/writing structured data) work correctly with Firebase. By running
+// these tests we can detect issues related to data structure, paths,
+// serialization, asynchronous operations, and error handling before the
+// HTTP layer is even involved. In other words, this class validates that
+// FirebaseService is reliable and consistent as the core data access layer
+// of the application.
 
 // Annotate this class as a Spring Boot integration test (loads the full application context)
 @SpringBootTest
