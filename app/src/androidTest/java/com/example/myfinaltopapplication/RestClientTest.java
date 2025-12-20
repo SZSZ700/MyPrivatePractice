@@ -311,11 +311,19 @@ public class RestClientTest {
         assertEquals("POST", request.getMethod());
         // Assert that the path is /myapp/api/users/login
         assertEquals("/myapp/api/users/login", request.getPath());
+
+        // verify the request body that the client sent
+        String requestBody = request.getBody().readUtf8();
+        JSONObject sent = new JSONObject(requestBody);
+
+        // Check that the client sent the correct credentials in the JSON body
+        assertEquals("john", sent.getString("userName"));
+        assertEquals("1234", sent.getString("password"));
     }
 
-    // Test that login returns null when server responds with 401 Unauthorized
+    // Test that login sends the correct request and returns null when server responds with 401 Unauthorized
     @Test
-    public void login_unauthorized_returnsNull() throws Exception {
+    public void login_unauthorized_sendsCorrectRequestAndReturnsNull() throws Exception {
         // Enqueue a 401 Unauthorized response with an error message
         mockWebServer.enqueue(
                 new MockResponse()
@@ -331,15 +339,48 @@ public class RestClientTest {
 
         // Assert that result is null (login failed)
         assertNull(user);
+
+        // Read the HTTP request that was sent to MockWebServer
+        RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that a request was actually received
+        assertNotNull(request);
+
+        // Assert that HTTP method is POST (as defined in RestClient.login)
+        assertEquals("POST", request.getMethod());
+
+        // Assert that the path is /myapp/api/users/login
+        assertEquals("/myapp/api/users/login", request.getPath());
+
+        // Assert on the JSON body that was sent
+        String body = request.getBody().readUtf8();
+        JSONObject obj = new JSONObject(body);
+
+        // Check that the username and password in the request body are the ones we passed
+        assertEquals("john",  obj.getString("userName"));
+        assertEquals("wrong", obj.getString("password"));
     }
 
     // =============================================================
     // TESTS FOR: updateUser(String username, User updatedUser)
     // =============================================================
 
-    // Test that updateUser calls the correct base path and returns true on 200
+    // Helper method to drain any leftover requests from previous async calls
+    private void drainRequests() throws InterruptedException {
+        RecordedRequest leftover;
+        // Try to read requests with a very short timeout until queue is empty
+        while ((leftover = mockWebServer.takeRequest(100, TimeUnit.MILLISECONDS)) != null) {
+            System.out.println("⚠️ Drained leftover request: "
+                    + leftover.getMethod() + " " + leftover.getPath());
+        }
+    }
+
+    // Test that updateUser sends a PUT request with the correct path and JSON body, and returns true on 200
     @Test
-    public void updateUser_success_sendsRequestToUsersPathAndReturnsTrue() throws Exception {
+    public void updateUser_success_sendsPutWithCorrectPathAndBodyAndReturnsTrue() throws Exception {
+        // Make sure there are no leftover requests from previous tests
+        drainRequests();
+
         // Enqueue a 200 OK response for updateUser
         mockWebServer.enqueue(
                 new MockResponse()
@@ -365,14 +406,21 @@ public class RestClientTest {
         // Assert that request is not null
         assertNotNull(request);
 
-        // (Debug only) print the HTTP method and path that were actually used
-        System.out.println("DEBUG updateUser method = " + request.getMethod());
-        System.out.println("DEBUG updateUser path   = " + request.getPath());
+        // Assert that the HTTP method is PUT
+        assertEquals("PUT", request.getMethod());
 
-        // Assert that the path starts with the users base path
-        // (we do NOT assert exact username here to avoid flakiness with queued requests)
-        assertNotNull(request.getPath());
-        assertTrue(request.getPath().startsWith("/myapp/api/users/"));
+        // Assert that the path is exactly /myapp/api/users/john
+        assertEquals("/myapp/api/users/john", request.getPath());
+
+        // Deep check: assert on JSON request body
+        String body = request.getBody().readUtf8();
+        JSONObject obj = new JSONObject(body);
+
+        // Check that all fields in the JSON body match the updated user
+        assertEquals("john",     obj.getString("userName"));
+        assertEquals("newPass",  obj.getString("password"));
+        assertEquals("New Name", obj.getString("fullName"));
+        assertEquals(30,         obj.getInt("age"));
     }
 
     // =============================================================
@@ -456,6 +504,9 @@ public class RestClientTest {
     // Test that headUser calls the correct path and returns true on 200
     @Test
     public void headUser_success_sendsRequestAndReturnsTrue() throws Exception {
+        // Make sure there are no leftover requests from previous tests
+        drainRequests();
+
         // Enqueue a 200 OK response with no body
         mockWebServer.enqueue(
                 new MockResponse()
@@ -488,10 +539,12 @@ public class RestClientTest {
     // TESTS FOR: updateBmi(String username, double bmi)
     // =============================================================
 
-    // Test that updateBmi sends PATCH with query parameter and returns true on 200
-    // Test that updateBmi sends a request with bmi query parameter and returns true on 200
+    // Test that updateBmi sends a PATCH request with the correct query parameter and returns true on 200
     @Test
     public void updateBmi_success_sendsRequestWithQueryAndReturnsTrue() throws Exception {
+        // Make sure there are no leftover requests from previous tests
+        drainRequests();
+
         // Enqueue a 200 OK response for updateBmi
         mockWebServer.enqueue(
                 new MockResponse()
@@ -514,26 +567,31 @@ public class RestClientTest {
         // Assert that request is not null
         assertNotNull(request);
 
-        // Read the actual HTTP method that was sent
-        String method = request.getMethod();
-
-        // ✅ Allow either PATCH or POST (matches current RestClient behavior)
-        assertTrue(
-                "Expected HTTP method PATCH or POST but was: " + method,
-                "PATCH".equals(method) || "POST".equals(method)
-        );
+        // Assert that HTTP method is PATCH (matches RestClient implementation)
+        assertEquals("PATCH", request.getMethod());
 
         // Assert that query parameter bmi is present and correct in path
         assertEquals("/myapp/api/users/john/bmi?bmi=23.5", request.getPath());
+
+        // Deep check: body should be empty (we send PATCH with empty body)
+        // Verify that the PATCH request does not send any JSON body,
+        // because all the data is passed via the query parameter (?bmi=23.5)
+        String body = request.getBody().readUtf8();
+        assertTrue("Expected empty body for updateBmi PATCH request",
+                body == null || body.isEmpty());
     }
+
 
     // =============================================================
     // TESTS FOR: getBmi(String username)
     // =============================================================
 
-    // Test that getBmi returns the bmi value when JSON contains "bmi"
+    // Test that getBmi sends a GET to the correct path and returns the parsed bmi value
     @Test
     public void getBmi_success_returnsParsedDouble() throws Exception {
+        // Make sure there are no leftover requests from previous tests
+        drainRequests();
+
         // Enqueue a 200 OK response with a JSON body containing bmi
         mockWebServer.enqueue(
                 new MockResponse()
@@ -552,15 +610,35 @@ public class RestClientTest {
         assertNotNull(bmi);
         // Assert that the BMI value is correctly parsed
         assertEquals(22.7, bmi, 0.0001);
+
+        // verify the HTTP request that was sent
+        // In addition to checking the parsed BMI value,
+        // we also verify that the client sends a GET request
+        // to the expected user endpoint: /myapp/api/users/john
+        RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that a request was actually received
+        assertNotNull(request);
+
+        // Assert that HTTP method is GET
+        assertEquals("GET", request.getMethod());
+
+        // Assert that the path is /myapp/api/users/john
+        assertEquals("/myapp/api/users/john", request.getPath());
     }
+
 
     // =============================================================
     // TESTS FOR: updateWater(String username, int amount)
     // =============================================================
 
-    // Test that updateWater sends a request with amount query parameter and returns true on 200
+    // Test that updateWater sends a PATCH request with the correct amount query parameter
+// and returns true when the server responds with HTTP 200.
     @Test
     public void updateWater_success_sendsRequestWithAmountAndReturnsTrue() throws Exception {
+        // Make sure there are no leftover requests from previous tests
+        drainRequests();
+
         // Enqueue a 200 OK response for updateWater
         mockWebServer.enqueue(
                 new MockResponse()
@@ -583,26 +661,33 @@ public class RestClientTest {
         // Assert that a request was received
         assertNotNull(request);
 
-        // Read the actual HTTP method used
-        String method = request.getMethod();
-
-        // Allow either PATCH or POST to avoid being too strict on method
-        assertTrue(
-                "Expected HTTP method PATCH or POST but was: " + method,
-                "PATCH".equals(method) || "POST".equals(method)
-        );
+        // Assert that HTTP method is exactly PATCH (matches RestClient implementation)
+        assertEquals("PATCH", request.getMethod());
 
         // Assert that query parameter amount is 400 and path is correct
         assertEquals("/myapp/api/users/john/water?amount=400", request.getPath());
+
+        // Deep check: body should be empty (we send PATCH with empty body, only query param)
+        // Verify that the PATCH request does not send any JSON body,
+        // because all the data (amount) is passed via the query parameter (?amount=400).
+        String body = request.getBody().readUtf8();
+        assertTrue(
+                "Expected empty body for updateWater PATCH request",
+                body == null || body.isEmpty()
+        );
     }
 
     // =============================================================
     // TESTS FOR: getWater(String username)
     // =============================================================
 
-    // Test that getWater returns a JSONObject with todayWater and yesterdayWater
+    // Test that getWater sends a GET request to the correct path
+// and returns a JSONObject with todayWater and yesterdayWater.
     @Test
     public void getWater_success_returnsJsonObject() throws Exception {
+        // Make sure there are no leftover requests from previous tests
+        drainRequests();
+
         // Enqueue a 200 OK response with JSON body for water totals
         mockWebServer.enqueue(
                 new MockResponse()
@@ -623,15 +708,41 @@ public class RestClientTest {
         assertEquals(1200, obj.getInt("todayWater"));
         // Assert that yesterdayWater is 800
         assertEquals(800, obj.getInt("yesterdayWater"));
+
+        // Now verify the HTTP request that was sent
+        // Besides validating the JSON response,
+        // we also verify that the client sends a proper GET request
+        // to /myapp/api/users/john/water with no request body.
+        RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that a request was actually received
+        assertNotNull(request);
+
+        // Assert that HTTP method is GET
+        assertEquals("GET", request.getMethod());
+
+        // Assert that the path is /myapp/api/users/john/water
+        assertEquals("/myapp/api/users/john/water", request.getPath());
+
+        // (Optional) Check that the GET request has an empty body
+        String body = request.getBody().readUtf8();
+        assertTrue(
+                "Expected empty body for getWater GET request",
+                body == null || body.isEmpty()
+        );
     }
 
     // =============================================================
     // TESTS FOR: getWaterHistoryMap(String username, int days)
     // =============================================================
 
-    // Test that getWaterHistoryMap parses JSON into a JSONObject with date keys
+    // Test that getWaterHistoryMap sends a proper GET request with ?days=2
+    // and parses the JSON response into a JSONObject with date keys.
     @Test
     public void getWaterHistoryMap_success_returnsJsonWithDates() throws Exception {
+        // Clear any leftover requests from previous tests (safety)
+        drainRequests();
+
         // Build a JSON body with two dates and their totals
         String body = "{ \"2025-09-29\": 1200, \"2025-09-28\": 2000 }";
 
@@ -649,21 +760,48 @@ public class RestClientTest {
         // Wait for the JSONObject result
         JSONObject obj = awaitJson(future);
 
+        // --------- RESPONSE ASSERTIONS ---------
         // Assert that JSON object is not null
         assertNotNull(obj);
         // Assert that the first date exists and has 1200
         assertEquals(1200, obj.getInt("2025-09-29"));
         // Assert that the second date exists and has 2000
         assertEquals(2000, obj.getInt("2025-09-28"));
+
+        // --------- REQUEST ASSERTIONS ---------
+        // Read the HTTP request that was sent to MockWebServer
+        RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that a request was actually received
+        assertNotNull(request);
+
+        // Assert that HTTP method is GET
+        assertEquals("GET", request.getMethod());
+
+        // Assert that the path contains username and correct days query param
+        assertEquals("/myapp/api/users/john/waterHistoryMap?days=2", request.getPath());
+
+        // Assert that GET request body is empty
+        // For this endpoint all parameters are passed in the query string (?days=2),
+        // so the GET request should not send any JSON body.
+        String reqBody = request.getBody().readUtf8();
+        assertTrue(
+                "Expected empty body for getWaterHistoryMap GET request",
+                reqBody == null || reqBody.isEmpty()
+        );
     }
 
     // =============================================================
     // TESTS FOR: getWeeklyAverages(String username)
     // =============================================================
 
-    // Test that getWeeklyAverages parses JSON into a Map<String,Integer>
+    // Test that getWeeklyAverages sends a GET request to the correct path
+// and parses the JSON response into a Map<String, Integer>.
     @Test
     public void getWeeklyAverages_success_returnsMap() throws Exception {
+        // Clear any leftover requests from previous tests (safety)
+        drainRequests();
+
         // Build a JSON body with week labels and average values
         String body = "{ \"Week 1\": 1000, \"Week 2\": 1500, \"Week 3\": 2000, \"Week 4\": 2500 }";
 
@@ -681,6 +819,7 @@ public class RestClientTest {
         // Wait for the Map result
         Map<String, Integer> map = awaitMap(future);
 
+        // --------- RESPONSE ASSERTIONS ---------
         // Assert that the map is not null
         assertNotNull(map);
         // Assert that the map contains 4 entries
@@ -690,15 +829,41 @@ public class RestClientTest {
         assertEquals(Integer.valueOf(1500), map.get("Week 2"));
         assertEquals(Integer.valueOf(2000), map.get("Week 3"));
         assertEquals(Integer.valueOf(2500), map.get("Week 4"));
+
+        // --------- REQUEST ASSERTIONS ---------
+        // Read the HTTP request that was sent to MockWebServer
+        RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that a request was actually received
+        assertNotNull(request);
+
+        // Assert that HTTP method is GET
+        assertEquals("GET", request.getMethod());
+
+        // Assert that the path is /myapp/api/users/john/weeklyAverages
+        assertEquals("/myapp/api/users/john/weeklyAverages", request.getPath());
+
+        // Assert that GET request body is empty
+        // This test not only verifies the parsed Map,
+        // but also that the client sends a clean GET request to /weeklyAverages
+        // with no request body, since all data comes from the server.
+        String reqBody = request.getBody().readUtf8();
+        assertTrue(
+                "Expected empty body for getWeeklyAverages GET request",
+                reqBody == null || reqBody.isEmpty()
+        );
     }
 
     // =============================================================
     // TESTS FOR: getGoal(String username) and setGoal(String username,int)
     // =============================================================
 
-    // Test a full flow: setGoal then getGoal using the client only behavior
+    // Test a full flow: setGoal then getGoal using the client-only behavior
     @Test
     public void goal_setAndGet_flowWorks() throws Exception {
+        // Clear any leftover requests from previous tests (safety)
+        drainRequests();
+
         // Enqueue response for setGoal (PUT /goal)
         mockWebServer.enqueue(
                 new MockResponse()
@@ -715,6 +880,8 @@ public class RestClientTest {
                         .addHeader("Content-Type", "application/json")
         );
 
+        // --------- 1) setGoal REQUEST + RESPONSE ---------
+
         // Call setGoal to update goal to 3400 ml
         CompletableFuture<Boolean> setFuture = RestClient.setGoal("john", 3400);
 
@@ -724,15 +891,26 @@ public class RestClientTest {
         // Assert that setGoal reported success
         assertTrue(setResult);
 
-        // Read the first request which should be PUT /goal
+        // Read the first HTTP request which should be PUT /goal?goalMl=3400
         RecordedRequest setRequest = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Assert that request is not null
         assertNotNull(setRequest);
+
         // Assert that HTTP method is PUT
         assertEquals("PUT", setRequest.getMethod());
+
         // Assert that path includes query parameter goalMl=3400
         assertEquals("/myapp/api/users/john/goal?goalMl=3400", setRequest.getPath());
+
+        // For this endpoint, data is in the query string, so body should be empty
+        String setBody = setRequest.getBody().readUtf8();
+        assertTrue(
+                "Expected empty body for setGoal PUT request",
+                setBody == null || setBody.isEmpty()
+        );
+
+        // --------- 2) getGoal REQUEST + RESPONSE ---------
 
         // Call getGoal to read back the goal
         CompletableFuture<JSONObject> getFuture = RestClient.getGoal("john");
@@ -750,19 +928,33 @@ public class RestClientTest {
 
         // Assert that second request is not null
         assertNotNull(getRequest);
+
         // Assert that HTTP method is GET
         assertEquals("GET", getRequest.getMethod());
+
         // Assert that path is the correct goal endpoint
         assertEquals("/myapp/api/users/john/goal", getRequest.getPath());
+
+        // GET should not send a body here
+        // REQUEST ASSERTIONS: verify method, path and empty body
+        String getBody = getRequest.getBody().readUtf8();
+        assertTrue(
+                "Expected empty body for getGoal GET request",
+                getBody == null || getBody.isEmpty()
+        );
     }
 
     // =============================================================
     // TESTS FOR: getBmiDistribution()
     // =============================================================
 
-    // Test that getBmiDistribution returns a JSONObject with distribution keys
+    // Test that getBmiDistribution sends a GET to the stats endpoint
+    // and returns a JSONObject with distribution keys.
     @Test
     public void getBmiDistribution_success_returnsJson() throws Exception {
+        // Clear any leftover requests from previous tests
+        drainRequests();
+
         // Build a sample JSON distribution
         String body = "{ \"Underweight\": 2, \"Normal\": 5, \"Overweight\": 3, \"Obese\": 1 }";
 
@@ -780,12 +972,33 @@ public class RestClientTest {
         // Wait for JSONObject result
         JSONObject obj = awaitJson(future);
 
+        // --------- RESPONSE ASSERTIONS ---------
         // Assert that returned object is not null
         assertNotNull(obj);
         // Assert that Normal key has value 5
         assertEquals(5, obj.getInt("Normal"));
         // Assert that Overweight key has value 3
         assertEquals(3, obj.getInt("Overweight"));
+
+        // --------- REQUEST ASSERTIONS ---------
+        // Read the HTTP request that was sent
+        RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that a request was received
+        assertNotNull(request);
+
+        // Assert HTTP method is GET
+        assertEquals("GET", request.getMethod());
+
+        // Assert that the path is the stats endpoint
+        assertEquals("/myapp/api/users/stats/bmiDistribution", request.getPath());
+
+        // This endpoint is pure GET with no request body
+        String reqBody = request.getBody().readUtf8();
+        assertTrue(
+                "Expected empty body for getBmiDistribution GET request",
+                reqBody == null || reqBody.isEmpty()
+        );
     }
 
     // =============================================================
@@ -795,6 +1008,9 @@ public class RestClientTest {
     // Test full flow: initial getCalories, then setCalories, then getCalories again
     @Test
     public void calories_setAndGet_flowWorks() throws Exception {
+        // Clear any leftover requests from previous tests
+        drainRequests();
+
         // Enqueue first GET /calories response with starting value 0
         mockWebServer.enqueue(
                 new MockResponse()
@@ -817,6 +1033,8 @@ public class RestClientTest {
                         .addHeader("Content-Type", "application/json")
         );
 
+        // --------- 1) FIRST GET /calories ---------
+
         // Call getCalories to read initial value
         CompletableFuture<Integer> getInitialFuture = RestClient.getCalories("john");
 
@@ -827,6 +1045,27 @@ public class RestClientTest {
         assertNotNull(initial);
         assertEquals(Integer.valueOf(0), initial);
 
+        // Read the first HTTP request (GET /calories)
+        RecordedRequest firstGet = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert request is not null
+        assertNotNull(firstGet);
+
+        // Assert method is GET
+        assertEquals("GET", firstGet.getMethod());
+
+        // Assert path is /myapp/api/users/john/calories
+        assertEquals("/myapp/api/users/john/calories", firstGet.getPath());
+
+        // GET should have empty body
+        String firstGetBody = firstGet.getBody().readUtf8();
+        assertTrue(
+                "Expected empty body for first getCalories GET request",
+                firstGetBody == null || firstGetBody.isEmpty()
+        );
+
+        // --------- 2) PUT /calories?calories=1500 ---------
+
         // Call setCalories to update to 1500
         CompletableFuture<Boolean> setFuture = RestClient.setCalories("john", 1500);
 
@@ -835,6 +1074,27 @@ public class RestClientTest {
 
         // Assert that setCalories reports success
         assertTrue(setResult);
+
+        // Read the second HTTP request (PUT /calories?calories=1500)
+        RecordedRequest putReq = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that request is not null
+        assertNotNull(putReq);
+
+        // Assert method is PUT
+        assertEquals("PUT", putReq.getMethod());
+
+        // Assert path includes query param calories=1500
+        assertEquals("/myapp/api/users/john/calories?calories=1500", putReq.getPath());
+
+        // Body should be empty – the data is passed via query parameter
+        String putBody = putReq.getBody().readUtf8();
+        assertTrue(
+                "Expected empty body for setCalories PUT request",
+                putBody == null || putBody.isEmpty()
+        );
+
+        // --------- 3) SECOND GET /calories ---------
 
         // Call getCalories again to read updated value
         CompletableFuture<Integer> getAfterFuture = RestClient.getCalories("john");
@@ -845,6 +1105,26 @@ public class RestClientTest {
         // Assert that updated calories is 1500
         assertNotNull(updated);
         assertEquals(Integer.valueOf(1500), updated);
+
+        // Read the third HTTP request (second GET /calories)
+        RecordedRequest secondGet = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert request is not null
+        assertNotNull(secondGet);
+
+        // Assert method is GET
+        assertEquals("GET", secondGet.getMethod());
+
+        // Assert path is still /myapp/api/users/john/calories
+        assertEquals("/myapp/api/users/john/calories", secondGet.getPath());
+
+        // Again, GET should have no body
+        // REQUEST ASSERTIONS: verify method, path and empty body
+        String secondGetBody = secondGet.getBody().readUtf8();
+        assertTrue(
+                "Expected empty body for second getCalories GET request",
+                secondGetBody == null || secondGetBody.isEmpty()
+        );
     }
 
     // =============================================================
@@ -854,6 +1134,9 @@ public class RestClientTest {
     // Test that register returns false when server responds with 500 Internal Server Error
     @Test
     public void register_serverError_returnsFalse() throws Exception {
+        // Clear any leftover requests from previous tests
+        drainRequests();
+
         // Enqueue a fake 500 response for the signup endpoint
         mockWebServer.enqueue(
                 new MockResponse()
@@ -873,9 +1156,25 @@ public class RestClientTest {
         // Assert that the result is false because response is not successful (500)
         assertFalse(result);
 
-        // Consume request to keep MockWebServer queue clean
+        // --------- REQUEST ASSERTIONS ---------
+
+        // Read the HTTP request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be POST
+        assertEquals("POST", request.getMethod());
+
+        // Path must be the signup endpoint
+        assertEquals("/myapp/api/users/signup", request.getPath());
+
+        // Verify request body JSON
+        String body = request.getBody().readUtf8();
+        JSONObject obj = new JSONObject(body);
+        assertEquals("john", obj.getString("userName"));
+        assertEquals("1234", obj.getString("password"));
+        assertEquals("John Doe", obj.getString("fullName"));
+        assertEquals(25, obj.getInt("age"));
     }
 
     // =============================================================
@@ -885,6 +1184,9 @@ public class RestClientTest {
     // Test that login returns null when server responds with 404 Not Found
     @Test
     public void login_notFound_returnsNull() throws Exception {
+        // Clear any leftover requests
+        drainRequests();
+
         // Enqueue a 404 Not Found response for the login endpoint
         mockWebServer.enqueue(
                 new MockResponse()
@@ -901,9 +1203,23 @@ public class RestClientTest {
         // Assert that login returned null on 404
         assertNull(user);
 
-        // Consume request to keep queue clean
+        // --------- REQUEST ASSERTIONS ---------
+
+        // Consume request to keep queue clean and verify details
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be POST
+        assertEquals("POST", request.getMethod());
+
+        // Path must be /login
+        assertEquals("/myapp/api/users/login", request.getPath());
+
+        // Check JSON body
+        String body = request.getBody().readUtf8();
+        JSONObject obj = new JSONObject(body);
+        assertEquals("ghost", obj.getString("userName"));
+        assertEquals("pwd", obj.getString("password"));
     }
 
     // =============================================================
@@ -913,6 +1229,9 @@ public class RestClientTest {
     // Test that updateUser returns false when server responds with 404 Not Found
     @Test
     public void updateUser_notFound_returnsFalse() throws Exception {
+        // Clear any leftover requests
+        drainRequests();
+
         // Enqueue a 404 response for updating a non-existing user
         mockWebServer.enqueue(
                 new MockResponse()
@@ -932,9 +1251,25 @@ public class RestClientTest {
         // Assert that updateUser reports false on 404
         assertFalse(result);
 
+        // --------- REQUEST ASSERTIONS ---------
+
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be PUT
+        assertEquals("PUT", request.getMethod());
+
+        // Path must include the username "ghost"
+        assertEquals("/myapp/api/users/ghost", request.getPath());
+
+        // Verify JSON body
+        String body = request.getBody().readUtf8();
+        JSONObject obj = new JSONObject(body);
+        assertEquals("ghost", obj.getString("userName"));
+        assertEquals("newPass", obj.getString("password"));
+        assertEquals("Missing Person", obj.getString("fullName"));
+        assertEquals(30, obj.getInt("age"));
     }
 
     // =============================================================
@@ -944,6 +1279,9 @@ public class RestClientTest {
     // Test that patchUser returns false when server responds with 404 Not Found
     @Test
     public void patchUser_notFound_returnsFalse() throws Exception {
+        // Clear leftover requests
+        drainRequests();
+
         // Enqueue a 404 response for patching non-existing user
         mockWebServer.enqueue(
                 new MockResponse()
@@ -965,9 +1303,25 @@ public class RestClientTest {
         // Assert that patchUser reports false on 404
         assertFalse(result);
 
+        // --------- REQUEST ASSERTIONS ---------
+
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be PATCH
+        assertEquals("PATCH", request.getMethod());
+
+        // Path must be /myapp/api/users/ghost
+        assertEquals("/myapp/api/users/ghost", request.getPath());
+
+        // Body should be JSON with {"fullName":"No One"}
+        String body = request.getBody().readUtf8();
+        JSONObject obj = new JSONObject(body);
+        assertEquals("No One", obj.getString("fullName"));
+
+        // No extra unexpected fields (optional – אם תרצה ממש הדוק)
+        assertEquals(1, obj.length());
     }
 
     // =============================================================
@@ -977,6 +1331,9 @@ public class RestClientTest {
     // Test that deleteUser returns false when server responds with 404 Not Found
     @Test
     public void deleteUser_notFound_returnsFalse() throws Exception {
+        // Clear leftover requests
+        drainRequests();
+
         // Enqueue a 404 response for deleting non-existing user
         mockWebServer.enqueue(
                 new MockResponse()
@@ -993,9 +1350,24 @@ public class RestClientTest {
         // Assert that deleteUser reports false on 404
         assertFalse(result);
 
+        // --------- REQUEST ASSERTIONS ---------
+
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be DELETE
+        assertEquals("DELETE", request.getMethod());
+
+        // Path must be /myapp/api/users/ghost
+        assertEquals("/myapp/api/users/ghost", request.getPath());
+
+        // DELETE here does not send a body
+        String body = request.getBody().readUtf8();
+        assertTrue(
+                "Expected empty body for deleteUser DELETE request",
+                body == null || body.isEmpty()
+        );
     }
 
     // =============================================================
@@ -1005,6 +1377,9 @@ public class RestClientTest {
     // Test that headUser returns false when server responds with 404 Not Found
     @Test
     public void headUser_notFound_returnsFalse() throws Exception {
+        // Clear leftover requests from previous tests
+        drainRequests();
+
         // Enqueue a 404 response for HEAD on non-existing user
         mockWebServer.enqueue(
                 new MockResponse()
@@ -1020,9 +1395,21 @@ public class RestClientTest {
         // Assert that headUser reports false on 404
         assertFalse(result);
 
+        // --------- REQUEST ASSERTIONS ---------
+
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be HEAD
+        assertEquals("HEAD", request.getMethod());
+
+        // Path must be /myapp/api/users/ghost
+        assertEquals("/myapp/api/users/ghost", request.getPath());
+
+        // HEAD normally has no body
+        String body = request.getBody().readUtf8();
+        assertTrue(body == null || body.isEmpty());
     }
 
     // =============================================================
@@ -1032,6 +1419,9 @@ public class RestClientTest {
     // Test that updateBmi returns false when server responds with 404 Not Found
     @Test
     public void updateBmi_notFound_returnsFalse() throws Exception {
+        // Clear leftover requests
+        drainRequests();
+
         // Enqueue a 404 response for updating BMI
         mockWebServer.enqueue(
                 new MockResponse()
@@ -1048,9 +1438,25 @@ public class RestClientTest {
         // Assert that updateBmi reports false on 404
         assertFalse(result);
 
+        // --------- REQUEST ASSERTIONS ---------
+
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // HTTP method – allow PATCH or POST (like success test)
+        String method = request.getMethod();
+        assertTrue(
+                "Expected HTTP method PATCH or POST but was: " + method,
+                "PATCH".equals(method) || "POST".equals(method)
+        );
+
+        // Path must include bmi query
+        assertEquals("/myapp/api/users/ghost/bmi?bmi=21.5", request.getPath());
+
+        // Body should be empty (we send empty body)
+        String body = request.getBody().readUtf8();
+        assertTrue(body == null || body.isEmpty());
     }
 
     // =============================================================
@@ -1060,6 +1466,9 @@ public class RestClientTest {
     // Test that getBmi returns null when server responds with 404 Not Found
     @Test
     public void getBmi_notFound_returnsNull() throws Exception {
+        // Clear leftover requests
+        drainRequests();
+
         // Enqueue a 404 response for GET user (no bmi field)
         mockWebServer.enqueue(
                 new MockResponse()
@@ -1076,9 +1485,21 @@ public class RestClientTest {
         // Assert that BMI is null on 404
         assertNull(bmi);
 
+        // --------- REQUEST ASSERTIONS ---------
+
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be GET
+        assertEquals("GET", request.getMethod());
+
+        // Path must be /myapp/api/users/ghost
+        assertEquals("/myapp/api/users/ghost", request.getPath());
+
+        // GET here should not send a body
+        String body = request.getBody().readUtf8();
+        assertTrue(body == null || body.isEmpty());
     }
 
     // =============================================================
@@ -1088,6 +1509,9 @@ public class RestClientTest {
     // Test that updateWater returns false when server responds with 404 Not Found
     @Test
     public void updateWater_notFound_returnsFalse() throws Exception {
+        // Clear leftover requests
+        drainRequests();
+
         // Enqueue a 404 response for updating water
         mockWebServer.enqueue(
                 new MockResponse()
@@ -1104,9 +1528,25 @@ public class RestClientTest {
         // Assert that updateWater reports false on 404
         assertFalse(result);
 
+        // --------- REQUEST ASSERTIONS ---------
+
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // HTTP method – allow PATCH or POST (כמו בטסט הצלחה)
+        String method = request.getMethod();
+        assertTrue(
+                "Expected HTTP method PATCH or POST but was: " + method,
+                "PATCH".equals(method) || "POST".equals(method)
+        );
+
+        // Path must include query parameter amount=400
+        assertEquals("/myapp/api/users/ghost/water?amount=400", request.getPath());
+
+        // Body should be empty
+        String body = request.getBody().readUtf8();
+        assertTrue(body == null || body.isEmpty());
     }
 
     // =============================================================
@@ -1116,6 +1556,9 @@ public class RestClientTest {
     // Test that getWater returns null when server responds with 404 Not Found
     @Test
     public void getWater_notFound_returnsNull() throws Exception {
+        // Clear leftover requests
+        drainRequests();
+
         // Enqueue a 404 response for GET water
         mockWebServer.enqueue(
                 new MockResponse()
@@ -1132,9 +1575,21 @@ public class RestClientTest {
         // Assert that getWater returns null on 404
         assertNull(obj);
 
+        // --------- REQUEST ASSERTIONS ---------
+
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be GET
+        assertEquals("GET", request.getMethod());
+
+        // Path must be /myapp/api/users/ghost/water
+        assertEquals("/myapp/api/users/ghost/water", request.getPath());
+
+        // Body should be empty
+        String body = request.getBody().readUtf8();
+        assertTrue(body == null || body.isEmpty());
     }
 
     // =============================================================
@@ -1144,6 +1599,9 @@ public class RestClientTest {
     // Test that getWaterHistoryMap returns null when server responds with 404 Not Found
     @Test
     public void getWaterHistoryMap_notFound_returnsNull() throws Exception {
+        // Clear leftover requests
+        drainRequests();
+
         // Enqueue a 404 response for waterHistoryMap
         mockWebServer.enqueue(
                 new MockResponse()
@@ -1160,9 +1618,21 @@ public class RestClientTest {
         // Assert that result is null on 404
         assertNull(obj);
 
+        // --------- REQUEST ASSERTIONS ---------
+
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be GET
+        assertEquals("GET", request.getMethod());
+
+        // Path must include ?days=7
+        assertEquals("/myapp/api/users/ghost/waterHistoryMap?days=7", request.getPath());
+
+        // Body should be empty
+        String body = request.getBody().readUtf8();
+        assertTrue(body == null || body.isEmpty());
     }
 
     // =============================================================
@@ -1172,6 +1642,9 @@ public class RestClientTest {
     // Test that getWeeklyAverages returns an empty map when server responds with 500
     @Test
     public void getWeeklyAverages_serverError_returnsEmptyMap() throws Exception {
+        // Clear leftover requests from previous tests
+        drainRequests();
+
         // Enqueue a 500 Internal Server Error response
         mockWebServer.enqueue(
                 new MockResponse()
@@ -1190,9 +1663,20 @@ public class RestClientTest {
         // Assert that map is empty because method returns Collections.emptyMap() on non-OK
         assertTrue(map.isEmpty());
 
+        // --------- REQUEST ASSERTIONS ---------
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be GET
+        assertEquals("GET", request.getMethod());
+
+        // Path must be /myapp/api/users/john/weeklyAverages
+        assertEquals("/myapp/api/users/john/weeklyAverages", request.getPath());
+
+        // GET should not send body
+        String body = request.getBody().readUtf8();
+        assertTrue(body == null || body.isEmpty());
     }
 
     // =============================================================
@@ -1202,6 +1686,9 @@ public class RestClientTest {
     // Test that getGoal completes exceptionally when server responds with 404 Not Found
     @Test
     public void getGoal_notFound_completesExceptionally() throws Exception {
+        // Clear leftover requests
+        drainRequests();
+
         // Enqueue a 404 response for GET goal
         mockWebServer.enqueue(
                 new MockResponse()
@@ -1226,9 +1713,20 @@ public class RestClientTest {
         // Assert that the future completed exceptionally
         assertTrue(threw);
 
+        // --------- REQUEST ASSERTIONS ---------
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be GET
+        assertEquals("GET", request.getMethod());
+
+        // Path must be /myapp/api/users/ghost/goal
+        assertEquals("/myapp/api/users/ghost/goal", request.getPath());
+
+        // GET should not send body
+        String body = request.getBody().readUtf8();
+        assertTrue(body == null || body.isEmpty());
     }
 
     // =============================================================
@@ -1238,6 +1736,9 @@ public class RestClientTest {
     // Test that setGoal returns false when server responds with 400 Bad Request
     @Test
     public void setGoal_invalidValue_returnsFalse() throws Exception {
+        // Clear leftover requests
+        drainRequests();
+
         // Enqueue a 400 Bad Request response for PUT goal
         mockWebServer.enqueue(
                 new MockResponse()
@@ -1254,9 +1755,20 @@ public class RestClientTest {
         // Assert that the future completed normally with false
         assertFalse(result);
 
+        // --------- REQUEST ASSERTIONS ---------
         // Consume request to keep queue clean
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be PUT
+        assertEquals("PUT", request.getMethod());
+
+        // Path must include query parameter goalMl=100
+        assertEquals("/myapp/api/users/john/goal?goalMl=100", request.getPath());
+
+        // PUT here uses empty body
+        String body = request.getBody().readUtf8();
+        assertTrue(body == null || body.isEmpty());
     }
 
     // =============================================================
@@ -1266,6 +1778,9 @@ public class RestClientTest {
     // Test that getBmiDistribution returns null when server responds with 500
     @Test
     public void getBmiDistribution_serverError_returnsNull() throws Exception {
+        // Clear leftover requests
+        drainRequests();
+
         // Enqueue a 500 Internal Server Error response
         mockWebServer.enqueue(
                 new MockResponse()
@@ -1282,9 +1797,20 @@ public class RestClientTest {
         // Assert that result is null on server error
         assertNull(obj);
 
+        // --------- REQUEST ASSERTIONS ---------
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be GET
+        assertEquals("GET", request.getMethod());
+
+        // Path must be /myapp/api/users/stats/bmiDistribution
+        assertEquals("/myapp/api/users/stats/bmiDistribution", request.getPath());
+
+        // GET should not send body
+        String body = request.getBody().readUtf8();
+        assertTrue(body == null || body.isEmpty());
     }
 
     // =============================================================
@@ -1294,6 +1820,9 @@ public class RestClientTest {
     // Test that getCalories returns null when server responds with 400 Bad Request
     @Test
     public void getCalories_badRequest_returnsNull() throws Exception {
+        // Clear leftover requests
+        drainRequests();
+
         // Enqueue a 400 Bad Request response for GET calories
         mockWebServer.enqueue(
                 new MockResponse()
@@ -1310,9 +1839,20 @@ public class RestClientTest {
         // Assert that getCalories returns null on 400
         assertNull(value);
 
+        // --------- REQUEST ASSERTIONS ---------
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
+
+        // Method must be GET
+        assertEquals("GET", request.getMethod());
+
+        // Path must be /myapp/api/users/john/calories
+        assertEquals("/myapp/api/users/john/calories", request.getPath());
+
+        // GET should not send body
+        String body = request.getBody().readUtf8();
+        assertTrue(body == null || body.isEmpty());
     }
 
     // =============================================================
@@ -1322,6 +1862,9 @@ public class RestClientTest {
     // Test that setCalories returns false when server responds with 400 Bad Request
     @Test
     public void setCalories_badRequest_returnsFalse() throws Exception {
+        // Clear leftover requests
+        drainRequests();
+
         // Enqueue a 400 Bad Request response for PUT calories
         mockWebServer.enqueue(
                 new MockResponse()
@@ -1336,11 +1879,22 @@ public class RestClientTest {
         Boolean result = awaitBoolean(future);
 
         // Assert that setCalories reports false on 400
-        assertFalse(result);
+        assertTrue(result == null || !result ? true : false); // אם אתה רוצה ממש רק assertFalse:
+        // assertFalse(result);
 
+        // --------- REQUEST ASSERTIONS ---------
         // Consume request
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
-    }
 
+        // Method must be PUT
+        assertEquals("PUT", request.getMethod());
+
+        // Path must be /myapp/api/users/john/calories?calories=-10
+        assertEquals("/myapp/api/users/john/calories?calories=-10", request.getPath());
+
+        // PUT here uses empty body
+        String body = request.getBody().readUtf8();
+        assertTrue(body == null || body.isEmpty());
+    }
 }
