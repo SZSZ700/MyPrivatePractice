@@ -11433,6 +11433,130 @@ public class Main {
                 // - isSubStack: Sliding window search in lists → O(n * m).
 
             });
+            // 2025 - summer b
+            q.offer(() -> {
+                // 1 - a
+                // function that returns the first digit (most significant digit) of a positive number
+                Function<Integer, Integer> firstDigitOfNumber = (num) -> {
+                    // will contain the first digit of number
+                    int digit = 0;
+
+                    // copy of original num
+                    int temp = num;
+
+                    // iteration: dissolve the number until reaching the most significant digit
+                    while (temp > 0) {
+                        digit = temp % 10;
+                        temp /= 10;
+                    }
+
+                    // return the first digit
+                    return digit;
+                };
+
+                BiFunction<Stack<Integer> , Integer, Boolean> isProperK = (st, k) -> {
+                    if (k < 0 || k > 9) { return false; }
+
+                    // restoration stack (will help us restore the original stack)
+                    Stack<Integer> tempStk = new Stack<Integer>();
+
+                    // size of the stack
+                    int size = st.size();
+
+                    // array that contains all values from original stack from top to bottom
+                    int[] arr = new int[size];
+
+                    // index for filling the array
+                    int index = 0;
+
+                    // pop all values into arr (top -> bottom) AND keep them in tempStk for restoration
+                    while (!st.empty()) {
+                        int val = st.pop();
+                        arr[index++] = val;
+                        tempStk.push(val);
+                    }
+
+                    // restore the original stack exactly as it was
+                    while (!tempStk.empty()) {
+                        st.push(tempStk.pop());
+                    }
+
+                    // list that will contain indexes of numbers that start with digit k
+                    ArrayList<Integer> arrlst = new ArrayList<Integer>();
+
+                    // iteration on the array to find all indexes where first digit == k
+                    for (int i = 0; i < arr.length; i++) {
+                        // calculate the first digit of the current number
+                        int firstDigitOfCurrentNum = firstDigitOfNumber.apply(arr[i]);
+
+                        // if the first digit equals k, save the index
+                        if (firstDigitOfCurrentNum == k) {
+                            arrlst.add(i);
+                        }
+                    }
+
+                    // must have at least one number that starts with k
+                    if (arrlst.size() == 0) {
+                        return false;
+                    }
+
+                    // if there is exactly one such number, it's automatically a valid consecutive block
+                    if (arrlst.size() == 1) {
+                        return true;
+                    }
+
+                    // check that all indexes are consecutive (difference of 1)
+                    for (int i = 0; i < arrlst.size() - 1; i++) {
+                        // keep current index
+                        int currIndex = arrlst.get(i);
+
+                        // keep next index
+                        int nextIndex = arrlst.get(i + 1);
+
+                        // if not consecutive, it is not proper
+                        if (nextIndex != currIndex + 1) {
+                            return false;
+                        }
+                    }
+
+                    // all indexes were consecutive -> proper
+                    return true;
+                };
+
+                // 1 - b
+                BiConsumer<Stack<Integer>, Integer> fixit = (stk, k) -> {
+                    // check if the stack is not "proper for k"
+                    // (k numbers must appear as one consecutive block)
+                    if (!isProperK.apply(stk, k)){
+                        // stack for all the numbers from the original stack that
+                        // their first digit diffrent from k
+                        var rest = new Stack<Integer>();
+                        // stack for all numbers that have the same first digit
+                        var solution = new Stack<Integer>();
+
+                        // iteration on the original stack
+                        while (!stk.empty()){
+                            // keep first digit of current number
+                            var currdigit = firstDigitOfNumber.apply(stk.peek());
+                            // if the first digit of the current number equals to k,
+                            // push current number to the "solution" stack
+                            if (currdigit == k){ solution.push(stk.pop()); }
+                            // else if it's not equal, push the current number to the "rest"
+                            // stack
+                            else { rest.push(stk.pop()); }
+                        }
+
+                        // mv all unwanted values from rest stack to the solution stack
+                        while (!rest.empty()){ solution.push(rest.pop()); }
+
+                        // restore original stack
+                        while (!solution.empty()){ stk.push(solution.pop()); }
+                    }
+                };
+
+                // 2
+
+            });
             //The End
             q.offer(() -> {
                 System.out.println("Java <--> JVM <--> ByteCode(mechine code) /or/ JNI(Bridge interface) <--> native code (c,c++) <--> Assembly(mechine code)? ");
