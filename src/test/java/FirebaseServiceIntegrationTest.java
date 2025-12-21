@@ -56,7 +56,7 @@ public class FirebaseServiceIntegrationTest {
     // Define a constant username for the main integration test user
     private final String TEST_USERNAME_1 = "integrationUser1";
 
-    // Define a second test username that can be used for comparison scenarios
+    // Define a second test username that will be used for comparison scenarios
     private final String TEST_USERNAME_2 = "integrationUser2";
 
     // Store the main test user object for convenience
@@ -76,8 +76,6 @@ public class FirebaseServiceIntegrationTest {
         testUser1.setUserName(TEST_USERNAME_1);
         // Set a password for the first test user
         testUser1.setPassword("pass1");
-        // Optionally set additional fields (only if they exist in your User class)
-        // For safety, we keep it minimal here
 
         // Create a new User instance for the second test user
         testUser2 = new User();
@@ -402,14 +400,14 @@ public class FirebaseServiceIntegrationTest {
         assertNotNull(history);
         // Assert that the history map contains exactly 3 entries (for 3 days)
         assertEquals(3, history.size());
-        //!........................................................!//
+
         // Assert that the map contains an entry for today's date key
         assertTrue(history.containsKey(todayKey));
         // Assert that the value in the map for today equals today's water total we observed
         assertEquals(todayAfter, history.get(todayKey));
     }
 
-    // Deep test: for a "fresh" user, history map should contain only zeros for all requested days
+    // Test for a "fresh" user, history map should contain only zeros for all requested days
     @Test
     void getWaterHistoryMap_forNewUser_returnsAllZerosWithExpectedKeys() throws Exception {
         // Choose the number of days we want to request in the history map
@@ -500,7 +498,6 @@ public class FirebaseServiceIntegrationTest {
         user.setUserName(username);
         // Set a password for the test user
         user.setPassword("p");
-        // Optionally set more fields if needed (not required for this test)
 
         // Create the user in Firebase using createUser
         CompletableFuture<Boolean> createFuture =
@@ -646,7 +643,6 @@ public class FirebaseServiceIntegrationTest {
         user.setUserName(username);
         // Set a password for the test user
         user.setPassword("p");
-        // Optionally set more fields if your User model requires them
 
         // Create the user in Firebase
         CompletableFuture<Boolean> createFuture =
@@ -730,7 +726,6 @@ public class FirebaseServiceIntegrationTest {
         assertNotNull(before);
 
         // Helper method to read a value from the map or default to 0 if missing
-        // (implemented inline using getOrDefault for clarity)
         // Read the initial count for the "Underweight" category
         int underBefore = before.getOrDefault("Underweight", 0);
         // Read the initial count for the "Normal" category
@@ -765,7 +760,7 @@ public class FirebaseServiceIntegrationTest {
             User u = new User();
             // Set the username for this test user
             u.setUserName(bmiUsers[i]);
-            // Set a simple password (if required by your User model)
+            // Set a simple password
             u.setPassword("bmiPass");
 
             // Create the user in Firebase using createUser
