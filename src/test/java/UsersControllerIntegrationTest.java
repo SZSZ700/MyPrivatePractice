@@ -85,9 +85,9 @@ public class UsersControllerIntegrationTest {
         user.setUserName(username);
         // Set the password field for this user
         user.setPassword(password);
-        // Optionally set full name for clarity in debug
+        // set full name for clarity in debug
         user.setFullName("Test User " + username);
-        // Optionally set an age for this user
+        // set an age for this user
         user.setAge(25);
 
         // Return the prepared user object
@@ -116,7 +116,7 @@ public class UsersControllerIntegrationTest {
         return user;
     }
 
-    // Helper method to delete a user in Firebase safely (used for cleanup)
+    // Helper method to delete a user in Firebase safely
     private void deleteUserInFirebase(String username) {
         try {
             // Call deleteUser on FirebaseService
@@ -147,10 +147,10 @@ public class UsersControllerIntegrationTest {
     void cleanupAllTestUsers() {
         // Print debug message before cleanup starts
         System.out.println("DEBUG cleanupAllTestUsers -> deleting "
-                + createdUsernames.size() + " test users");
+                + this.createdUsernames.size() + " test users");
 
         // Iterate over all created usernames and delete each one
-        for (String username : createdUsernames) {
+        for (String username : this.createdUsernames) {
             deleteUserInFirebase(username);
         }
     }
@@ -162,7 +162,7 @@ public class UsersControllerIntegrationTest {
     void health_returnsOk() {
         // Perform a GET request to /api/users/health and expect a String body
         ResponseEntity<String> response =
-                restTemplate.getForEntity("/api/users/health", String.class);
+                this.restTemplate.getForEntity("/api/users/health", String.class);
 
         // Assert that the HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -182,7 +182,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform the first POST request to /api/users/signup sending the User as JSON
         ResponseEntity<String> firstResponse =
-                restTemplate.postForEntity("/api/users/signup", user, String.class);
+                this.restTemplate.postForEntity("/api/users/signup", user, String.class);
 
         // Assert that the HTTP status is 201 Created
         assertEquals(HttpStatus.CREATED, firstResponse.getStatusCode());
@@ -190,11 +190,11 @@ public class UsersControllerIntegrationTest {
         assertEquals("User created successfully", firstResponse.getBody());
 
         // Remember this username for cleanup (only if first call succeeded)
-        createdUsernames.add(username);
+        this.createdUsernames.add(username);
 
         // Perform the second POST request with the same username to test duplicate handling
         ResponseEntity<String> secondResponse =
-                restTemplate.postForEntity("/api/users/signup", user, String.class);
+                this.restTemplate.postForEntity("/api/users/signup", user, String.class);
 
         // Assert that the HTTP status is 409 Conflict
         assertEquals(HttpStatus.CONFLICT, secondResponse.getStatusCode());
@@ -221,7 +221,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform the POST request to /api/users/login sending User as JSON and expecting a User body
         ResponseEntity<User> response =
-                restTemplate.postForEntity("/api/users/login", loginRequestUser, User.class);
+                this.restTemplate.postForEntity("/api/users/login", loginRequestUser, User.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -252,7 +252,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform the POST request to /api/users/login sending User as JSON and expecting String body
         ResponseEntity<String> response =
-                restTemplate.postForEntity("/api/users/login", loginRequestUser, String.class);
+                this.restTemplate.postForEntity("/api/users/login", loginRequestUser, String.class);
 
         // Assert that HTTP status is 401 Unauthorized
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
@@ -272,7 +272,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a GET request to /api/users expecting an array of User
         ResponseEntity<User[]> response =
-                restTemplate.getForEntity("/api/users", User[].class);
+                this.restTemplate.getForEntity("/api/users", User[].class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -296,7 +296,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a GET request to /api/users/{username} expecting a User body
         ResponseEntity<User> response =
-                restTemplate.getForEntity("/api/users/" + username, User.class);
+                this.restTemplate.getForEntity("/api/users/" + username, User.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -316,7 +316,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a GET request to /api/users/{username} expecting String body
         ResponseEntity<String> response =
-                restTemplate.getForEntity("/api/users/" + username, String.class);
+                this.restTemplate.getForEntity("/api/users/" + username, String.class);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -346,7 +346,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a PUT request to /api/users/{username} expecting a User response
         ResponseEntity<User> response =
-                restTemplate.exchange("/api/users/{username}",
+                this.restTemplate.exchange("/api/users/{username}",
                         HttpMethod.PUT,
                         entity,
                         User.class,
@@ -379,7 +379,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a PUT request to /api/users/{username} expecting String body
         ResponseEntity<String> response =
-                restTemplate.exchange(
+                this.restTemplate.exchange(
                         // url template
                         "/api/users/{username}",
                         // http method
@@ -418,7 +418,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a PATCH request to /api/users/{username} expecting User response
         ResponseEntity<User> response =
-                restTemplate.exchange("/api/users/{username}",
+                this.restTemplate.exchange("/api/users/{username}",
                         HttpMethod.PATCH,
                         entity,
                         User.class,
@@ -451,7 +451,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a PATCH request to /api/users/{username} expecting String body
         ResponseEntity<String> response =
-                restTemplate.exchange("/api/users/{username}",
+                this.restTemplate.exchange("/api/users/{username}",
                         HttpMethod.PATCH,
                         entity,
                         String.class,
@@ -475,7 +475,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a DELETE request to /api/users/{username} expecting String body
         ResponseEntity<String> response =
-                restTemplate.exchange("/api/users/{username}",
+                this.restTemplate.exchange("/api/users/{username}",
                         HttpMethod.DELETE,
                         null,
                         String.class,
@@ -495,7 +495,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a DELETE request to /api/users/{username} expecting String body
         ResponseEntity<String> response =
-                restTemplate.exchange("/api/users/{username}",
+                this.restTemplate.exchange("/api/users/{username}",
                         HttpMethod.DELETE,
                         null,
                         String.class,
@@ -519,7 +519,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a HEAD request to /api/users/{username} expecting no body
         ResponseEntity<Void> response =
-                restTemplate.exchange("/api/users/{username}",
+                this.restTemplate.exchange("/api/users/{username}",
                         HttpMethod.HEAD,
                         null,
                         Void.class,
@@ -539,7 +539,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a HEAD request to /api/users/{username}
         ResponseEntity<Void> response =
-                restTemplate.exchange("/api/users/{username}",
+                this.restTemplate.exchange("/api/users/{username}",
                         HttpMethod.HEAD,
                         null,
                         Void.class,
@@ -564,7 +564,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a PATCH request to /api/users/{username}/bmi expecting String body
         ResponseEntity<String> response =
-                restTemplate.exchange(url,
+                this.restTemplate.exchange(url,
                         HttpMethod.PATCH,
                         null,
                         String.class);
@@ -586,7 +586,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a PATCH request to /api/users/{username}/bmi expecting String body
         ResponseEntity<String> response =
-                restTemplate.exchange(url,
+                this.restTemplate.exchange(url,
                         HttpMethod.PATCH,
                         null,
                         String.class);
@@ -609,7 +609,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a GET request to read initial water values
         ResponseEntity<Map> beforeResponse =
-                restTemplate.getForEntity("/api/users/" + username + "/water", Map.class);
+                this.restTemplate.getForEntity("/api/users/" + username + "/water", Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, beforeResponse.getStatusCode());
@@ -629,7 +629,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform PATCH request to update water
         ResponseEntity<String> patchResponse =
-                restTemplate.exchange(patchUrl,
+                this.restTemplate.exchange(patchUrl,
                         HttpMethod.PATCH,
                         null,
                         String.class);
@@ -641,7 +641,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform another GET request to read updated water totals
         ResponseEntity<Map> afterResponse =
-                restTemplate.getForEntity("/api/users/" + username + "/water", Map.class);
+                this.restTemplate.getForEntity("/api/users/" + username + "/water", Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, afterResponse.getStatusCode());
@@ -665,7 +665,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a GET request to /api/users/{username}/water expecting String body
         ResponseEntity<String> response =
-                restTemplate.getForEntity("/api/users/" + username + "/water", String.class);
+                this.restTemplate.getForEntity("/api/users/" + username + "/water", String.class);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -691,7 +691,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform GET request expecting a Map body
         ResponseEntity<Map> response =
-                restTemplate.getForEntity(url, Map.class);
+                this.restTemplate.getForEntity(url, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -714,7 +714,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform GET request expecting String body
         ResponseEntity<String> response =
-                restTemplate.getForEntity(url, String.class);
+                this.restTemplate.getForEntity(url, String.class);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -732,11 +732,11 @@ public class UsersControllerIntegrationTest {
         // Create the user in Firebase
         createUserInFirebase(username, "p");
 
-        // Optionally add some water so at least one week has non-zero average
+        // add some water so at least one week has non-zero average
         String waterUrl = "/api/users/" + username + "/water?amount=300";
         // Perform PATCH request to add water
         ResponseEntity<String> waterResponse =
-                restTemplate.exchange(waterUrl,
+                this.restTemplate.exchange(waterUrl,
                         HttpMethod.PATCH,
                         null,
                         String.class);
@@ -748,7 +748,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform GET request expecting Map<String,Integer> body (as raw Map)
         ResponseEntity<Map> response =
-                restTemplate.getForEntity(url, Map.class);
+                this.restTemplate.getForEntity(url, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -771,7 +771,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform GET request expecting String body
         ResponseEntity<String> response =
-                restTemplate.getForEntity(url, String.class);
+                this.restTemplate.getForEntity(url, String.class);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -797,7 +797,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform PUT request expecting Map body
         ResponseEntity<Map> setResponse =
-                restTemplate.exchange(setUrl,
+                this.restTemplate.exchange(setUrl,
                         HttpMethod.PUT,
                         null,
                         Map.class);
@@ -816,7 +816,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform GET request expecting Map body
         ResponseEntity<Map> getResponse =
-                restTemplate.getForEntity(getUrl, Map.class);
+                this.restTemplate.getForEntity(getUrl, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, getResponse.getStatusCode());
@@ -843,7 +843,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform PUT request expecting Map body
         ResponseEntity<Map> response =
-                restTemplate.exchange(url,
+                this.restTemplate.exchange(url,
                         HttpMethod.PUT,
                         null,
                         Map.class);
@@ -868,7 +868,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform GET request expecting Map body
         ResponseEntity<Map> response =
-                restTemplate.getForEntity(url, Map.class);
+                this.restTemplate.getForEntity(url, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -893,7 +893,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform initial GET request expecting Map body
         ResponseEntity<Map> initialResponse =
-                restTemplate.getForEntity(getInitialUrl, Map.class);
+                this.restTemplate.getForEntity(getInitialUrl, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, initialResponse.getStatusCode());
@@ -911,7 +911,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform PUT request with valid value expecting no content
         ResponseEntity<Void> validResponse =
-                restTemplate.exchange(putValidUrl,
+                this.restTemplate.exchange(putValidUrl,
                         HttpMethod.PUT,
                         null,
                         Void.class);
@@ -921,7 +921,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform GET request again to verify updated calories
         ResponseEntity<Map> afterValidResponse =
-                restTemplate.getForEntity(getInitialUrl, Map.class);
+                this.restTemplate.getForEntity(getInitialUrl, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, afterValidResponse.getStatusCode());
@@ -939,7 +939,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform PUT request expecting bad request
         ResponseEntity<Void> invalidLowResponse =
-                restTemplate.exchange(putInvalidLowUrl,
+                this.restTemplate.exchange(putInvalidLowUrl,
                         HttpMethod.PUT,
                         null,
                         Void.class);
@@ -952,7 +952,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform PUT request expecting bad request again
         ResponseEntity<Void> invalidHighResponse =
-                restTemplate.exchange(putInvalidHighUrl,
+                this.restTemplate.exchange(putInvalidHighUrl,
                         HttpMethod.PUT,
                         null,
                         Void.class);
@@ -962,7 +962,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform GET request again to verify calories did not change after invalid updates
         ResponseEntity<Map> afterInvalidResponse =
-                restTemplate.getForEntity(getInitialUrl, Map.class);
+                this.restTemplate.getForEntity(getInitialUrl, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, afterInvalidResponse.getStatusCode());
