@@ -1,5 +1,5 @@
 // Define the package for this test class
-package org.example.service;
+package CapstoneTests;
 // Import assertion methods from JUnit Jupiter
 import org.junit.jupiter.api.AfterAll;
 // Import annotation to define methods that run before all tests
@@ -11,9 +11,7 @@ import org.junit.jupiter.api.TestInstance;
 // Import the TestInstance lifecycle enum
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 // Import the ParameterizedTest annotation for parameterized test methods
-import org.junit.jupiter.params.ParameterizedTest;
 // Import ValueSource to supply simple parameter values for parameterized tests
-import org.junit.jupiter.params.provider.ValueSource;
 // Import the SpringBootTest annotation to load the full Spring context
 import org.springframework.boot.test.context.SpringBootTest;
 // Import Autowired to inject Spring beans into the test class
