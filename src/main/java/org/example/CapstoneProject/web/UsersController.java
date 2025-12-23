@@ -1,11 +1,11 @@
 // Define the package where this controller belongs
-package org.example.web;
+package org.example.CapstoneProject.web;
 
 // Import the User model (POJO with username, password, age, fullName)
 import org.example.model.User;
 
 // Import the Firebase service that handles database operations
-import org.example.service.FirebaseService;
+import org.example.CapstoneProject.service.FirebaseService;
 
 // Import Spring framework classes for HTTP status and response handling
 import org.springframework.http.HttpStatus;
