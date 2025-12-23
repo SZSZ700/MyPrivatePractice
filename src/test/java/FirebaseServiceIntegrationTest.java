@@ -51,7 +51,7 @@ public class FirebaseServiceIntegrationTest {
 
     // Inject the real FirebaseService bean from the Spring context
     @Autowired
-    private FirebaseService firebaseService;
+    private org.example.service.FirebaseService firebaseService;
 
     // Define a constant username for the main integration test user
     private final String TEST_USERNAME_1 = "integrationUser1";
