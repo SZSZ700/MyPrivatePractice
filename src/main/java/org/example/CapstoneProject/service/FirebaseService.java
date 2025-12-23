@@ -1,5 +1,5 @@
 // Define the package for this service class
-package org.example.service;
+package org.example.CapstoneProject.service;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
