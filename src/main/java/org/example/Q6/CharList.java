@@ -86,7 +86,7 @@ public class CharList {
         // ✅ pointer for the first Node that contains the letter
         Node<Character> first = firstAfterChain.apply(letter);
 
-        // ✅ pointer for the Node before "sec-Node"
+        // ✅ pointer for the Node before "first-Node"
         var between = this.head;
         while (between != null && between.getNext() != null  &&
                 between.getNext().getValue() != letter){
