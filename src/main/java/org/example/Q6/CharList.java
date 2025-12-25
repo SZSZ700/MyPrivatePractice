@@ -1,5 +1,4 @@
 package org.example.Q6; // package name for this class
-import org.checkerframework.checker.units.qual.N;
 import org.example.Node; // Import the Node class from the org.example package
 
 public class CharList {
@@ -7,7 +6,7 @@ public class CharList {
     private Node<Character> head;
 
     // private field that points to the tail of the character linked list
-    private Node<Character> tail;
+    private final Node<Character> tail;
 
     // default constructor
     public CharList(){
@@ -46,17 +45,20 @@ public class CharList {
         var pos = this.head;
         // Create a pointer that will store the last found node that matches the letter
         Node<Character> wanted = null;
+        var found = false;
 
         while (pos != null){ // Loop while we did not reach the end of the list
             // Check if the current node value equals the target letter
             if (pos.getValue() == letter){
                 // Update wanted to point to the current node (so it becomes the latest match)
                 wanted = pos;
+                if (!found){ found = true; }
             }
 
             pos = pos.getNext(); // Move the iterator to the next node
         }
 
+        if (found){ return wanted; }
         return null; // Return null if the letter was not found in the chain
     }
 
@@ -132,9 +134,12 @@ public class CharList {
             }
             //❗🛑❗////❗🛑❗//
 
+            assert pos != null;
+
             pos = pos.getNext();
         } // end of external while loop
 
+        assert secoc != null;
         secoc.setNext(this.head);
         this.head = next_to_secoc;
         tail_after_next_to_secoc.setNext(firstoc);
