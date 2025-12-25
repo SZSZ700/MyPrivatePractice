@@ -6,9 +6,8 @@ public class CharList {
     // private field that points to the head of the character linked list
     private Node<Character> head;
     // private field that points to the tail of the character linked list
-    private final Node<Character> tail;
+    private Node<Character> tail;
 
-    // first default constructor exist not shown //
     // second constructor that receives an existing chain (head node)
     public CharList(Node<Character> chain){
         this.head = chain; // Set this list head to the received chain
@@ -88,7 +87,7 @@ public class CharList {
         Node<Character> first = firstAfterChain.apply(letter);
 
         // ✅ pointer for the Node before "sec-Node"
-        var between = first;
+        var between = this.head;
         while (between != null && between.getNext() != null  &&
                 between.getNext().getValue() != letter){
             between = between.getNext();
@@ -107,5 +106,11 @@ public class CharList {
         sec.setNext(this.head);
         this.tail.setNext(first);
         this.head = next_to_secoc;
+
+        // fix the tail pointer position
+        this.tail = this.head;
+        while (this.tail.getNext() != null){
+            this.tail = this.tail.getNext();
+        }
     }
 }
