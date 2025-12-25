@@ -1,5 +1,6 @@
 package org.example.Q6; // package name for this class
 import org.example.Node; // Import the Node class from the org.example package
+import java.util.function.*;
 
 public class CharList {
     // private field that points to the head of the character linked list
@@ -24,7 +25,7 @@ public class CharList {
     }
 
     // method that finds the first node with a given letter starting from a given chain
-    public Node<Character> firstAfterChain(Node<Character> chain, char letter){
+    private Node<Character> firstAfterChain(Node<Character> chain, char letter){
         var pos = chain; // Create an iterator pointer starting at the given chain head
 
         while (pos != null){ // Loop while we did not reach the end of the list
@@ -40,7 +41,7 @@ public class CharList {
     }
 
     // method that finds the last occurrence node of the given letter in this list
-    public Node<Character> last (char letter){
+    private Node<Character> last (char letter){
         // Create an iterator pointer starting at the head of this list
         var pos = this.head;
         // Create a pointer that will store the last found node that matches the letter
@@ -63,10 +64,25 @@ public class CharList {
     }
 
     public void swap(char letter){
-        // if the head/tail pointers points to null -> EXIT
+        // internal lambda function to count the num of occurences
+        // of some letter in single linkedlist
+        Function<Character, Boolean> only2 = (tav) -> {
+            var pos = this.head; // pointer for the head of the list
+            var count = 0; // counter - to count the num of occurences of the letter
+            // iteration + count
+            while (pos != null){ if (pos.getValue() == tav){ count++; } }
+            // if the letter shown less than twice in a list return false
+            if (count < 2){ return false; }
+            return true; // else return true
+        };
+
+        // ⚠️ if the letter found less than twice in list -> EXIT
+        if (!only2.apply(letter)){ return; }
+
+        // ⚠️ if the head/tail pointers points to null -> EXIT
         if (this.head == null || this.tail == null){ return; }
 
-        // if the letter found in the first Node or in the last node -> EXIT
+        // ⚠️ if the letter found in the first Node or in the last node -> EXIT
         if (this.head.getValue() == letter || this.tail.getValue() == letter){ return; }
 
         // POINTERS:
@@ -91,7 +107,7 @@ public class CharList {
             tail_after_next_to_secoc = tail_after_next_to_secoc.getNext();
         }
 
-        // rewconec the original lisgt
+        // 🔁 reconect the original list
         between.setNext(null);
         sec.setNext(this.head);
         tail_after_next_to_secoc.setNext(first);
