@@ -63,85 +63,38 @@ public class CharList {
     }
 
     public void swap(char letter){
-        if (this.head == null || this.tail == null){
-            return;
+        // if the head/tail pointers points to null -> EXIT
+        if (this.head == null || this.tail == null){ return; }
+
+        // if the letter found in the first Node or in the last node -> EXIT
+        if (this.head.getValue() == letter || this.tail.getValue() == letter){ return; }
+
+        // POINTERS:
+        // ✅ pointer for the first Node that contains the letter
+        Node<Character> first = this.firstAfterChain(this.head, letter);
+
+        // ✅ pointer for the Node before "sec-Node"
+        var between = first;
+        while (first.getNext() != null  && first.getNext().getValue() != letter){
+            between = between.getNext();
         }
 
-        if (this.head.getValue() == letter || this.tail.getValue() == letter){
-            return;
-        }
+        // ✅ pointer for the second Node that contains the letter
+        Node<Character> sec = this.last(letter);
 
-        var pos = this.head;
-        Node<Character> firstoc = null;
-        Node<Character> secoc = null;
-        Node<Character> next_to_secoc = null;
+        // ✅ pointer for the next node, after the second Node that contains the letter
+        Node<Character> next_to_secoc = sec.getNext();
+
+        // ✅ pointer for the tail of the list
         Node<Character> tail_after_next_to_secoc = null;
-        var canComplete = false;
+        while (tail_after_next_to_secoc.getNext() != null){
+            tail_after_next_to_secoc = tail_after_next_to_secoc.getNext();
+        }
 
-        while (pos != null){
-            if (pos.getNext() != null){
-                if (pos.getNext().getValue() == letter){
-
-                    //⚠️////⚠️////⚠️////⚠️//
-                    firstoc = pos.getNext();
-                    //⚠️////⚠️////⚠️////⚠️//
-
-
-                    //⚠️////⚠️////⚠️////⚠️//
-                    pos.setNext(null);
-                    pos = firstoc;
-                    //⚠️////⚠️////⚠️////⚠️//
-
-                    while (pos != null){
-                        if (pos.getNext() != null){
-                            if (pos.getNext().getValue() == letter){
-
-                                //⚠️////⚠️////⚠️////⚠️//
-                                secoc = pos.getNext();
-                                //⚠️////⚠️////⚠️////⚠️//
-
-                                //⚠️////⚠️////⚠️////⚠️////⚠️////⚠️////⚠️//
-                                // the new head of the original list
-                                next_to_secoc = pos.getNext().getNext();
-                                //⚠️////⚠️////⚠️////⚠️////⚠️////⚠️////⚠️//
-
-
-                                //⚠️////⚠️////⚠️////⚠️////⚠️////⚠️////⚠️//
-                                tail_after_next_to_secoc = next_to_secoc;
-                                //⚠️////⚠️////⚠️////⚠️////⚠️////⚠️////⚠️//
-
-
-                                while (tail_after_next_to_secoc.getNext() != null){
-                                    tail_after_next_to_secoc =
-                                            tail_after_next_to_secoc.getNext();
-                                }
-
-                                //❗🛑❗////❗🛑❗//
-                                canComplete = true;
-                                break;
-                                //❗🛑❗////❗🛑❗//
-                            }
-                        }
-
-                        pos = pos.getNext();
-                    } // end of internal while loop
-                }
-            } // end of external if statement
-
-            //❗🛑❗////❗🛑❗//
-            if (canComplete){
-                break;
-            }
-            //❗🛑❗////❗🛑❗//
-
-            assert pos != null;
-
-            pos = pos.getNext();
-        } // end of external while loop
-
-        assert secoc != null;
-        secoc.setNext(this.head);
+        // rewconec the original lisgt
+        between.setNext(null);
+        sec.setNext(this.head);
+        tail_after_next_to_secoc.setNext(first);
         this.head = next_to_secoc;
-        tail_after_next_to_secoc.setNext(firstoc);
     }
 }
