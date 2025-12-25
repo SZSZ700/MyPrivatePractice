@@ -4,9 +4,9 @@ import java.util.function.*;
 
 public class CharList {
     // private field that points to the head of the character linked list
-    private Node<Character> head = null;
+    private Node<Character> head;
     // private field that points to the tail of the character linked list
-    private Node<Character> tail = null;
+    private final Node<Character> tail;
 
     // first default constructor exist not shown //
     // second constructor that receives an existing chain (head node)
@@ -66,10 +66,12 @@ public class CharList {
             var pos = this.head; // pointer for the head of the list
             var count = 0; // counter - to count the num of occurences of the letter
             // iteration + count
-            while (pos != null){ if (pos.getValue() == tav){ count++; } }
+            while (pos != null){
+                if (pos.getValue() == tav){ count++; }
+                pos = pos.getNext();
+            }
             // if the letter shown less than twice in a list return false
-            if (count < 2){ return false; }
-            return true; // else return true
+            return count >= 2;// else return true
         };
 
         // ⚠️ if the letter found less than twice in list -> EXIT
@@ -87,7 +89,8 @@ public class CharList {
 
         // ✅ pointer for the Node before "sec-Node"
         var between = first;
-        while (first.getNext() != null  && first.getNext().getValue() != letter){
+        while (between != null && between.getNext() != null  &&
+                between.getNext().getValue() != letter){
             between = between.getNext();
         }
 
@@ -95,9 +98,11 @@ public class CharList {
         Node<Character> sec = last.apply(letter);
 
         // ✅ pointer for the next node, after the second Node that contains the letter
+        assert sec != null;
         Node<Character> next_to_secoc = sec.getNext();
 
         // 🔁 reconect the original list
+        assert between != null;
         between.setNext(null);
         sec.setNext(this.head);
         this.tail.setNext(first);
