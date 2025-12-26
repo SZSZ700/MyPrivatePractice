@@ -1,3 +1,5 @@
+import sun.jvmstat.monitor.MonitoredVmUtil.jvmArgs
+
 plugins {
     alias(libs.plugins.android.application)
 }
@@ -32,6 +34,10 @@ android {
 
     testOptions {
         unitTests.isIncludeAndroidResources = true
+
+        unitTests.all {
+            it.jvmArgs("-XX:+EnableDynamicAgentLoading")
+        }
     }
 }
 
