@@ -29,6 +29,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
@@ -42,7 +46,6 @@ dependencies {
 
     // ============================
     // OkHttp + MockWebServer 4.12.0
-    // (אותה גרסה ל-main, unit test, androidTest)
     // ============================
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -51,11 +54,18 @@ dependencies {
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 
-    // Unit tests (JVM)
+    // -------- Unit tests (JVM) --------
     testImplementation(libs.junit)
 
-    // Android instrumented tests (includes AndroidJUnit4)
+    // Robolectric + Mockito
+    testImplementation("org.robolectric:robolectric:4.13")
+    testImplementation("org.mockito:mockito-core:5.14.2")
+    testImplementation("org.mockito:mockito-inline:5.14.2")
+    testImplementation("junit:junit:4.13.2")
+
+    // -------- Android instrumented tests --------
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation("androidx.test:runner:1.6.2")
 }
+
