@@ -1,5 +1,6 @@
 // Define the package for this integration test class
 package CapstoneTests;
+import org.example.Application;
 // Import JUnit 5 test annotations
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -56,7 +57,10 @@ import java.util.*;
 // verify the full HTTP behavior of our controllers end-to-end.
 
 // Mark this class as a Spring Boot integration test (loads the full context + web server)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        classes = Application.class,
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
 // Use a single test instance for the whole class (allows @BeforeAll non-static)
 @TestInstance(Lifecycle.PER_CLASS)
 public class UsersControllerIntegrationTest {
