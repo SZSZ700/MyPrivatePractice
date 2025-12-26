@@ -59,8 +59,8 @@ dependencies {
 
     // Robolectric + Mockito
     testImplementation("org.robolectric:robolectric:4.13")
-    testImplementation("org.mockito:mockito-core:5.14.2")
-    testImplementation("org.mockito:mockito-inline:5.14.2")
+    testImplementation("org.mockito:mockito-core:5.21.0")
+    testImplementation("org.mockito:mockito-inline:5.21.0")
     testImplementation("junit:junit:4.13.2")
 
     // -------- Android instrumented tests --------
