@@ -1,4 +1,3 @@
-import sun.jvmstat.monitor.MonitoredVmUtil.jvmArgs
 
 plugins {
     alias(libs.plugins.android.application)
