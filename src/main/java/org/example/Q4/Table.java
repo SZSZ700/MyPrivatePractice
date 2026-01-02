@@ -12,36 +12,24 @@ public class Table {
         this.free = free;
     }
 
-    public int getNum() {
-        return num;
-    }
+    public int getNum() { return this.num; }
 
-    public void setNum(int num) {
-        this.num = num;
-    }
+    public void setNum(int num) { this.num = num; }
 
-    public int getPlaces() {
-        return places;
-    }
+    public int getPlaces() { return this.places; }
 
-    public void setPlaces(int places) {
-        this.places = places;
-    }
+    public void setPlaces(int places) { this.places = places; }
 
-    public int getFree() {
-        return free;
-    }
+    public int getFree() { return this.free; }
 
-    public void setFree(int free) {
-        this.free = free;
-    }
+    public void setFree(int free) { this.free = free; }
 
     @Override
     public String toString() {
         return "Table{" +
-                "num=" + num +
-                ", places=" + places +
-                ", free=" + free +
+                "num=" + this.num +
+                ", places=" + this.places +
+                ", free=" + this.free +
                 '}';
     }
 }
