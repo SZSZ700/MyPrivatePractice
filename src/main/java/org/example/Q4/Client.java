@@ -4,6 +4,8 @@ public class Client {
     private String name;
     private int diners; // num of diners
 
+    public Client() { }
+
     public Client(String name, int diners) {
         this.name = name;
         this.diners = diners;
