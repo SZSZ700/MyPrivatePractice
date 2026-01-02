@@ -6,6 +6,8 @@ public class Table {
     private int places; // how many diners can seat on the table
     int free; // num of empty chairs
 
+    public Table() { }
+
     public Table(int num, int places, int free) {
         this.num = num;
         this.places = places;
