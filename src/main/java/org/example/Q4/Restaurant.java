@@ -27,7 +27,7 @@ public class Restaurant {
             // iteration
             while (i < size){
                 // create new table
-                var tableToAdd = new Table(++num, size, size);
+                var tableToAdd = new Table(++Restaurant.num, size, size);
                 // create new node with the new table
                 var nodeToAdd = new Node<Table>(tableToAdd);
 
@@ -60,14 +60,14 @@ public class Restaurant {
         // array witch the first cell points to the head of the new medium list
         // and the second cell points to the tail of the new medium list
         var arrayOflistOfMediumTables = createTbl.apply(medium);
-        var head2 = arrayOflistOfSmallTables[0];
-        var tail2 = arrayOflistOfSmallTables[1];
+        var head2 = arrayOflistOfMediumTables[0];
+        var tail2 = arrayOflistOfMediumTables[1];
 
         // array witch the first cell points to the head of the new big list
         // and the second cell points to the tail of the new big list
         var arrayOflistOfBigTables = createTbl.apply(large);
-        var head3 = arrayOflistOfSmallTables[0];
-        var tail3 = arrayOflistOfSmallTables[1];
+        var head3 = arrayOflistOfBigTables[0];
+        var tail3 = arrayOflistOfBigTables[1];
 
         this.tables = head1;
         tail1.setNext(head2);
