@@ -138,18 +138,14 @@ public class Restaurant {
                         tableFound = true;
                         break;
                     }
-
                     // move to the next table
                     pos = pos.getNext();
                 }
-
             }
         }
 
         // restore the original queue
-        while (!temp.isEmpty()){
-            this.clients.offer(temp.poll());
-        }
+        while (!temp.isEmpty()){ this.clients.offer(temp.poll()); }
 
         // if the function couldn't find table for any of the clients, return false
         // else return true
