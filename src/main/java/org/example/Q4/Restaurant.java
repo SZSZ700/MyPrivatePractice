@@ -2,6 +2,7 @@ package org.example.Q4;
 import org.example.Node;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.function.Function;
 
 public class Restaurant {
     // queue of clients
@@ -11,61 +12,60 @@ public class Restaurant {
     // number of table
     private static int num = 0;
 
-    // function to create table
-    // recive {how many diners can seat on the table, num of empty chairs}
-    private Node<Table>[] createTbl(int size){
-        // pointer for the head of the new list
-        Node<Table> chain = null;
-        // pointer for the tail of the new list
-        Node<Table> tail = null;
-        // var for iteration
-        var i = 0;
-
-        // iteration
-        while (i < size){
-            // create new table
-            var tableToAdd = new Table(++num, size, size);
-            // create new node with the new table
-            var nodeToAdd = new Node<Table>(tableToAdd);
-
-            // add the new node to the new list
-            if (chain == null){
-                chain = nodeToAdd;
-                tail = nodeToAdd;
-            }else{
-                tail.setNext(nodeToAdd);
-                tail = tail.getNext();
-            }
-
-            i++;
-        }
-
-        // return array witch the first cell points to the head of the new list
-        // and the second cell points to the tail of the new list
-        return new Node[]{chain,tail};
-    }
-
     // function that recive the number of small/medium/big tables and build list with
     // all type of tables
     public Restaurant(int small, int medium, int large){
+        // private lambda function to create tables list, of given size
+        Function<Integer, Node<Table>[]> createTbl = (size)-> {
+            // pointer for the head of the new list
+            Node<Table> chain = null;
+            // pointer for the tail of the new list
+            Node<Table> tail = null;
+            // var for iteration
+            var i = 0;
+
+            // iteration
+            while (i < size){
+                // create new table
+                var tableToAdd = new Table(++num, size, size);
+                // create new node with the new table
+                var nodeToAdd = new Node<Table>(tableToAdd);
+
+                // add the new node to the new list
+                if (chain == null){
+                    chain = nodeToAdd;
+                    tail = nodeToAdd;
+                }else{
+                    tail.setNext(nodeToAdd);
+                    tail = tail.getNext();
+                }
+
+                i++;
+            }
+
+            // return array witch the first cell points to the head of the new list
+            // and the second cell points to the tail of the new list
+            return new Node[]{chain,tail};
+        };
+
         // initialize the queue
         this.clients = new LinkedList<>();
 
         // array witch the first cell points to the head of the new small list
         // and the second cell points to the tail of the new small list
-        var arrayOflistOfSmallTables = createTbl(small);
+        var arrayOflistOfSmallTables = createTbl.apply(small);
         var head1 = arrayOflistOfSmallTables[0];
         var tail1 = arrayOflistOfSmallTables[1];
 
         // array witch the first cell points to the head of the new medium list
         // and the second cell points to the tail of the new medium list
-        var arrayOflistOfMediumTables = createTbl(medium);
+        var arrayOflistOfMediumTables = createTbl.apply(medium);
         var head2 = arrayOflistOfSmallTables[0];
         var tail2 = arrayOflistOfSmallTables[1];
 
         // array witch the first cell points to the head of the new big list
         // and the second cell points to the tail of the new big list
-        var arrayOflistOfBigTables = createTbl(large);
+        var arrayOflistOfBigTables = createTbl.apply(large);
         var head3 = arrayOflistOfSmallTables[0];
         var tail3 = arrayOflistOfSmallTables[1];
 
@@ -89,12 +89,8 @@ public class Restaurant {
             var places = currentTable.getPlaces();
             // num of empty chairs
             var free = currentTable.getFree();
-
             // return thr number of the table
-            if (free >= numOfDiners && places >= numOfDiners ){
-                return num;
-            }
-
+            if (free >= numOfDiners && places >= numOfDiners ){ return num; }
             // move to the next table
             pos = pos.getNext();
         }
