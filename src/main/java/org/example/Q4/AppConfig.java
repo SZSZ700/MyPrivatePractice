@@ -46,19 +46,3 @@ public class AppConfig {
         return new Restaurant(2, 3, 1, tableProvider, clientProvider);
     }
 }
-
-class tryMain {
-    public static void main(String[] args) {
-        AnnotationConfigApplicationContext ctx =
-                new AnnotationConfigApplicationContext(AppConfig.class);
-
-        Restaurant r = ctx.getBean(Restaurant.class);
-
-        r.addClient("Avi", 4);
-        r.addClient("Dana", 2);
-
-        System.out.println(r.seatNextClient());
-
-        ctx.close();
-    }
-}
