@@ -9,27 +9,19 @@ public class Client {
         this.diners = diners;
     }
 
-    public String getName() {
-        return name;
-    }
+    public String getName() { return this.name; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public void setName(String name) { this.name = name; }
 
-    public int getDiners() {
-        return diners;
-    }
+    public int getDiners() { return this.diners; }
 
-    public void setDiners(int diners) {
-        this.diners = diners;
-    }
+    public void setDiners(int diners) { this.diners = diners; }
 
     @Override
     public String toString() {
         return "Client{" +
-                "name='" + name + '\'' +
-                ", diners=" + diners +
+                "name='" + this.name + '\'' +
+                ", diners=" + this.diners +
                 '}';
     }
 }
