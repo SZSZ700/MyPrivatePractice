@@ -244,6 +244,9 @@ public class Restaurant {
             }
         }
 
+        // move the rest of the clients to the temporary queue
+        while (!this.clients.isEmpty()){ temp.offer(this.clients.poll()); }
+
         // Restore all unseated clients back into the main queue in the same order.
         while (!temp.isEmpty()) { this.clients.offer(temp.poll()); }
 
