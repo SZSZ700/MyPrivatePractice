@@ -57,7 +57,7 @@ public class Restaurant {
             // Use an index variable for the loop.
             var i = 0;
 
-            // Create "size" tables (your original logic: size controls both count and capacity).
+            // Create "size" tables
             while (i < size) {
 
                 // Ask Spring for a fresh Table instance (prototype).
