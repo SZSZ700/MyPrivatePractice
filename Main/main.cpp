@@ -2362,6 +2362,7 @@ void twentyTwentyFiveSummerA() {
             // 📥 Get pointer to the string at the front of the original queue
             string *s = q->front();
             // 🔤 Get the first character of this string
+            // ReSharper disable once CppTooWideScopeInitStatement
             const char currentChar = (*s)[0];
 
             // ✅ If the first character matches the most common character
@@ -2399,8 +2400,24 @@ void twentyTwentyFiveSummerA() {
         delete notsame;
     };
 
+    // 2 - a
+    [[maybe_unused]] auto isSequenceK =  [&] (const auto p1, const auto p2) -> bool {
+        if (!p1 || !p2) return false;
 
-    // ... ...
+        const auto k = *p1->getValue();
+        auto count = 0;
+
+        auto pos = p1;
+        while (pos != p2 && count < k) {
+            if (*pos->getValue() != k) return false;
+            pos = pos->getNext();
+            count++;
+        }
+
+        if (count != k) return false;
+
+        return true;
+    };
 }
 
 int main() {
