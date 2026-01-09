@@ -2420,6 +2420,97 @@ void twentyTwentyFiveSummerA() {
     };
 }
 
+void twentyTwentyFiveSummerB() {
+    [[maybe_unused]] auto first = [&] (std::stack<int*> *stk, const int k) -> bool {
+        // assist function to delete array
+        [[maybe_unused]] auto delAr = [&] (int **arr) {
+            const auto size = *arr[0];
+            // delete old elements from the array
+            // iteration
+            for (auto i = 0; i < size; i++) { delete arr[i]; }
+            // delete the head pointer for the array
+            delete arr;
+        };
+
+        // assist function to cast stack into array
+        [[maybe_unused]] auto stkToArray = [&] (std::stack<int*> *stack) -> int** {
+            // restoration stack
+            const auto temp = new std::stack<int*>();
+            // size of the original stack
+            const auto stkSize = new int(stack->size());
+            // create new empty array with the same size of the original stack
+            const auto array = new int*[*stkSize];
+            // first index in the array contains the size of the array
+            array[0] = stkSize;
+            // index
+            auto index = 1;
+
+            // iteration on the original stack
+            while (!stack->empty()) {
+                // create new integer number that equals to the top element from the stack
+                const auto current = new int(*stack->top());
+                // add this new created number to the returned array
+                array[index++] = current;
+                // push the current number to the restoration stack
+                temp->push(stack->top());
+                // remove the top element from the stack
+                stack->pop();
+            }
+
+            // restoration
+            while (!temp->empty()) {
+                // push current element to the restoration stack
+                stack->push(temp->top());
+                // remove the top element from the stack
+                temp->pop();
+            }
+
+            // delete the restoration stack
+            delete temp;
+            // return the array
+            return array;
+        };
+
+        // if there is no stack return false
+        if (!stk) return false;
+        // create array that contains the same values
+        // and with the same order as the shown in the original stack
+        const auto array = stkToArray(stk);
+        // size of the array
+        const auto size = *array[0];
+        // create new empty array filled with 0,
+        int monim[size];
+        // index for iteratoin on the indices array
+        auto index = 0;
+
+        for (auto i = 0; i < size; i++) {
+            // if the current value equals to k
+            // keep its index in the indexes array
+            if (array[i] && *array[i] == k) { monim[index++] = i; }
+        }
+
+        // boolean flag that detects if the stack is not valid
+        bool notValid = false;
+
+        // fill the indices array with the indices that
+        for (auto i = 0; i < size - 1; i++) {
+            if (monim[i] != monim[i + 1] + 1) { notValid = true; break; }
+        }
+
+        if (!notValid) {
+            // delete the array
+            delAr(array);
+            // return false, stack not valid
+            return false;
+        }
+
+        // delete the array
+        delAr(array);
+        // return true, stack is valid
+        return true;
+    };
+}
+
 int main() {
     system("chcp 65001 > nul"); // 💡 Change console to UTF-8 mode (Windows CMD command)
     someTry0();
