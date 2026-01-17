@@ -2421,8 +2421,28 @@ void twentyTwentyFiveSummerA() {
 }
 
 void twentyTwentyFiveSummerB() {
-    [[maybe_unused]] auto first = [&] (std::stack<int*> *stk, const int k) -> bool {
-        // assist function to delete array
+    // ✅ 1 - a
+    [[maybe_unused]] auto first_A = [&] (std::stack<int*> *stk, const int k) -> bool {
+        // ✅ assist function to return the first digit in number
+        [[maybe_unused]] auto fdigit = [&] (const int *num) -> int {
+            // copy of num
+            auto temp = *num;
+            // for keeping the first digit in number
+            auto first = 0;
+
+            // destroy thr number
+            while (temp > 0) {
+                // keep last digit
+                first = temp % 10;
+                // remove last digit
+                temp /= 10;
+            }
+
+            // return the first digit
+            return first;
+        };
+
+        // ✅ assist function to delete array
         [[maybe_unused]] auto delAr = [&] (int **arr) {
             const auto size = *arr[0];
             // delete old elements from the array
@@ -2432,7 +2452,7 @@ void twentyTwentyFiveSummerB() {
             delete arr;
         };
 
-        // assist function to cast stack into array
+        // ✅ assist function to cast stack into array
         [[maybe_unused]] auto stkToArray = [&] (std::stack<int*> *stack) -> int** {
             // restoration stack
             const auto temp = new std::stack<int*>();
@@ -2486,7 +2506,7 @@ void twentyTwentyFiveSummerB() {
         for (auto i = 0; i < size; i++) {
             // if the current value equals to k
             // keep its index in the indexes array
-            if (array[i] && *array[i] == k) { monim[index++] = i; }
+            if (array[i] && fdigit(array[i]) == k) { monim[index++] = i; }
         }
 
         // boolean flag that detects if the stack is not valid
@@ -2508,6 +2528,65 @@ void twentyTwentyFiveSummerB() {
         delAr(array);
         // return true, stack is valid
         return true;
+    };
+
+    // ✅ 1 - b
+    [[maybe_unused]] auto first_B = [&] (std::stack<int*> *stk, const int k) -> void {
+        // if the stack is valid, EXIT DO NOTHING
+        if (first_A(stk, k)) return;
+
+        // ✅ assist function to return the first digit in number
+        [[maybe_unused]] auto fdigit = [&] (const int *num) -> int {
+            // copy of num
+            auto temp = *num;
+            // for keeping the first digit in number
+            auto first = 0;
+
+            // destroy thr number
+            while (temp > 0) {
+                // keep last digit
+                first = temp % 10;
+                // remove last digit
+                temp /= 10;
+            }
+
+            // return the first digit
+            return first;
+        };
+
+        // stack for diffrents values
+        const auto temp_stk = new std::stack<int*>();
+        // stack for "same" values
+        const auto only_stk = new std::stack<int*>();
+
+        // iteration
+        while (!stk->empty()) {
+            // calc current number first digit, if it is equals to k => push the current number
+            // to the same-stack, else => push it to the non-same-stack
+            if (const auto currentNum = fdigit(stk->top()); currentNum == k) {
+                only_stk->push(stk->top());
+                stk->pop();
+            }else {
+                temp_stk->push(stk->top());
+                stk->pop();
+            }
+        }
+
+        //emptying the same-stack content into the original stack
+        while (!only_stk->empty()) {
+            stk->push(only_stk->top());
+            only_stk->pop();
+        }
+
+        // emptying the non-same-stack content into the original stack
+        while (!temp_stk->empty()) {
+            stk->push(temp_stk->top());
+            temp_stk->pop();
+        }
+
+        // delete the assists stacks
+        delete temp_stk;
+        delete only_stk;
     };
 }
 
