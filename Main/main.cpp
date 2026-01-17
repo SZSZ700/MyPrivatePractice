@@ -2588,6 +2588,9 @@ void twentyTwentyFiveSummerB() {
         delete temp_stk;
         delete only_stk;
     };
+
+
+    // 2 - StarCount Class
 }
 
 int main() {
