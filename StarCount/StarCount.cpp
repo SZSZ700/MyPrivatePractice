@@ -315,7 +315,7 @@ void StarCount::fixNumber() {
 
             const auto before = pos; // Node before the multi-digit node
             const auto middle = pos->getNext(); // The multi-digit node itself
-            const auto after = pos->getNext()->getNext(); // Node after the multi-digit node (may be nullptr)
+            const auto after = pos->getNext()->getNext(); // Node after the multi-digit node (can be nullptr)
 
             const auto new_list = buildlist(middle->getValue()); // Build a list of single-digit nodes from the middle value
             auto tail_for_new_list = new_list; // Start from the head of the new sublist
