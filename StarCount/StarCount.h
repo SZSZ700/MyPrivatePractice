@@ -33,5 +33,11 @@ public:
 
     // tostring
     std::string toString() const;
+
+    // build numlist
+    Node<int*> *buildlist(const int *num);
+
+    // fix the list
+    void fixNumber();
 };
 #endif //UNTITLED1_STARCOUNT_H
