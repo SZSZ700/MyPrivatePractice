@@ -61,5 +61,11 @@ public:
 
     // Method that converts the restaurant data into a human-readable string
     string toString() const;
+
+    // Method that finds a table number that has enough free places for the given number of diners
+    int findAvailableTable(int numOfDiners) const;
+
+    // Method that seats the next suitable client from the queue at a table with enough free places
+    bool seatNextClient();
 };
 #endif //UNTITLED1_RESTAURANT_H
