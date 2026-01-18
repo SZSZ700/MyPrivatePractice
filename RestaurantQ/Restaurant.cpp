@@ -398,3 +398,147 @@ string Restaurant::toString() const {
     // Return the string built inside the stringstream
     return ss.str();
 }
+
+// Method that finds a table number that has enough free places for the given number of diners
+int Restaurant::findAvailableTable(const int numOfDiners) const {
+    // If there are no tables at all, return -1 to indicate failure
+    if (!this->tables) { return -1; }
+
+    // Create a pointer to traverse the linked list of tables
+    const Node<Table*>* pos = this->tables;
+
+    // Traverse the table list as long as there are nodes
+    while (pos != nullptr) {
+        // Get the table pointer stored in the current node
+        // ReSharper disable once CppTooWideScope
+        const Table* tbl = pos->getValue();
+
+        // If the table pointer is valid
+        if (tbl) {
+            // Get the pointer to the number of free places at this table
+            const int* freePtr = tbl->getFreePlaces();
+            // Get the pointer to the table number
+            // ReSharper disable once CppTooWideScopeInitStatement
+            const int* numPtr = tbl->getNum();
+
+            // If both pointers are valid
+            if (freePtr && numPtr) {
+                // Read the number of free places from the table
+                // ReSharper disable once CppTooWideScopeInitStatement
+                const int free = *freePtr;
+
+                // If the number of free places is enough for the given diners
+                if (free >= numOfDiners) {
+                    // Return the table number because this table can seat the group
+                    return *numPtr;
+                }
+            }
+        }
+
+        // Move to the next node in the tables list
+        pos = pos->getNext();
+    }
+
+    // If no suitable table was found, return -1 to indicate failure
+    return -1;
+}
+
+// Method that seats the next suitable client from the queue at a table with enough free places
+// ReSharper disable once CppMemberFunctionMayBeConst
+bool Restaurant::seatNextClient() {
+    // If the client queue pointer is null, there are no clients to seat
+    if (!this->clients) {
+        // Return false because no client was seated
+        return false;
+    }
+
+    // If the queue is empty, there are no clients waiting
+    if (this->clients->empty()) {
+        // Return false because no client was seated
+        return false;
+    }
+
+    // Store the current number of clients in the queue
+    const std::size_t originalSize = this->clients->size();
+
+    // Initialize a flag that indicates whether a client was successfully seated
+    bool seated = false;
+
+    // Loop over the queue at most once (one full rotation)
+    for (std::size_t i = 0; i < originalSize; i++) {
+        // Take the client pointer from the front of the queue
+        Client* current = this->clients->front();
+        // Remove the client pointer from the front of the queue
+        this->clients->pop();
+
+        // If the client pointer is null, skip it and continue to the next
+        if (!current) {
+            // Continue to the next client in the loop
+            continue;
+        }
+
+        // Get the pointer to the number of diners for this client
+        const int* dinersPtr = current->getDiners();
+        // If the diners pointer is null, treat this client as having zero diners
+        const int diners = dinersPtr ? *dinersPtr : 0;
+
+        // Call the method that finds a suitable table number for this group size
+        // ReSharper disable once CppTooWideScopeInitStatement
+        const int tableNum = this->findAvailableTable(diners);
+
+        // If a valid table number was found
+        if (tableNum != -1) {
+            // Create a pointer to traverse the tables list again to locate this table object
+            const Node<Table*>* pos = this->tables;
+
+            // Traverse the table list until the matching table is found
+            while (pos != nullptr) {
+                // Get the table pointer stored in the current node
+                // ReSharper disable once CppTooWideScopeInitStatement
+                Table* tbl = pos->getValue();
+
+                // If the table pointer is valid and has a valid table number
+                if (tbl && tbl->getNum()) {
+                    // If the current table number matches the one returned by findAvailableTable
+                    if (*(tbl->getNum()) == tableNum) {
+                        // Get the pointer to the current number of free places at this table
+                        // ReSharper disable once CppTooWideScope
+                        const int* freePtr = tbl->getFreePlaces();
+
+                        // If the free places pointer is valid
+                        if (freePtr) {
+                            // Compute the new number of free places after seating this client
+                            int newFree = *freePtr - diners;
+                            // Update the table object with the new number of free places
+                            tbl->setFreePlaces(&newFree);
+                        }
+
+                        // Delete the client object because the client has been seated and leaves the queue
+                        delete current;
+
+                        // Set the flag to indicate that a client was seated successfully
+                        seated = true;
+
+                        // Break out of the inner loop because we have found and updated the table
+                        break;
+                    }
+                }
+
+                // Move to the next node in the tables list
+                pos = pos->getNext();
+            }
+
+            // After seating the client, break out of the outer loop as well
+            if (seated) {
+                // Stop processing more clients because one client has been seated
+                break;
+            }
+        } else {
+            // If no suitable table was found for this client, push the client back to the end of the queue
+            this->clients->push(current);
+        }
+    }
+
+    // Return true if a client was seated, or false if no client could be seated
+    return seated;
+}
