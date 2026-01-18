@@ -342,3 +342,157 @@ void StarCount::fixNumber() {
         scan = scan->getNext(); // Move to the next node
     }
 }
+
+// Convert this.number (single list) to a doubly linked list
+BinNode<int*>* StarCount::convert_THIS_SingleListToDoubly() const { // Convert the current single list into a doubly linked list
+    const Node<int*>* pos = this->number; // Pointer that iterates over the single linked list
+    BinNode<int*>* doublychain = nullptr; // Head of the new doubly linked list
+    BinNode<int*>* tailD = nullptr; // Tail of the new doubly linked list
+
+    while (pos != nullptr) { // Traverse all nodes of the single linked list
+        const int* digitPtr = pos->getValue(); // Get the digit pointer stored in the current node
+        const int digit = digitPtr ? *digitPtr : 0; // Read the digit value or use 0 if the pointer is null
+        const auto newDigit = new int(digit); // Allocate a new integer for the doubly node
+
+        const auto toAdd = new BinNode(newDigit); // Create a new doubly node that stores the newly allocated digit
+
+        if (doublychain == nullptr) { // If this is the first node in the doubly list
+            doublychain = toAdd; // Set head of the doubly list
+            tailD = toAdd; // Set tail to the first node
+        } else { // If the doubly list already has nodes
+            assert(tailD != nullptr);
+            tailD->setRight(toAdd); // Link current tail to the new node (to the right)
+            toAdd->setLeft(tailD); // Link new node back to the old tail (to the left)
+            tailD = toAdd; // Move tail pointer to the new node
+        }
+
+        pos = pos->getNext(); // Move to the next node in the single linked list
+    }
+
+    return doublychain; // Return the head of the doubly linked list
+}
+
+// Return the tail of a given doubly linked list
+// ReSharper disable once CppMemberFunctionMayBeStatic
+BinNode<int*>* StarCount::returnTailOfDlist(BinNode<int*>* chain) const { // Return the last node of a doubly linked list
+    if (!chain) return nullptr; // If the list is empty, there is no tail
+
+    auto tailD = chain; // Start from the head node
+    while (tailD->getRight() != nullptr) { // Move right while there is a next node
+        tailD = tailD->getRight(); // Advance the tail pointer
+    }
+
+    return tailD; // Return the last node in the list
+}
+
+// Convert doubly list back into this.number and free the doubly list
+void StarCount::convertDoublyListTo_THIS_Single(const BinNode<int*>* doublychain) { // Convert a doubly linked list back into this.number as a single linked list
+    // First, delete the current single linked list (nodes and their digit pointers)
+    const Node<int*>* curr = this->number; // Start from the head of the current single list
+
+    while (curr != nullptr) { // Traverse all nodes in the current list
+        const Node<int*>* next = curr->getNext(); // Store pointer to the next node
+        const int* digitPtr = curr->getValue(); // Get the digit pointer stored in the current node
+        delete digitPtr; // Delete the digit pointer
+        delete curr; // Delete the current node
+        curr = next; // Move to the next node
+    }
+
+    this->number = nullptr; // Clear the head pointer
+    this->tail = nullptr; // Clear the tail pointer
+
+    // Now, rebuild the single linked list from the doubly linked list
+    const BinNode<int*>* position = doublychain; // Start from the head of the doubly list
+    Node<int*>* newTail = nullptr; // Tail pointer for the rebuilt single list
+
+    while (position != nullptr) { // Traverse all nodes in the doubly list
+        const int* digitPtr = position->getValue(); // Get the digit pointer from the doubly node
+        const int digit = digitPtr ? *digitPtr : 0; // Read the digit value or use 0 if pointer is null
+        const auto newDigit = new int(digit); // Allocate a new integer for the single linked node
+
+        const auto toAdd = new Node(newDigit); // Create a new single linked node with the digit pointer
+
+        if (this->number == nullptr) { // If this is the first node in the rebuilt list
+            this->number = toAdd; // Set head of the rebuilt list
+            newTail = toAdd; // Set tail of the rebuilt list
+        } else { // If the rebuilt list already has nodes
+            assert(newTail != nullptr);
+            newTail->setNext(toAdd); // Attach the new node at the end of the list
+            newTail = toAdd; // Move the tail pointer to the new node
+        }
+
+        const BinNode<int*>* nextD = position->getRight(); // Store pointer to the next doubly node
+        delete digitPtr; // Delete the digit pointer owned by the doubly node
+        delete position; // Delete the doubly node itself
+        position = nextD; // Move to the next node in the doubly list
+    }
+
+    this->tail = newTail; // Update the tail pointer to the last node of the rebuilt list
+}
+
+void StarCount::addOne() { // Add 1 to the big number represented by this.number
+    if (this->number == nullptr) { // If the list is null, treat it as 0 and make it 1
+        const auto oneDigit = new int(1); // Allocate a digit with value 1
+        const auto node = new Node(oneDigit); // Create a new node that stores the digit
+        this->number = node; // Set the head pointer to the new node
+        this->tail = node; // Set the tail pointer to the same node
+        return; // The operation is complete
+    }
+
+    BinNode<int*>* doublychain = this->convert_THIS_SingleListToDoubly(); // Convert the original single list to a doubly linked list
+    BinNode<int*>* dail = this->returnTailOfDlist(doublychain); // Find the tail of the doubly linked list
+
+    bool detectedLastNumberWasNine = false; // Indicates whether we still have a carry because we saw a 9
+
+    while (dail != nullptr) { // Iterate backward from tail to head
+        int* digitPtr = dail->getValue(); // Get the digit pointer from the current node
+        const int currentdigit = digitPtr ? *digitPtr : 0; // Read the digit value or use 0 if the pointer is null
+
+        if (detectedLastNumberWasNine) { // If we already have a carry from the previous digit
+            if (currentdigit != 9) { // If current digit is not 9
+                assert(digitPtr != nullptr);
+                *digitPtr = currentdigit + 1; // Increment the current digit and resolve the carry
+                break; // Stop because carry is resolved
+                // ReSharper disable once CppRedundantElseKeywordInsideCompoundStatement
+            } else { // If current digit is 9
+                *digitPtr = 0; // Turn 9 into 0
+                detectedLastNumberWasNine = true; // Carry remains
+
+                if (dail->getLeft() == nullptr) { // If we are at the head and it became 0
+                    const auto oneDigit = new int(1); // Allocate a new digit 1 for the new head
+                    const auto newHead = new BinNode(oneDigit); // Create a new head node
+                    newHead->setRight(dail); // Connect new head to the old head
+                    dail->setLeft(newHead); // Connect old head back to the new head
+                    doublychain = newHead; // Update the head pointer of the doubly list
+                    break; // Stop because the number is now fixed (e.g., 999 -> 1000)
+                }
+
+                dail = dail->getLeft(); // Move left to continue processing carry
+                continue; // Skip the block below in this iteration
+            }
+        }
+
+        if (currentdigit == 9) { // If current digit is 9 and we are adding 1
+            *digitPtr = 0; // Turn 9 into 0
+            detectedLastNumberWasNine = true; // Set carry to true
+
+            if (dail->getLeft() == nullptr) { // If we are at the head
+                const auto oneDigit = new int(1); // Allocate a new digit 1 for a new head
+                const auto newHead = new BinNode(oneDigit); // Create the new head node
+                newHead->setRight(dail); // Connect new head to old head
+                dail->setLeft(newHead); // Connect old head back to new head
+                doublychain = newHead; // Update the head pointer of the doubly list
+                break; // Stop because the number is now fixed (e.g., 9 -> 10)
+            }
+
+            dail = dail->getLeft(); // Move left to continue carry
+        } else { // If current digit is not 9
+            assert(digitPtr != nullptr);
+            *digitPtr = currentdigit + 1; // Just increment the current digit
+            break; // Stop because no further carry is needed
+        }
+    }
+
+    this->convertDoublyListTo_THIS_Single(doublychain); // Convert the updated doubly list back into the single linked list
+}
+
