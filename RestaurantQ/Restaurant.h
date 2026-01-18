@@ -1,0 +1,8 @@
+//
+// Created by Sharb on 1/18/2026.
+//
+
+#ifndef UNTITLED1_RESTAURANT_H
+#define UNTITLED1_RESTAURANT_H
+
+#endif //UNTITLED1_RESTAURANT_H
