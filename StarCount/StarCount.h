@@ -16,7 +16,7 @@ class StarCount {
     BinNode<int*>* returnTailOfDlist(BinNode<int*>* chain) const;
 
     // Convert doubly list back into this.number and free the doubly list
-    void convertDoublyListTo_THIS_Single(BinNode<int*>* doublychain);
+    void convertDoublyListTo_THIS_Single(const BinNode<int*>* doublychain);
 
 public:
     // constructor
