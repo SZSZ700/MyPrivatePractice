@@ -1030,7 +1030,7 @@ public class FirebaseService {
 
                     @Override
                     public void onCancelled(DatabaseError error) {
-                        // Complete exceptionally so controller can handle as 5xx if it wants
+                        // Complete exceptionally
                         System.err.println("ERROR getCalories -> " + error.getMessage());
                         fut.completeExceptionally(error.toException());
                     }
