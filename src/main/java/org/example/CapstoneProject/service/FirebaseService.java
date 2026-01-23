@@ -863,7 +863,7 @@ public class FirebaseService {
 
                     @Override
                     public void onCancelled(DatabaseError error) {
-                        // Complete exceptionally so controller can handle as 5xx
+                        // Complete exceptionally
                         fut.completeExceptionally(error.toException());
                     }
                 });
