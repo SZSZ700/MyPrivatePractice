@@ -1047,7 +1047,6 @@ public class FirebaseService {
         CompletableFuture<Boolean> fut = new CompletableFuture<>();
 
         // Optional validation: we do not allow negative values
-        // (You can change max if you want)
         if (calories < 0 || calories > 20000) {
             System.out.println("DEBUG updateCalories -> invalid value: " + calories);
             fut.complete(false);
