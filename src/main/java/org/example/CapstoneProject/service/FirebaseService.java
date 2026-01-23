@@ -457,7 +457,7 @@ public class FirebaseService {
         // Future that will be completed once the async work finishes
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
-        // Optional guard: ignore invalid amounts (<= 0). You can remove this if you support negatives.
+        // Optional guard: ignore invalid amounts (<= 0).
         if (waterAmount <= 0) {
             System.out.println("DEBUG updateWater -> ignored non-positive amount: " + waterAmount);
             future.complete(false);
