@@ -457,7 +457,7 @@ public class FirebaseService {
         // Future that will be completed once the async work finishes
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
-        // Optional guard: ignore invalid amounts (<= 0).
+        // Optional guard: ignore invalid amounts (<= 0)
         if (waterAmount <= 0) {
             System.out.println("DEBUG updateWater -> ignored non-positive amount: " + waterAmount);
             future.complete(false);
@@ -478,7 +478,7 @@ public class FirebaseService {
 
                         // We expect a single user, but loop just in case
                         for (DataSnapshot userSnap : snapshot.getChildren()) {
-                            // Build today's date key: yyyy-MM-dd (matches your existing structure)
+                            // Build today's date key: yyyy-MM-dd
                             String dayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                                     .format(new Date());
 
