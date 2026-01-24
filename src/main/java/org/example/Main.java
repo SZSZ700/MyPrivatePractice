@@ -1,7 +1,5 @@
 package org.example;
-
 import org.example.Q4.Restaurant;
-
 import java.awt.*;
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -355,75 +353,6 @@ public class Main {
             count = 0;//איפוס מונה ערכים זוגיים
         }
         return true;//אם לא חזר שקר, משמע שכל התורים בשרשרת חוליות הן זוגיים ולכן נחזיר אמת
-    }
-
-    //פונקציה המקבלת שרשרת חוליות של תורים ומחזירה שרשרת חווליות כאשר כל חוליה מכילה מחלקה המכילה מינימום ומקסימום בתור
-    public static LinkedList<RangeNode> Range_N(LinkedList<Queue<Integer>> lst) {
-        //crete the list we gonna return at the end of the proccess
-        LinkedList<RangeNode> newey = new LinkedList<>();
-
-        //iterate through the original list
-        for (int i = 0; i < lst.size(); i++) {
-
-            Queue<Integer> temp = new LinkedList<>();//queue assist
-            //initialize min mav variables
-            int min = Integer.MAX_VALUE;
-            int max = Integer.MIN_VALUE;
-
-            //itirate throgh the current queue
-            while (!lst.get(i).isEmpty()) {
-                int x = lst.get(i).poll();
-                if (x < min) {
-                    min = x;
-                }
-                if (x > max) {
-                    max = x;
-                }
-                temp.offer(x);//move it for the temp queue anyway
-            }
-
-            //restore current queue
-            while (!temp.isEmpty()) {
-                lst.get(i).offer(temp.poll());
-            }
-
-            RangeNode tempy = new RangeNode(min, max);//create the rangenode object
-            newey.add(tempy);//insert it to the new list
-        }
-        return newey;//return the new list
-    }
-
-    //על אותו עיקרון כמו פונקצייה קודמת רק שהפעם זו היא שרשרת מחסניות
-    public static LinkedList<RangeNode> Range_N2(LinkedList<Stack<Integer>> lst) {
-        LinkedList<RangeNode> newey = new LinkedList<>();//create the new list we gonna return
-
-        //iterate through the recived list
-        for (int i = 0; i < lst.size(); i++) {
-            //create assist stack
-            Stack<Integer> temp = new Stack<Integer>();
-            //initialize min to max-value and max to min-value
-            int min = Integer.MAX_VALUE;
-            int max = Integer.MIN_VALUE;
-            //itereate through the current stack
-            while (!lst.get(i).empty()) {
-                int x = lst.get(i).pop();
-                if (x < min) {
-                    min = x;
-                }
-                if (x > max) {
-                    max = x;
-                }
-                temp.push(x);
-            }
-            //restore current stack
-            while (!temp.empty()) {
-                lst.get(i).push(temp.pop());
-            }
-            //create new rangenode object
-            RangeNode tempy = new RangeNode(min, max);
-            newey.add(tempy);
-        }
-        return newey;//return the new rangenode min-max list
     }
 
     public static int putInPlace(Queue<Integer> q, int num) {
@@ -3198,38 +3127,6 @@ public class Main {
         return true;
     }
 
-    public static Node<Student>[] arLiMonth(School s1) {
-        Node<Student>[] arr = new Node[12];//יצירת מערך רשימות התלמידים ממויין לפי חודשי לידה
-
-        //מעבר על מערך השכבות (שרשראות התלמידים-ממויין לפי מס שכבה)
-        for (int i = 0; i < s1.getGrades().length; i++) {
-
-            if (s1.getGrades()[i] != null) {//אם השכבה לא ריקה מתלמידים
-
-                Node<Student> pos = s1.getGrades()[i];//פויינטר לראש השרשרת בתא הנוכחי של השכבה הנוכחית
-
-                while (pos != null) {//כל עוד לא הדענו לסוף שרשרת חוליות התלמידים
-
-                    int month = pos.getValue().getDate().getMonth();//שמירת חודש של תלמיד נוכחי
-                    Student temp = pos.getValue();//פויינטר לסטודנט נוכחי
-
-                    //הוספה למערך שרשראות החדש(עפ חודש לידה בלבד)
-                    if (arr[month - 1] == null) {//אם התא הנוכחי ריק
-                        arr[month - 1] = new Node<>(temp);//תא זה יפנה לחוליית תלמיד חדשה
-                    } else {//אחרת אם התא הנוכחי לא ריק
-                        Node<Student> last = arr[month - 1];//פויינטר למציאת זנב שרשרת
-                        while (last.getNext() != null) {//כל עוד לא הגענו לזנב
-                            last = last.getNext();//התקדמות לחולייה הבאה
-                        }
-                        last.setNext(new Node<>(temp));//הוספת חולייה חדשה בסוף השרשרת
-                    }
-
-                    pos = pos.getNext();//התקדמות לחוליית התלמיד הבאה
-                }
-            }
-        }
-        return arr;// החזרת מערך שרשראות התלמידים(ממויין ע"פ חודשי לידה)
-    }
 
     /*
       0   1   2   3   4   5...12
@@ -3491,72 +3388,6 @@ public class Main {
         } else {//there is no any num that seen twice in any stack , -> return -1
             return -1;
         }
-    }
-
-    //private static final Object lock = new Object();//אובייקט לעיקוב
-
-    public static Node<RangeNode> tvachim(Node<Integer> chain) {
-        // אם הרשימה ריקה או חוליה אחת בלבד
-        if (chain == null || chain.getNext() == null) {
-            return null;
-        }
-
-        Node<RangeNode> reu = null;// ראש הרשימה החדשה
-        Node<RangeNode> leu = null;// סוף הרשימה החדשה
-        Node<Integer> pos = chain;// מצביע לרשימה המקורית
-
-        while (pos != null && pos.getNext() != null) {
-            int curr = pos.getValue();
-            int nex = pos.getNext().getValue();
-
-            if (curr < nex) {// התחלת טווח עולה
-                int min = curr;
-                while (pos.getNext() != null && pos.getValue() < pos.getNext().getValue()) {
-                    pos = pos.getNext();
-                }
-                // סיום הטווח
-                int max = pos.getValue();
-
-                // יצירת RangeNode
-                RangeNode temp = new RangeNode(min, max);
-                Node<RangeNode> newey = new Node<>(temp);
-                if (reu == null) {// עדכון ראש הרשימה
-                    reu = newey;
-                    leu = reu;
-                } else {// הוספה לסוף הרשימה
-                    leu.setNext(newey);
-                    leu = leu.getNext();
-                }
-            } else if (curr == nex) { // טיפול באיברים זהים
-                int min = curr;
-                int max = min;// min ו-max שווים במקרה זה
-                RangeNode temp = new RangeNode(min, max);
-                Node<RangeNode> newey = new Node<>(temp);
-                if (reu == null) {// עדכון ראש הרשימה
-                    reu = newey;
-                    leu = reu;
-                } else {// הוספה לסוף הרשימה
-                    leu.setNext(newey);
-                    leu = leu.getNext();
-                }
-            }
-            pos = pos.getNext();// קידום מצביע
-        }
-        // טיפול באיבר האחרון ברשימה אם הוא לא נכלל
-        if (pos != null) {
-            int last = pos.getValue();
-            RangeNode range = new RangeNode(last, last); // יצירת טווח עם ערך יחיד
-            Node<RangeNode> newNode = new Node<>(range);
-
-            if (reu == null) { // אם הרשימה החדשה עדיין ריקה
-                reu = newNode;
-                leu = reu;
-            } else {
-                leu.setNext(newNode); // הוספה לסוף הרשימה
-                leu = leu.getNext();
-            }
-        }
-        return reu;
     }
 
     //פונקצייה עוטפת
@@ -4437,69 +4268,6 @@ public class Main {
         return big;//returne new united list
     }
 
-    public static Node<RangeNode> minMaxList(Node<Integer> chain){
-        // אם הרשימה ריקה או חוליה אחת בלבד
-        if (chain == null || chain.getNext() == null) {return null;}
-
-        Node<RangeNode> start = null;// ראש הרשימה החדשה
-        Node<RangeNode> tail = null;// סוף הרשימה החדשה
-        Node<Integer> pos = chain;// מצביע לרשימה המקורית
-
-        while (pos != null && pos.getNext() != null) {
-            int curr = pos.getValue();
-            int nex = pos.getNext().getValue();
-
-            if (curr < nex) {// התחלת טווח עולה
-                int min = curr;
-                while (pos.getNext() != null && pos.getValue() < pos.getNext().getValue()) {
-                    pos = pos.getNext();
-                }
-                // סיום הטווח
-                int max = pos.getValue();
-                //-//
-                // יצירת RangeNode
-                RangeNode temp = new RangeNode(min, max);
-                Node<RangeNode> newey = new Node<>(temp);
-                if (start == null) {// עדכון ראש הרשימה
-                    start = newey;
-                    tail = start;
-                } else {// הוספה לסוף הרשימה
-                    tail.setNext(newey);
-                    tail = tail.getNext();
-                }
-            } else if (curr == nex) { // טיפול באיברים זהים
-                int min = curr;
-                int max = min;// min ו-max שווים במקרה זה
-                RangeNode temp = new RangeNode(min, max);
-                Node<RangeNode> newey = new Node<>(temp);
-                if (start == null) {// עדכון ראש הרשימה
-                    start = newey;
-                    tail = start;
-                } else {// הוספה לסוף הרשימה
-                    tail.setNext(newey);
-                    tail = tail.getNext();
-                }
-            }
-            pos = pos.getNext();// קידום מצביע
-        }
-
-        // טיפול באיבר האחרון ברשימה אם הוא לא נכלל
-        if (pos != null) {
-            int last = pos.getValue();
-            RangeNode range = new RangeNode(last, last); // יצירת טווח עם ערך יחיד
-            Node<RangeNode> newNode = new Node<>(range);
-
-            if (start == null) { // אם הרשימה החדשה עדיין ריקה
-                start = newNode;
-                tail = start;
-            } else {
-                tail.setNext(newNode); // הוספה לסוף הרשימה
-                tail = tail.getNext();
-            }
-        }
-        return start;
-    }
-
     //func to check how many times num found in queue
     public static int howInQueue(Queue<Integer> q, int num){
         Queue<Integer> copyQ = cloneQueue(q);//תור העתק מקור
@@ -4634,29 +4402,6 @@ public class Main {
         for (int i = 0; i < length; i++) {
             q.offer(q.remove());//הוצאה והכנסה לאותו תור בו זמנית
         }
-    }
-
-    public static void sortStudentGlists(GradesFile gd){
-        Node<StudentG> [] arr = new Node[gd.getGrades().length];
-
-        for (int i = 0; i < gd.getGrades().length; i++) {
-            Node<StudentG> pos = gd.getGrades()[i];
-
-            while (pos != null){
-                int code = pos.getValue().getCode();//קבלת ספרות אמצעיות במזהה הסטודנט
-                Node<StudentG> toAdd = new Node<>(pos.getValue());//יצירת חולייה חדשה להוספה
-
-                if (arr[code] == null){//אם האוסף ריק בתא במערך החדש,נפנה תא זה לחוליית סטודנט החדשה
-                    arr[code] = toAdd;
-                }else {//אם האוסף אינו ריק בתא הנוכחי
-                    toAdd.setNext(arr[code]);// מחבר את הסטודנט הנוכחי לראש הרשימה
-                    arr[code] = toAdd;// מעדכן את הראש החדש
-                }
-
-                pos = pos.getNext();//התקדמות לחולייה הבאה
-            }
-        }
-        gd.setGrades(arr);//שינוי מערך המחלקה שיכיל נתוני מערך זה
     }
 
     public static int High(BinNode<Integer> root){
@@ -5703,28 +5448,6 @@ public class Main {
         }
     }
 
-
-    public static String bigSender(MailItem [] arr){
-        double maxPrice = Double.MIN_VALUE;
-        String sender = "";
-
-        for (int i = 0; i < arr.length; i++) {
-
-            if (arr[i] instanceof Package){
-                double price = ((Package)arr[i]).getRealPrice();
-
-                if (price > maxPrice){
-                    maxPrice = price;
-                    sender = ((Package)arr[i]).getName();
-                }
-            }
-        }
-        if (sender != "") {
-            return sender;
-        }
-        return null;
-    }
-
     /*
                 T
               /   \
@@ -5743,7 +5466,6 @@ public class Main {
                  N  P
 
      */
-
     public static BinNode<Integer> buildBst(int n){
         Scanner scanner = new Scanner(System.in);
 
@@ -6409,45 +6131,6 @@ public class Main {
         return true;
     }
 
-    public static void resetGfile(GradesFile f1){
-        //מערך שרשראות סטודנטים מקורי-מבולגן
-        Node<StudentG> [] grr = f1.getGrades();
-
-        //יצירת מערך שרשראות סטודנטים חדש
-        Node<StudentG> [] arr = new Node[100];
-
-        //מעבר על מערך מבולגן
-        for (int i = 0; i < grr.length; i++) {
-            //פויינטר לשרשרת-סטודנטים לראש שלה
-            Node<StudentG> pos = grr[i];
-
-            //מעבר על השרשרת בתא הנוכחי במערך
-            while (pos != null){
-                //קבלת סטודנט נוכחי
-                StudentG tempSt = pos.getValue();
-                //קבלת קוד סטודנט
-                int code = tempSt.getCode();
-                //יצירת חולייה עם סטודנט נוכחי כדי שנוסיף אותו למערך החדש לשרשרת החדשה בו
-                Node<StudentG> toAdd = new Node<>(tempSt);
-
-                //מקרה ראשון אם השרשרת במיקום ההוא במערך ריקה, מקרה שני אם לא ריקה כלומר ישנם חוליות
-                if (arr[code] == null){
-                    arr[code] = toAdd;
-                }else{
-                    toAdd.setNext(arr[code]);
-                    arr[code] = toAdd;
-                }
-
-                //התקדמות לחולייה הבאה
-                pos = pos.getNext();
-            }
-        }
-
-        //שינוי המערך במחלקה שבה המערך היה מבולגן,
-        // להיות המערך החדש
-        f1.setGrades(arr);
-    }
-
     //O(n)
     public static boolean isParity(Stack<Integer> st){
         //stack for restoration
@@ -6601,32 +6284,6 @@ public class Main {
         }
 
         return true;
-    }
-
-    public static String bigSenderr(MailItem[] items) {
-        //אתחול משתנה לשמירת מחיר החבילה הגבוה ביותר
-        double maxPrice = -1;
-        //מחרוזת לשמירת שם השולח של החבילה היקרה ביותר
-        String maxSender = null;
-
-        //איטרציה על המערך פריטים
-        for (int i = 0; i < items.length; i++) {
-            //אם פריט זה הינו "חבילה למשלוח"
-            if (items[i] instanceof Package) {
-                //המרה מפורשת לסוג הפריט "חבילה"
-                Package pack = (Package) items[i];
-                //חישוב המחיר של החבילה
-                double price = pack.getRealPrice();
-                //אם נמצא מחיר חבילה הגבוה יותר ממחיר השמור במשתנה המקסימום
-                //נעדכן את המחיר השמור במשתנה המקסימום להיות המחיר של חבילה זו
-                if (price > maxPrice) {
-                    maxPrice = price;
-                    maxSender = pack.getName();
-                }
-            }
-        }
-        //החזרת שם השולח
-        return maxSender;
     }
 
     public static void one1(Queue<Integer>q, int k){
@@ -6899,14 +6556,6 @@ public class Main {
         Node<Integer> toAdd = new Node<>(9);
         toAdd.setNext(chain);
         chain = toAdd;//לא חוקי
-    }
-
-    //right
-    //O(1)
-    public static void changeHead(NodeWrapper<Integer> wrapper) {
-        Node<Integer> toAdd = new Node<>(9);
-        toAdd.setNext(wrapper.getHead());
-        wrapper.setHead(toAdd); // שינוי אמיתי
     }
 
     //O(n)
@@ -7428,18 +7077,6 @@ public class Main {
 
         //return the new queue
         return q;
-    }
-
-    //9
-    public static void printAffordableApartments(Appartment[] building, double budget) {
-        System.out.println("Apartments available within budget " + budget + ":");
-
-        for (Appartment app : building) {
-            // נניח null פירושו דירה לא קיימת או לא רלוונטית
-            if (app != null && app.getPrice() <= budget) {
-                System.out.println(app);
-            }
-        }
     }
 
     //7
@@ -9347,17 +8984,6 @@ public class Main {
 
                         //קובץ שיווצר לאחר הפענוח
                         File decryptedFile = new File(userHome + File.separator + "Desktop" + File.separator + "decrypted.txt");
-
-                        try {
-                            // שלב הצפנה
-                            MyEncrypt.EncryptOrDecryptAnyFileUsingCipher(Cipher.ENCRYPT_MODE, secret, inputFile, encryptedFile);
-                            // שלב הפענוח
-                            MyEncrypt.EncryptOrDecryptAnyFileUsingCipher(Cipher.DECRYPT_MODE, secret, encryptedFile, decryptedFile);
-
-                            System.out.println("finished encryption-decryption proccess!");
-                        } catch (Exception e) {
-                            System.err.println("error: " + e.getMessage());
-                        }
                     }
                 }
 
@@ -9505,52 +9131,6 @@ public class Main {
                 }
                 System.out.println("----------------------------------------------------------");
             });
-            //Test for resetGfile function
-            q.offer(() -> {
-                System.out.println("Test for resetGfile function: ");
-                // יצירת 5 סטודנטים עם קודים שונים
-                StudentG s1 = new StudentG(123456789, 90); // קוד: 45
-                StudentG s2 = new StudentG(987654321, 65); // קוד: 54
-                StudentG s3 = new StudentG(112233445, 75); // קוד: 33
-                StudentG s4 = new StudentG(556677889, 82); // קוד: 77
-                StudentG s5 = new StudentG(999888777, 95); // קוד: 88
-
-                // הכנסנו את כולם לאותו תא [0] – כלומר מקום לא נכון
-                Node<StudentG> chain = new Node<>(s1, new Node<>(s2, new Node<>(s3, new Node<>(s4, new Node<>(s5)))));
-
-                // יצירת מערך עם תא אחד לא תקני
-                Node<StudentG>[] grades = new Node[100];
-                grades[0] = chain;
-
-                // יצירת מחלקת GradesFile עם המערך
-                GradesFile file = new GradesFile(grades);
-
-                System.out.println("📦 לפני reset:");
-                for (int i = 0; i < grades.length; i++) {
-                    if (grades[i] != null) {
-                        System.out.println("Index " + i + ": " + grades[i]);
-                    }
-                }
-
-                // קריאה לפונקציה שמארגנת מחדש לפי קוד
-                resetGfile(file);
-
-                // הדפסת המצב החדש
-                System.out.println("\n📦 אחרי reset:");
-                Node<StudentG>[] fixed = file.getGrades();
-                for (int i = 0; i < fixed.length; i++) {
-                    if (fixed[i] != null) {
-                        System.out.print("Index " + i + ": ");
-                        Node<StudentG> p = fixed[i];
-                        while (p != null) {
-                            System.out.print(p.getValue() + " → ");
-                            p = p.getNext();
-                        }
-                        System.out.println("null");
-                    }
-                }
-                System.out.println("----------------------------------------------------------");
-            });
             //BinNode question...
             q.offer(() -> {
                 BinNode<Integer> a = new BinNode<>(3);
@@ -9576,32 +9156,6 @@ public class Main {
                 BinNode<Integer> j = new BinNode<>(10);
                 i.setRight(j);
                 what1(a);
-                System.out.println("----------------------------------------------------------");
-            });
-            //class Doctor...
-            q.offer(() -> {
-                var d = new Doctor[9];
-                d[0] = new Doctor("Dr. Cohen", "Cardiology",12);
-                d[1] = new Doctor("Dr. Levy", "Neurology");
-                d[2] = new Doctor("Dr. Sharon", "Pediatrics",8);
-                d[3] = new Intern("Dani", "Cardiology", new Doctor(d[0]));
-                d[4] = new Intern("Yael", "Surgery", d[0]);
-                d[5] = new Intern("Avi", "Pediatrics", new Doctor(d[2]));
-                d[6] = new Intern("Ruth", "Oncology", d[2]);
-                d[7] = new Intern("Noam", "Cardiology", new Doctor(d[1]));
-                d[8] = new Intern("Maya", "Neurology", new Doctor(d[0]));
-
-                for (int i=0; i<d.length; i++) { System.out.println(d [i]); }
-
-                d[0] = new Doctor("Dr. Goldman","Neurology",20);
-                d[2].setName("Dr. Galper");
-                d[2].addPatients(100);
-                d[3].addPatients(200);
-                d[5].addPatients(100);
-
-                System.out.println("After change:");
-                for (int i=0; i<d.length; i++) { System.out.println(d[i]); }
-
                 System.out.println("----------------------------------------------------------");
             });
             //upgrade Object
