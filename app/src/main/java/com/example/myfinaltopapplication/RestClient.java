@@ -2,25 +2,18 @@
 package com.example.myfinaltopapplication;
 // Import OkHttp classes for HTTP requests and responses
 import android.util.Log;
-
-import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken;
-
+import androidx.annotation.NonNull;
 import okhttp3.*;
 import okio.Buffer;
-// Import JSON library for building and parsing JSON objects
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 // Import exception handling for input/output operations
 import java.io.IOException;
-// Import Map class for PATCH requests (partial updates)
-import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 // Import CompletableFuture for asynchronous programming
 import java.util.concurrent.CompletableFuture;
-import java.lang.reflect.Type;
 
 
 /**
@@ -42,30 +35,34 @@ public class RestClient {
     private static final OkHttpClient client = new OkHttpClient.Builder()
             .addInterceptor(chain -> {
                 // Capture the outgoing request
-                Request request = chain.request();
+                var request = chain.request();
 
                 // Start timer for performance measurement
-                long t1 = System.nanoTime();
-                android.util.Log.d("HTTP", "➡️ Sending " + request.method() + " request to " + request.url());
+                var t1 = System.nanoTime();
+                // Log request details
+                Log.d("HTTP", "➡️ Sending " + request.method() + " request to " + request.url());
 
                 // If request has a body, log its contents
                 if (request.body() != null) {
-                    Buffer buffer = new Buffer();
+                    // Create a buffer to capture the request body
+                    var buffer = new Buffer();
+                    // Write the request body to the buffer
                     request.body().writeTo(buffer);
+                    // Log the captured request body
                     android.util.Log.d("HTTP", "📤 Request body: " + buffer.readUtf8());
                 }
 
                 // Proceed with the request and capture the response
-                Response response = chain.proceed(request);
+                var response = chain.proceed(request);
 
                 // End timer for performance measurement
-                long t2 = System.nanoTime();
-                android.util.Log.d("HTTP", "⬅️ Received response for " + response.request().url() +
+                var t2 = System.nanoTime();
+                Log.d("HTTP", "⬅️ Received response for " + response.request().url() +
                         " in " + ((t2 - t1) / 1e6d) + "ms, code = " + response.code());
 
                 // Print response body (peek to avoid consuming original stream)
-                ResponseBody responseBody = response.peekBody(Long.MAX_VALUE);
-                android.util.Log.d("HTTP", "📥 Response body: " + responseBody.string());
+                var responseBody = response.peekBody(Long.MAX_VALUE);
+                Log.d("HTTP", "📥 Response body: " + responseBody.string());
 
                 // Return the response so the client can use it
                 return response;
@@ -77,21 +74,21 @@ public class RestClient {
     // =========================================================
     public static CompletableFuture<Boolean> register(User user) {
         // Create a CompletableFuture to return the result asynchronously
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         try {
             // Build JSON object with user details
-            JSONObject json = new JSONObject();
+            var json = new JSONObject();
             json.put("userName", user.getUserName()); // Add username
             json.put("password", user.getPassword()); // Add password
             json.put("fullName", user.getFullName()); // Add full name
             json.put("age", user.getAge());           // Add age
 
             // Create HTTP request body from JSON
-            RequestBody body = RequestBody.create(json.toString(), JSON);
+            var body = RequestBody.create(json.toString(), JSON);
 
             // Build POST request for /signup endpoint
-            Request request = new Request.Builder()
+            var request = new Request.Builder()
                     .url(BASE_URL + "/signup") // Correct endpoint for signup
                     .post(body)                // Use POST method
                     .build();
@@ -113,19 +110,19 @@ public class RestClient {
     // =========================================================
     public static CompletableFuture<User> login(String username, String password) {
         // Future object that will complete with User if success
-        CompletableFuture<User> future = new CompletableFuture<>();
+        var future = new CompletableFuture<User>();
 
         try {
             // Build JSON with login credentials
-            JSONObject json = new JSONObject();
+            var json = new JSONObject();
             json.put("userName", username); // Add username
             json.put("password", password); // Add password
 
             // Create request body with JSON
-            RequestBody body = RequestBody.create(json.toString(), JSON);
+            var body = RequestBody.create(json.toString(), JSON);
 
             // Build POST request for login endpoint
-            Request request = new Request.Builder()
+            var request = new Request.Builder()
                     .url(BASE_URL + "/login") // Target endpoint
                     .post(body)               // Use POST
                     .build();
@@ -133,16 +130,18 @@ public class RestClient {
             // Send request asynchronously
             client.newCall(request).enqueue(new Callback() {
                 @Override
-                public void onFailure(Call call, IOException e) {
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    // Log error if request fails
                     Log.e("HTTP", "❌ LOGIN request failed: " + e.getMessage());
                     // If network error, return null
                     future.complete(null);
                 }
 
                 @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    String responseBody = response.body() != null ? response.body().string() : "null";
-
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                    // Capture response body as string
+                    var responseBody = response.body() != null ? response.body().string() : "null";
+                    // Log response details
                     Log.d("HTTP", "⬅️ LOGIN response code: " + response.code());
                     Log.d("HTTP", "⬅️ LOGIN response body: " + responseBody);
 
@@ -152,10 +151,10 @@ public class RestClient {
                             // Read response body
 
                             // Parse JSON object from string
-                            JSONObject obj = new JSONObject(responseBody);
+                            var obj = new JSONObject(responseBody);
 
                             // Create User object from response
-                            User user = new User(
+                            var user = new User(
                                     obj.getString("userName"), // Extract username
                                     obj.getString("password"), // Extract password
                                     obj.getInt("age"),         // Extract age
@@ -166,6 +165,7 @@ public class RestClient {
                             future.complete(user);
 
                         } catch (Exception e) {
+                            // Log parsing error
                             Log.e("HTTP", "❌ LOGIN parsing error: " + e.getMessage());
                             // If parsing fails -> complete with null
                             future.complete(null);
@@ -192,21 +192,21 @@ public class RestClient {
     // =========================================================
     public static CompletableFuture<Boolean> updateUser(String username, User updatedUser) {
         // CompletableFuture for async result
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         try {
             // Build JSON with updated user info
-            JSONObject json = new JSONObject();
+            var json = new JSONObject();
             json.put("userName", updatedUser.getUserName());
             json.put("password", updatedUser.getPassword());
             json.put("fullName", updatedUser.getFullName());
             json.put("age", updatedUser.getAge());
 
             // Create request body
-            RequestBody body = RequestBody.create(json.toString(), JSON);
+            var body = RequestBody.create(json.toString(), JSON);
 
             // Build PUT request
-            Request request = new Request.Builder()
+            var request = new Request.Builder()
                     .url(BASE_URL + "/" + username) // Endpoint with username path
                     .put(body)                      // Use PUT method
                     .build();
@@ -219,6 +219,7 @@ public class RestClient {
             future.complete(false);
         }
 
+        // Return future
         return future;
     }
 
@@ -227,17 +228,17 @@ public class RestClient {
     // =========================================================
     public static CompletableFuture<Boolean> patchUser(String username, Map<String, Object> updates) {
         // CompletableFuture for result
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         try {
             // Convert updates map into JSON object
-            JSONObject json = new JSONObject(updates);
+            var json = new JSONObject(updates);
 
             // Create request body
-            RequestBody body = RequestBody.create(json.toString(), JSON);
+            var body = RequestBody.create(json.toString(), JSON);
 
             // Build PATCH request
-            Request request = new Request.Builder()
+            var request = new Request.Builder()
                     .url(BASE_URL + "/" + username) // Endpoint with username
                     .patch(body)                    // Use PATCH
                     .build();
@@ -250,6 +251,7 @@ public class RestClient {
             future.complete(false);
         }
 
+        // Return future
         return future;
     }
 
@@ -258,16 +260,18 @@ public class RestClient {
     // =========================================================
     public static CompletableFuture<Boolean> deleteUser(String username) {
         // Future for result
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         // Build DELETE request
-        Request request = new Request.Builder()
+        var request = new Request.Builder()
                 .url(BASE_URL + "/" + username) // Endpoint
                 .delete()                       // Use DELETE
                 .build();
 
         // Send async request
         client.newCall(request).enqueue(callbackBoolean(future));
+
+        // Return future
         return future;
     }
 
@@ -276,16 +280,18 @@ public class RestClient {
     // =========================================================
     public static CompletableFuture<Boolean> headUser(String username) {
         // Future for result
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         // Build HEAD request
-        Request request = new Request.Builder()
+        var request = new Request.Builder()
                 .url(BASE_URL + "/" + username) // Endpoint
                 .head()                         // Use HEAD
                 .build();
 
         // Send async request
         client.newCall(request).enqueue(callbackBoolean(future));
+
+        // Return future
         return future;
     }
 
@@ -294,16 +300,18 @@ public class RestClient {
     // =========================================================
     public static CompletableFuture<Boolean> updateBmi(String username, double bmi) {
         // Future for result
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         // Build PATCH request with query param bmi
-        Request request = new Request.Builder()
+        var request = new Request.Builder()
                 .url(BASE_URL + "/" + username + "/bmi?bmi=" + bmi) // Add BMI as query
-                .patch(RequestBody.create(new byte[0], null))       // Empty body required
+                .patch(RequestBody.create(new byte[0], null)) // Empty body required
                 .build();
 
         // Send async request
         client.newCall(request).enqueue(callbackBoolean(future));
+
+        // Return future
         return future;
     }
 
@@ -312,46 +320,53 @@ public class RestClient {
     // =========================================================
     public static CompletableFuture<Double> getBmi(String username) {
         // Future for result
-        CompletableFuture<Double> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Double>();
 
         // Build GET request
-        Request request = new Request.Builder()
+        var request = new Request.Builder()
                 .url(BASE_URL + "/" + username) // Endpoint
-                .get()                          // Use GET
+                .get() // Use GET
                 .build();
 
         // Send async request
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 // If request fails
                 future.complete(null);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) {
                 // If response is success
                 if (response.isSuccessful()) {
                     try {
                         // Read response body
-                        String body = response.body().string();
+                        assert response.body() != null;
+                        var body = response.body().string();
+
                         // Parse JSON
-                        JSONObject obj = new JSONObject(body);
+                        var obj = new JSONObject(body);
+
                         // Check if bmi exists
                         if (obj.has("bmi")) {
                             future.complete(obj.getDouble("bmi"));
                         } else {
+                            // BMI not found -> complete with null
                             future.complete(null);
                         }
                     } catch (Exception e) {
+                        // complete future with null
                         future.complete(null);
                     }
                 } else {
+                    // complete future with null
                     future.complete(null);
                 }
             }
         });
 
+        // Return future
         return future;
     }
 
@@ -361,17 +376,17 @@ public class RestClient {
     // =========================================================
     public static CompletableFuture<Boolean> updateWater(String username, int amount) {
         // Future that will hold the result of the network call
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         // Build the request URL
-        String url = BASE_URL + "/" + username + "/water?amount=" + amount;
+        var url = BASE_URL + "/" + username + "/water?amount=" + amount;
 
         // Debug logs before sending request
         Log.d("HTTP", "➡️ Sending PATCH request to " + url);
         Log.d("HTTP", "📤 Request body: (empty)");
 
         // Build the PATCH request with an empty body
-        Request request = new Request.Builder()
+        var request = new Request.Builder()
                 .url(url)
                 .patch(RequestBody.create(new byte[0], null))
                 .build();
@@ -379,17 +394,19 @@ public class RestClient {
         // Execute the request asynchronously
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 // Log error if request fails
                 Log.e("HTTP", "❌ updateWater request failed: " + e.getMessage());
+                // Complete future with false
                 future.complete(false);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 // Capture status code and body
-                int code = response.code();
-                String body = response.body() != null ? response.body().string() : "";
+                var code = response.code();
+                // Capture response body as string
+                var body = response.body() != null ? response.body().string() : "";
 
                 // Debug logs for response
                 Log.d("HTTP", "⬅️ Received response for updateWater, code = " + code);
@@ -397,10 +414,14 @@ public class RestClient {
 
                 // Complete the future depending on success
                 if (response.isSuccessful()) {
+                    // Log success
                     Log.d("DEBUG", "✅ updateWater worked!");
+                    // Complete future with true
                     future.complete(true);
                 } else {
+                    // Log failure
                     Log.d("DEBUG", "❌ updateWater failed with code " + code);
+                    // Complete future with false
                     future.complete(false);
                 }
             }
@@ -415,42 +436,52 @@ public class RestClient {
     // =========================================================
     public static CompletableFuture<JSONObject> getWater(String username) {
         // Future for result
-        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+        var future = new CompletableFuture<JSONObject>();
 
         // Build GET request
-        Request request = new Request.Builder()
+        var request = new Request.Builder()
                 .url(BASE_URL + "/" + username + "/water") // Endpoint
-                .get()                                    // Use GET
+                .get() // Use GET
                 .build();
 
         // Send async request
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 // On failure
+                // Log error
+                Log.e("HTTP", "❌ getWater request failed: " + e.getMessage());
+                // Complete future with null
                 future.complete(null);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) {
                 // If success
                 if (response.isSuccessful()) {
                     try {
                         // Read body
-                        String body = response.body().string();
+                        assert response.body() != null;
+
+                        var body = response.body().string();
+
                         // Parse into JSONObject
-                        JSONObject obj = new JSONObject(body);
+                        var obj = new JSONObject(body);
+
                         // Complete with object
                         future.complete(obj);
                     } catch (Exception e) {
+                        // complete future with null
                         future.complete(null);
                     }
                 } else {
+                    // complete future with null
                     future.complete(null);
                 }
             }
         });
 
+        // Return future
         return future;
     }
 
@@ -460,17 +491,21 @@ public class RestClient {
     private static Callback callbackBoolean(CompletableFuture<Boolean> future) {
         return new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                // Log error
                 Log.e("HTTP", "❌ Request failed: " + e.getMessage());
                 // On failure -> false
                 future.complete(false);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String body = response.body() != null ? response.body().string() : "null";
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                var  body = response.body() != null ? response.body().string() : "null";
+
+                // Log response details
                 Log.d("HTTP", "⬅️ Response code: " + response.code());
                 Log.d("HTTP", "⬅️ Response body: " + body);
+
                 // On success -> true if status is 200-299
                 future.complete(response.isSuccessful());
             }
@@ -483,24 +518,32 @@ public class RestClient {
     private static Callback callbackJson(CompletableFuture<JSONObject> future) {
         return new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 // On failure -> null
                 future.complete(null);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) {
                 // If success
                 if (response.isSuccessful()) {
                     try {
                         // Parse JSON
-                        String body = response.body().string();
-                        JSONObject obj = new JSONObject(body);
+                        assert response.body() != null;
+
+                        var body = response.body().string();
+
+                        // Parse into JSONObject
+                        var obj = new JSONObject(body);
+
+                        // complete future with object
                         future.complete(obj);
                     } catch (Exception e) {
+                        // complete future with null
                         future.complete(null);
                     }
                 } else {
+                    // complete future with null
                     future.complete(null);
                 }
             }
@@ -514,11 +557,13 @@ public class RestClient {
     // Returns: JSONObject {"2025-09-29":1200, "2025-09-28":2000, ...}
     // ---------------------------------------------------------------------
     public static CompletableFuture<JSONObject> getWaterHistoryMap(String username, int days) {
-        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+        var future = new CompletableFuture<JSONObject>();
 
         // Build the URL for water history map
-        String url = BASE_URL + "/" + username + "/waterHistoryMap?days=" + days;
-        Request request = new Request.Builder()
+        var url = BASE_URL + "/" + username + "/waterHistoryMap?days=" + days;
+
+        // Build GET request
+        var request = new Request.Builder()
                 .url(url)
                 .get()
                 .build();
@@ -526,29 +571,36 @@ public class RestClient {
         // Send request asynchronously
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 // Log error and complete future with null
                 Log.e("HTTP", "❌ getWaterHistoryMap failed", e);
+                // Complete future with null
                 future.complete(null);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) {
                 try (Response r = response) {
                     // If response is not successful, complete with null
                     if (!r.isSuccessful()) {
+                        // Log error and complete with null
                         Log.e("HTTP", "❌ getWaterHistoryMap error code=" + r.code());
+                        // complete future with null
                         future.complete(null);
+                        // Stop processing
                         return;
                     }
                     // Read body and log response
-                    String body = r.body() != null ? r.body().string() : "{}";
+                    var body = r.body() != null ? r.body().string() : "{}";
+                    // Log response body
                     Log.d("HTTP", "📥 getWaterHistoryMap response=" + body);
+
                     // Parse JSON and complete future
                     future.complete(new JSONObject(body));
                 } catch (Exception e) {
                     // Handle JSON parse errors
                     Log.e("HTTP", "❌ getWaterHistoryMap parse error", e);
+                    // Complete future with null
                     future.complete(null);
                 }
             }
@@ -563,11 +615,14 @@ public class RestClient {
     // Returns: CompletableFuture<Map<String, Integer>>
     // -------------------------------------------------------------
     public static CompletableFuture<Map<String, Integer>> getWeeklyAverages(String username) {
-        CompletableFuture<Map<String, Integer>> future = new CompletableFuture<>();
-        // Build the URL for weakly water history map
-        String url = BASE_URL + "/" + username + "/weeklyAverages";
+        // Future for async result
+        var future = new CompletableFuture<Map<String, Integer>>();
 
-        Request request = new Request.Builder()
+        // Build the URL for weakly water history map
+        var url = BASE_URL + "/" + username + "/weeklyAverages";
+
+        // Build GET request
+        var request = new Request.Builder()
                 .url(url)
                 .get()
                 .build();
@@ -575,33 +630,42 @@ public class RestClient {
         // Send request asynchronously
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 // Log error and complete with exception
                 Log.w("HTTP", "weeklyAverages onFailure: " + e.getMessage());
+                // Complete future with exception
                 future.completeExceptionally(e);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                try (ResponseBody body = response.body()) {
+            public void onResponse(@NonNull Call call, @NonNull Response response) {
+                try (var body = response.body()) {
                     // Handle non-OK responses
                     if (!response.isSuccessful()) {
-                        String resp = (body != null ? body.string() : "");
+                        // parse body into string
+                        var resp = (body != null ? body.string() : "");
+                        // Log
                         Log.w("HTTP", "⚠️ Non-OK weeklyAverages: " + response.code() + " body=" + resp);
+                        // Complete future with empty map
                         future.complete(Collections.emptyMap());
+
+                        // Stop processing
                         return;
                     }
 
                     // Parse JSON response
-                    String json = (body != null ? body.string() : "{}");
-                    JSONObject obj = new JSONObject(json);
+                    var json = (body != null ? body.string() : "{}");
+                    var obj = new JSONObject(json);
 
                     // Use LinkedHashMap to preserve order
-                    Map<String, Integer> map = new LinkedHashMap<>();
-                    Iterator<String> keys = obj.keys();
+                    var map = new LinkedHashMap<String, Integer>();
+                    var keys = obj.keys();
+
                     // Iterate over JSON keys and populate map
                     while (keys.hasNext()) {
-                        String k = keys.next();
+                        // Get next key
+                        var k = keys.next();
+                        // Add key-value pair to map
                         map.put(k, obj.optInt(k, 0));
                     }
 
@@ -614,6 +678,7 @@ public class RestClient {
             }
         });
 
+        // Return future
         return future;
     }
 
@@ -623,11 +688,12 @@ public class RestClient {
     // Returns: CompletableFuture<JSONObject>
     public static CompletableFuture<JSONObject> getGoal(String username) {
         // Future for async result (JSONObject response)
-        CompletableFuture<JSONObject> future = new CompletableFuture<>();
-        String url = BASE_URL + "/" + username + "/goal";
+        var future = new CompletableFuture<JSONObject>();
+        // Build the URL for goal
+        var url = BASE_URL + "/" + username + "/goal";
 
         // Build GET request
-        Request req = new Request.Builder()
+        var req = new Request.Builder()
                 .url(url)
                 .get()
                 .build();
@@ -635,21 +701,27 @@ public class RestClient {
         // Send request asynchronously
         client.newCall(req).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 // Complete with exception if request fails
                 future.completeExceptionally(e);
             }
 
             @Override
-            public void onResponse(Call call, Response res) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response res) {
                 if (!res.isSuccessful()) {
                     // If HTTP response is not OK, complete with exception
                     future.completeExceptionally(new IOException("HTTP " + res.code()));
+                    // Stop processing
                     return;
                 }
                 try {
                     // Parse body into JSONObject {"goalMl": 2600}
-                    String body = res.body().string();
+                    assert res.body() != null;
+
+                    // Read response body as string
+                    var body = res.body().string();
+
+                    // complete future with parsed JSONObject
                     future.complete(new JSONObject(body));
                 } catch (Exception ex) {
                     // On parse error, complete exceptionally
@@ -658,6 +730,7 @@ public class RestClient {
             }
         });
 
+        // Return future
         return future;
     }
 
@@ -667,11 +740,12 @@ public class RestClient {
     // Returns: CompletableFuture<Boolean>
     public static CompletableFuture<Boolean> setGoal(String username, int goalMl) {
         // Future for async result (true if success, false otherwise)
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        String url = BASE_URL + "/" + username + "/goal?goalMl=" + goalMl;
+        var future = new CompletableFuture<Boolean>();
+        // Build the URL for goal
+        var url = BASE_URL + "/" + username + "/goal?goalMl=" + goalMl;
 
         // Build PUT request with empty body (query params carry data)
-        Request req = new Request.Builder()
+        var req = new Request.Builder()
                 .url(url)
                 .put(RequestBody.create(new byte[0]))
                 .build();
@@ -679,18 +753,19 @@ public class RestClient {
         // Send request asynchronously
         client.newCall(req).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 // Complete with exception if request fails
                 future.completeExceptionally(e);
             }
 
             @Override
-            public void onResponse(Call call, Response res) {
+            public void onResponse(@NonNull Call call, @NonNull Response res) {
                 // Complete with true if response is successful, otherwise false
                 future.complete(res.isSuccessful());
             }
         });
 
+        // Return future
         return future;
     }
 
@@ -702,13 +777,13 @@ public class RestClient {
     // ---------------------------------------------------------------------
     public static CompletableFuture<JSONObject> getBmiDistribution() {
         // Future for async result
-        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+        var future = new CompletableFuture<JSONObject>();
 
         // Build URL for the statistics endpoint
-        String url = BASE_URL + "/stats/bmiDistribution";
+        var url = BASE_URL + "/stats/bmiDistribution";
 
         // Build GET request
-        Request request = new Request.Builder()
+        var request = new Request.Builder()
                 .url(url)
                 .get()
                 .build();
@@ -716,36 +791,45 @@ public class RestClient {
         // Send async request
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                // Log error and complete with null (or exceptionally if תרצה)
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                // Log error and complete with null
                 Log.e("HTTP", "❌ getBmiDistribution failed: " + e.getMessage());
                 future.complete(null);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                try (ResponseBody body = response.body()) {
+            public void onResponse(@NonNull Call call, @NonNull Response response) {
+                try (var body = response.body()) {
                     // If not successful -> return null
                     if (!response.isSuccessful()) {
-                        String resp = (body != null ? body.string() : "");
+                        // parse body into string
+                        var resp = (body != null ? body.string() : "");
+                        // Log
                         Log.w("HTTP", "⚠️ Non-OK getBmiDistribution: " + response.code() + " body=" + resp);
+                        // Complete with null
                         future.complete(null);
+                        // Stop processing
                         return;
                     }
 
-                    // Read JSON body
-                    String json = (body != null ? body.string() : "{}");
+                    // Read JSON body as string
+                    var json = (body != null ? body.string() : "{}");
+
+                    // Log response
                     Log.d("HTTP", "📥 getBmiDistribution response=" + json);
 
-                    // Parse into JSONObject and complete
+                    // Parse into JSONObject and complete future with it
                     future.complete(new JSONObject(json));
                 } catch (Exception ex) {
+                    // Log error
                     Log.e("HTTP", "❌ getBmiDistribution parse error", ex);
+                    // Complete with null
                     future.complete(null);
                 }
             }
         });
 
+        // Return future
         return future;
     }
 
@@ -757,10 +841,10 @@ public class RestClient {
     // =========================================================
     public static CompletableFuture<Integer> getCalories(String username) {
         // Create future that will hold the Integer result (or null on error)
-        CompletableFuture<Integer> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Integer>();
 
         // Build GET request to /{username}/calories
-        Request request = new Request.Builder()
+        var request = new Request.Builder()
                 // Set target URL for calories endpoint
                 .url(BASE_URL + "/" + username + "/calories")
                 // Use GET method
@@ -771,7 +855,7 @@ public class RestClient {
         // Execute request asynchronously using OkHttp client
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 // Log error in case of network failure
                 Log.e("HTTP", "❌ getCalories request failed: " + e.getMessage());
                 // Complete future with null to indicate failure
@@ -779,7 +863,7 @@ public class RestClient {
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) {
                 try {
                     // If HTTP response is not in 200-299 range
                     if (!response.isSuccessful()) {
@@ -792,14 +876,14 @@ public class RestClient {
                     }
 
                     // Read response body as string (JSON text)
-                    String body = response.body() != null ? response.body().string() : "{}";
+                    var body = response.body() != null ? response.body().string() : "{}";
                     // Log body for debugging
                     Log.d("HTTP", "📥 getCalories body: " + body);
 
                     // Parse JSON string into JSONObject
-                    JSONObject obj = new JSONObject(body);
+                    var obj = new JSONObject(body);
                     // Extract "calories" field, default = 0 if missing
-                    int cals = obj.optInt("calories", 0);
+                    var cals = obj.optInt("calories", 0);
 
                     // Complete future with parsed calories value
                     future.complete(cals);
@@ -824,13 +908,13 @@ public class RestClient {
     // =========================================================
     public static CompletableFuture<Boolean> setCalories(String username, int calories) {
         // Create future that will hold true/false result
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         // Build URL with query parameter ?calories=...
-        String url = BASE_URL + "/" + username + "/calories?calories=" + calories;
+        var url = BASE_URL + "/" + username + "/calories?calories=" + calories;
 
         // Build PUT request with empty body (data passes via query param)
-        Request request = new Request.Builder()
+        var request = new Request.Builder()
                 // Set target URL for update calories endpoint
                 .url(url)
                 // Use PUT method with empty body
@@ -841,7 +925,7 @@ public class RestClient {
         // Execute request asynchronously
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 // Log error on network failure
                 Log.e("HTTP", "❌ setCalories request failed: " + e.getMessage());
                 // Complete future with false to indicate failure
@@ -849,7 +933,7 @@ public class RestClient {
             }
 
             @Override
-            public void onResponse(Call call, Response response) {
+            public void onResponse(@NonNull Call call, @NonNull Response response) {
                 // Log HTTP status code for debugging
                 Log.d("HTTP", "⬅️ setCalories response code: " + response.code());
                 // Complete future with true if response is in 200-299 range
