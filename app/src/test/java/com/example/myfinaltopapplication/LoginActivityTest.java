@@ -1,4 +1,4 @@
-// Define the package of the test (same as the app package or test package)
+// Define the package of the test
 package com.example.myfinaltopapplication;
 // Import Android Context for SharedPreferences access
 import android.content.Context;
@@ -6,8 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 // Import Android Looper for controlling UI thread tasks
 import android.os.Looper;
-// Import Android SharedPreferences for checking stored values
-import android.content.SharedPreferences;
 // Import Android widgets used inside the Activity
 import android.widget.Button;
 import android.widget.EditText;
@@ -31,6 +29,7 @@ import org.robolectric.shadows.ShadowToast;
 // Import JSON object for fake getWater response
 import org.json.JSONObject;
 // Import Java concurrent class for CompletableFuture
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 // -----------------------------------------------------------------------------
@@ -48,12 +47,10 @@ public class LoginActivityTest {
     // -------------------------------------------------------------------------
     private LoginActivity buildActivity() {
         // Build the Activity using Robolectric and call onCreate()
-        LoginActivity activity = Robolectric.buildActivity(LoginActivity.class)
+        // Return the created Activity instance
+        return Robolectric.buildActivity(LoginActivity.class)
                 .setup()
                 .get();
-
-        // Return the created Activity instance
-        return activity;
     }
 
     // -------------------------------------------------------------------------
@@ -93,7 +90,7 @@ public class LoginActivityTest {
             // Assert that the Toast text equals the validation message
             assertEquals("Please fill all fields", toastText.toString());
 
-            // Verify that RestClient.login was NEVER called (because of validation failure)
+            // Verify that RestClient.login was NEVER called
             restClientMock.verify(
                     () -> RestClient.login(Mockito.anyString(), Mockito.anyString()),
                     Mockito.never()
@@ -111,13 +108,13 @@ public class LoginActivityTest {
         try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Create a fake User object that RestClient.login will return
-            User fakeUser = new User("john", "1234", 25, "John Doe");
+            var fakeUser = new User("john", "1234", 25, "John Doe");
 
             // Create a pre-completed future for login success
             CompletableFuture<User> loginFuture = CompletableFuture.completedFuture(fakeUser);
 
             // Create a fake JSONObject for water data
-            JSONObject waterJson = new JSONObject();
+            var waterJson = new JSONObject();
             // Put todayWater = 1200 into the JSON
             waterJson.put("todayWater", 1200);
             // Put yesterdayWater = 800 into the JSON
@@ -168,21 +165,21 @@ public class LoginActivityTest {
             );
 
             // Obtain SharedPreferences used by LoginActivity
-            SharedPreferences prefs = activity.getSharedPreferences(
+            var prefs = activity.getSharedPreferences(
                     activity.getString(R.string.myprefs),
                     Context.MODE_PRIVATE
             );
 
             // Read stored current user from SharedPreferences
-            String storedUser = prefs.getString(activity.getString(R.string.currentuser), null);
+            var storedUser = prefs.getString(activity.getString(R.string.currentuser), null);
             // Read stored age from SharedPreferences
-            int storedAge = prefs.getInt(activity.getString(R.string.age), -1);
+            var storedAge = prefs.getInt(activity.getString(R.string.age), -1);
             // Read stored fullName from SharedPreferences
             String storedFullName = prefs.getString("fullName", null);
             // Read stored todayWater from SharedPreferences
-            int storedToday = prefs.getInt("todayWater", -1);
+            var storedToday = prefs.getInt("todayWater", -1);
             // Read stored yesterdayWater from SharedPreferences
-            int storedYesterday = prefs.getInt("yesterdayWater", -1);
+            var storedYesterday = prefs.getInt("yesterdayWater", -1);
 
             // Assert that username was stored correctly
             assertEquals("john", storedUser);
@@ -196,16 +193,16 @@ public class LoginActivityTest {
             assertEquals(800, storedYesterday);
 
             // Get the ShadowActivity to inspect started Activities
-            ShadowActivity shadowActivity = Shadows.shadowOf(activity);
+            var shadowActivity = Shadows.shadowOf(activity);
 
             // Get the next started Activity Intent
-            Intent startedIntent = shadowActivity.getNextStartedActivity();
+            var startedIntent = shadowActivity.getNextStartedActivity();
 
             // Assert that an Activity was indeed started
             assertNotNull(startedIntent);
             // Assert that the started Activity is HomePage.class
             assertEquals(HomePage.class.getName(),
-                    startedIntent.getComponent().getClassName());
+                    Objects.requireNonNull(startedIntent.getComponent()).getClassName());
 
             // Get latest Toast text shown to the user
             CharSequence toastText = ShadowToast.getTextOfLatestToast();
@@ -222,7 +219,7 @@ public class LoginActivityTest {
     // and shows "Invalid username or password" Toast.
     // -------------------------------------------------------------------------
     @Test
-    public void login_failure_showsErrorToast_andDoesNotNavigate() throws Exception {
+    public void login_failure_showsErrorToast_andDoesNotNavigate() {
         // Create static mock for RestClient
         try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
 
@@ -230,14 +227,14 @@ public class LoginActivityTest {
             CompletableFuture<User> failedFuture = CompletableFuture.completedFuture(null);
 
             // Stub RestClient.login to return failedFuture for these credentials
-            restClientMock.when(() -> RestClient.login("john", "badpass"))
+            restClientMock.when(() -> RestClient.login("john", "bad pass"))
                     .thenReturn(failedFuture);
 
             // Build the Activity under test
-            LoginActivity activity = buildActivity();
+            var activity = buildActivity();
 
             // Get SharedPreferences reference before login attempt
-            SharedPreferences prefsBefore = activity.getSharedPreferences(
+            var prefsBefore = activity.getSharedPreferences(
                     activity.getString(R.string.myprefs),
                     Context.MODE_PRIVATE
             );
@@ -251,8 +248,8 @@ public class LoginActivityTest {
 
             // Set username to "john"
             username.setText("john");
-            // Set password to wrong value "badpass"
-            password.setText("badpass");
+            // Set password to wrong value "bad pass"
+            password.setText("bad pass");
 
             // Click login button to trigger flow
             loginBtn.performClick();
@@ -260,17 +257,17 @@ public class LoginActivityTest {
             // Run pending UI tasks
             Shadows.shadowOf(Looper.getMainLooper()).idle();
 
-            // Verify that RestClient.login was called once with "john","badpass"
+            // Verify that RestClient.login was called once with "john","bad pass"
             restClientMock.verify(
-                    () -> RestClient.login("john", "badpass"),
+                    () -> RestClient.login("john", "bad pass"),
                     Mockito.times(1)
             );
 
             // Get ShadowActivity to inspect navigation
-            ShadowActivity shadowActivity = Shadows.shadowOf(activity);
+            var shadowActivity = Shadows.shadowOf(activity);
 
-            // Try to get started Activity Intent (should be null on failure)
-            Intent startedIntent = shadowActivity.getNextStartedActivity();
+            // Try to get started Activity Intent
+            var startedIntent = shadowActivity.getNextStartedActivity();
 
             // Assert that NO Activity was started
             assertNull(startedIntent);
@@ -284,13 +281,13 @@ public class LoginActivityTest {
             assertEquals("Invalid username or password", toastText.toString());
 
             // Read SharedPreferences after login attempt
-            SharedPreferences prefsAfter = activity.getSharedPreferences(
+            var prefsAfter = activity.getSharedPreferences(
                     activity.getString(R.string.myprefs),
                     Context.MODE_PRIVATE
             );
 
             // Read current user from prefs after login
-            String storedUser = prefsAfter.getString(
+            var storedUser = prefsAfter.getString(
                     activity.getString(R.string.currentuser),
                     null
             );
@@ -306,7 +303,7 @@ public class LoginActivityTest {
     @Test
     public void signUpButton_click_startsSignupActivity() {
         // Build the Activity under test
-        LoginActivity activity = buildActivity();
+        var activity = buildActivity();
 
         // Find the signup button in the layout
         Button signUpBtn = activity.findViewById(R.id.button2);
@@ -326,7 +323,7 @@ public class LoginActivityTest {
         // Assert that the started Activity is signup.class
         assertEquals(
                 signup.class.getName(),
-                startedIntent.getComponent().getClassName()
+                Objects.requireNonNull(startedIntent.getComponent()).getClassName()
         );
     }
 
@@ -335,12 +332,12 @@ public class LoginActivityTest {
     // prefs saved, navigation still happens, and welcome Toast is shown.
     // -------------------------------------------------------------------------
     @Test
-    public void login_success_getWaterReturnsNull_savesZeroWater_andStillNavigates() throws Exception {
+    public void login_success_getWaterReturnsNull_savesZeroWater_andStillNavigates() {
         // Create static mock for RestClient
         try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Fake user returned from RestClient.login
-            User fakeUser = new User("john", "1234", 25, "John Doe");
+            var fakeUser = new User("john", "1234", 25, "John Doe");
 
             // Pre-completed future for login success
             CompletableFuture<User> loginFuture =
@@ -359,7 +356,7 @@ public class LoginActivityTest {
                     .thenReturn(waterFuture);
 
             // Build the Activity under test
-            LoginActivity activity = buildActivity();
+            var activity = buildActivity();
 
             // Find username EditText
             EditText username = activity.findViewById(R.id.editTextText);
@@ -391,21 +388,21 @@ public class LoginActivityTest {
             );
 
             // Obtain SharedPreferences
-            SharedPreferences prefs = activity.getSharedPreferences(
+            var prefs = activity.getSharedPreferences(
                     activity.getString(R.string.myprefs),
                     Context.MODE_PRIVATE
             );
 
             // Read stored base user data
-            String storedUser = prefs.getString(
+            var storedUser = prefs.getString(
                     activity.getString(R.string.currentuser), null);
-            int storedAge = prefs.getInt(
+            var storedAge = prefs.getInt(
                     activity.getString(R.string.age), -1);
-            String storedFullName = prefs.getString("fullName", null);
+            var storedFullName = prefs.getString("fullName", null);
 
             // Read stored water values
-            int storedToday = prefs.getInt("todayWater", -1);
-            int storedYesterday = prefs.getInt("yesterdayWater", -1);
+            var storedToday = prefs.getInt("todayWater", -1);
+            var storedYesterday = prefs.getInt("yesterdayWater", -1);
 
             // Assert base user data saved correctly
             assertEquals("john", storedUser);
@@ -417,17 +414,22 @@ public class LoginActivityTest {
             assertEquals(0, storedYesterday);
 
             // Verify navigation to HomePage still happened
-            ShadowActivity shadowActivity = Shadows.shadowOf(activity);
-            Intent startedIntent = shadowActivity.getNextStartedActivity();
+            var shadowActivity = Shadows.shadowOf(activity);
+            var startedIntent = shadowActivity.getNextStartedActivity();
+
+            // Assert that an Activity was indeed started
             assertNotNull(startedIntent);
+            // Assert that the started Activity is HomePage.class
             assertEquals(
                     HomePage.class.getName(),
-                    startedIntent.getComponent().getClassName()
+                    Objects.requireNonNull(startedIntent.getComponent()).getClassName()
             );
 
             // Verify welcome Toast is shown
             CharSequence toastText = ShadowToast.getTextOfLatestToast();
+            // Assert that Toast was shown
             assertNotNull(toastText);
+            // Assert that the Toast message is the welcome text with full name
             assertEquals("Welcome John Doe", toastText.toString());
         }
     }

@@ -1,8 +1,8 @@
-// Define package of the test (same as app package)
+// Define package of the test
 package com.example.myfinaltopapplication;
 // Import Android Intent for inspecting navigation between Activities
 import android.content.Intent;
-// Import Android Looper for running pending main-thread tasks (if needed)
+// Import Android Looper for running pending main-thread tasks
 import android.os.Looper;
 // Import Android widget Button to access buttons from layout
 import android.widget.Button;
@@ -19,6 +19,7 @@ import org.robolectric.annotation.Config;
 // Import Shadows helpers to inspect started Activities
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowActivity;
+import java.util.Objects;
 
 // -----------------------------------------------------------------------------
 // HomePageTest
@@ -38,12 +39,10 @@ public class HomePageTest {
     // -------------------------------------------------------------------------
     private HomePage buildActivity() {
         // Use Robolectric to build HomePage and call onCreate()
-        HomePage activity = Robolectric.buildActivity(HomePage.class)
+        // Return created instance
+        return Robolectric.buildActivity(HomePage.class)
                 .setup()
                 .get();
-
-        // Return created instance
-        return activity;
     }
 
     // -------------------------------------------------------------------------
@@ -100,7 +99,7 @@ public class HomePageTest {
         assertNotNull(startedIntent);
         // Assert that the Activity class is BMIActivity
         assertEquals(BMIActivity.class.getName(),
-                startedIntent.getComponent().getClassName());
+                Objects.requireNonNull(startedIntent.getComponent()).getClassName());
     }
 
     // -------------------------------------------------------------------------
@@ -130,7 +129,7 @@ public class HomePageTest {
         assertNotNull(startedIntent);
         // Assert that target is WaterActivity
         assertEquals(WaterActivity.class.getName(),
-                startedIntent.getComponent().getClassName());
+                Objects.requireNonNull(startedIntent.getComponent()).getClassName());
     }
 
     // -------------------------------------------------------------------------
@@ -160,7 +159,7 @@ public class HomePageTest {
         assertNotNull(startedIntent);
         // Assert that the Activity is WaterChartActivity
         assertEquals(WaterChartActivity.class.getName(),
-                startedIntent.getComponent().getClassName());
+                Objects.requireNonNull(startedIntent.getComponent()).getClassName());
     }
 
     // -------------------------------------------------------------------------
@@ -190,6 +189,6 @@ public class HomePageTest {
         assertNotNull(startedIntent);
         // Assert that destination is DailyWaterGoal
         assertEquals(DailyWaterGoal.class.getName(),
-                startedIntent.getComponent().getClassName());
+                Objects.requireNonNull(startedIntent.getComponent()).getClassName());
     }
 }

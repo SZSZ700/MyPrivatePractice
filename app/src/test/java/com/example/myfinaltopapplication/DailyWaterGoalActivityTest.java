@@ -2,14 +2,10 @@
 package com.example.myfinaltopapplication;
 // Android imports used in the Activity
 import android.app.Application;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Looper;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 // JSON for fake server responses
 import org.json.JSONObject;
@@ -24,20 +20,14 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowActivity;
 import org.robolectric.shadows.ShadowToast;
-// Mockito for static mocking of RestClient
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 // Java utilities
-import java.util.Collections;
-import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 // MPAndroidChart imports to inspect donut chart state
 import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
-import com.github.mikephil.charting.data.PieEntry;
 
 // -----------------------------------------------------------------------------
 // DailyWaterGoalActivityTest
@@ -55,15 +45,15 @@ public class DailyWaterGoalActivityTest {
     // -------------------------------------------------------------------------
     // Helper: store a username in SharedPreferences before creating the Activity
     // -------------------------------------------------------------------------
-    private void putUserInPrefs(Application app, String username) {
+    private void putUserInPrefs(Application app) {
         // Get SharedPreferences by name defined in strings.xml
-        SharedPreferences prefs = app.getSharedPreferences(
+        var prefs = app.getSharedPreferences(
                 app.getString(R.string.myprefs),
                 Application.MODE_PRIVATE
         );
         // Edit SharedPreferences to store current user
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(app.getString(R.string.currentuser), username);
+        var editor = prefs.edit();
+        editor.putString(app.getString(R.string.currentuser), "john");
         editor.commit();
     }
 
@@ -71,15 +61,15 @@ public class DailyWaterGoalActivityTest {
     // TEST 1: Empty goal input → validation Toast, no RestClient.setGoal call.
     // -------------------------------------------------------------------------
     @Test
-    public void saveGoal_emptyInput_showsValidationToast_andDoesNotCallSetGoal() throws Exception {
+    public void saveGoal_emptyInput_showsValidationToast_andDoesNotCallSetGoal() {
         // Mock static methods of RestClient
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Get application instance
-            Application app = RuntimeEnvironment.getApplication();
+            var app = RuntimeEnvironment.getApplication();
 
             // Put logged-in user "john" into SharedPreferences
-            putUserInPrefs(app, "john");
+            putUserInPrefs(app);
 
             // Prepare minimal futures for initial fetchAndRender to avoid real calls
             CompletableFuture<JSONObject> goalFuture =
@@ -88,15 +78,19 @@ public class DailyWaterGoalActivityTest {
                     CompletableFuture.completedFuture(new JSONObject());
 
             // Stub getGoal and getWater for initial load
-            restClientMock.when(() -> RestClient.getGoal("john"))
-                    .thenReturn(goalFuture);
-            restClientMock.when(() -> RestClient.getWater("john"))
-                    .thenReturn(waterFuture);
+            restClientMock.when(
+                    // Lambda for RestClient.getGoal call
+                    () -> RestClient.getGoal("john")
+            ).thenReturn(goalFuture);
+
+            // Stub getWater for initial load
+            restClientMock.when(
+                    // Lambda for RestClient.getWater call
+                    () -> RestClient.getWater("john")
+            ).thenReturn(waterFuture);
 
             // Build and start DailyWaterGoal Activity
-            DailyWaterGoal activity = Robolectric.buildActivity(DailyWaterGoal.class)
-                    .setup()
-                    .get();
+            var activity = Robolectric.buildActivity(DailyWaterGoal.class).setup().get();
 
             // Run all pending UI tasks
             Shadows.shadowOf(Looper.getMainLooper()).idle();
@@ -124,7 +118,9 @@ public class DailyWaterGoalActivityTest {
 
             // Verify that setGoal was never called
             restClientMock.verify(
+                    // Lambda for RestClient.setGoal call
                     () -> RestClient.setGoal(Mockito.anyString(), Mockito.anyInt()),
+                    // Never called
                     Mockito.never()
             );
         }
@@ -134,15 +130,15 @@ public class DailyWaterGoalActivityTest {
     // TEST 2: Non-numeric input → "Goal must be a number" Toast, no setGoal call.
     // -------------------------------------------------------------------------
     @Test
-    public void saveGoal_nonNumericInput_showsNumberError_andDoesNotCallSetGoal() throws Exception {
+    public void saveGoal_nonNumericInput_showsNumberError_andDoesNotCallSetGoal() {
         // Mock RestClient statics
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Get application
-            Application app = RuntimeEnvironment.getApplication();
+            var app = RuntimeEnvironment.getApplication();
 
             // Put user "john"
-            putUserInPrefs(app, "john");
+            putUserInPrefs(app);
 
             // Minimal futures for fetchAndRender
             CompletableFuture<JSONObject> goalFuture =
@@ -150,15 +146,20 @@ public class DailyWaterGoalActivityTest {
             CompletableFuture<JSONObject> waterFuture =
                     CompletableFuture.completedFuture(new JSONObject());
 
-            restClientMock.when(() -> RestClient.getGoal("john"))
-                    .thenReturn(goalFuture);
-            restClientMock.when(() -> RestClient.getWater("john"))
-                    .thenReturn(waterFuture);
+            // Stub getGoal and getWater for "john"
+            restClientMock.when(
+                    // Lambda for RestClient.getGoal call
+                    () -> RestClient.getGoal("john")
+            ).thenReturn(goalFuture);
+
+            // Stub getWater for "john"
+            restClientMock.when(
+                    // Lambda for RestClient.getWater call
+                    () -> RestClient.getWater("john")
+            ).thenReturn(waterFuture);
 
             // Build Activity
-            DailyWaterGoal activity = Robolectric.buildActivity(DailyWaterGoal.class)
-                    .setup()
-                    .get();
+            var activity = Robolectric.buildActivity(DailyWaterGoal.class).setup().get();
 
             // Run pending tasks
             Shadows.shadowOf(Looper.getMainLooper()).idle();
@@ -181,11 +182,14 @@ public class DailyWaterGoalActivityTest {
 
             // Assert Toast text
             assertNotNull(toastText);
+            // Assert Toast message
             assertEquals("Goal must be a number", toastText.toString());
 
             // Verify setGoal not called
             restClientMock.verify(
+                    // Lambda for RestClient.setGoal call
                     () -> RestClient.setGoal(Mockito.anyString(), Mockito.anyInt()),
+                    // Never called
                     Mockito.never()
             );
         }
@@ -196,15 +200,15 @@ public class DailyWaterGoalActivityTest {
     // Here we test upper bound; lower bound is symmetric.
     // -------------------------------------------------------------------------
     @Test
-    public void saveGoal_outOfRange_showsRangeToast_andDoesNotCallSetGoal() throws Exception {
+    public void saveGoal_outOfRange_showsRangeToast_andDoesNotCallSetGoal() {
         // Mock RestClient statics
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Get application instance
-            Application app = RuntimeEnvironment.getApplication();
+            var app = RuntimeEnvironment.getApplication();
 
             // Put user
-            putUserInPrefs(app, "john");
+            putUserInPrefs(app);
 
             // Minimal futures for initial load
             CompletableFuture<JSONObject> goalFuture =
@@ -212,15 +216,20 @@ public class DailyWaterGoalActivityTest {
             CompletableFuture<JSONObject> waterFuture =
                     CompletableFuture.completedFuture(new JSONObject());
 
-            restClientMock.when(() -> RestClient.getGoal("john"))
-                    .thenReturn(goalFuture);
-            restClientMock.when(() -> RestClient.getWater("john"))
-                    .thenReturn(waterFuture);
+            // Stub getGoal and getWater for "john"
+            restClientMock.when(
+                    // Lambda for RestClient.getGoal call
+                    () -> RestClient.getGoal("john")
+            ).thenReturn(goalFuture);
+
+            // Stub getWater for "john"
+            restClientMock.when(
+                    // Lambda for RestClient.getWater call
+                    () -> RestClient.getWater("john")
+            ).thenReturn(waterFuture);
 
             // Build Activity
-            DailyWaterGoal activity = Robolectric.buildActivity(DailyWaterGoal.class)
-                    .setup()
-                    .get();
+            var activity = Robolectric.buildActivity(DailyWaterGoal.class).setup().get();
 
             // Run pending UI tasks
             Shadows.shadowOf(Looper.getMainLooper()).idle();
@@ -243,11 +252,14 @@ public class DailyWaterGoalActivityTest {
 
             // Assert Toast message is correct
             assertNotNull(toastText);
+            // Assert Toast message
             assertEquals("Goal should be between 500 and 10000 ml", toastText.toString());
 
             // Verify setGoal was not invoked
             restClientMock.verify(
+                    // Lambda for RestClient.setGoal call
                     () -> RestClient.setGoal(Mockito.anyString(), Mockito.anyInt()),
+                    // Never called
                     Mockito.never()
             );
         }
@@ -263,20 +275,20 @@ public class DailyWaterGoalActivityTest {
     @Test
     public void saveGoal_success_updatesGoal_andRendersDonutCorrectly() throws Exception {
         // Mock RestClient statics
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Get application
-            Application app = RuntimeEnvironment.getApplication();
+            var app = RuntimeEnvironment.getApplication();
 
             // Put user "john"
-            putUserInPrefs(app, "john");
+            putUserInPrefs(app);
 
             // Build fake JSON for initial goal
-            JSONObject goalJson = new JSONObject();
+            var goalJson = new JSONObject();
             goalJson.put("goalMl", 3000);
 
             // Build fake JSON for water: today=1000
-            JSONObject waterJson = new JSONObject();
+            var waterJson = new JSONObject();
             waterJson.put("todayWater", 1000);
             waterJson.put("yesterdayWater", 0);
 
@@ -287,21 +299,29 @@ public class DailyWaterGoalActivityTest {
                     CompletableFuture.completedFuture(waterJson);
 
             // Stub getGoal and getWater for "john"
-            restClientMock.when(() -> RestClient.getGoal("john"))
-                    .thenReturn(goalFuture);
-            restClientMock.when(() -> RestClient.getWater("john"))
-                    .thenReturn(waterFuture);
+            restClientMock.when(
+                    // Lambda for RestClient.getGoal call
+                    () -> RestClient.getGoal("john")
+            ).thenReturn(goalFuture);
+
+            // Stub getWater for "john"
+            restClientMock.when(
+                    // Lambda for RestClient.getWater call
+                    () -> RestClient.getWater("john")
+            ).thenReturn(waterFuture);
 
             // Stub setGoal("john", 2600) to succeed
             CompletableFuture<Boolean> setGoalFuture =
                     CompletableFuture.completedFuture(true);
-            restClientMock.when(() -> RestClient.setGoal("john", 2600))
-                    .thenReturn(setGoalFuture);
+
+            // Stub setGoal for "john"
+            restClientMock.when(
+                    // Lambda for RestClient.setGoal call
+                    () -> RestClient.setGoal("john", 2600)
+            ).thenReturn(setGoalFuture);
 
             // Build Activity
-            DailyWaterGoal activity = Robolectric.buildActivity(DailyWaterGoal.class)
-                    .setup()
-                    .get();
+            var activity = Robolectric.buildActivity(DailyWaterGoal.class).setup().get();
 
             // Run pending tasks (to apply initial fetchAndRender)
             Shadows.shadowOf(Looper.getMainLooper()).idle();
@@ -328,7 +348,9 @@ public class DailyWaterGoalActivityTest {
 
             // Verify setGoal was called exactly once with "john", 2600
             restClientMock.verify(
+                    // Lambda for RestClient.setGoal call
                     () -> RestClient.setGoal("john", 2600),
+                    // Called once
                     Mockito.times(1)
             );
 
@@ -341,17 +363,23 @@ public class DailyWaterGoalActivityTest {
             String centerText = donutChart.getCenterText().toString();
             assertEquals("1,000 / 2,600 ml", centerText);
 
-            // Optional: verify chart data entries (1000 consumed, 1600 remaining)
-            PieData data = donutChart.getData();
+            // verify chart data entries (1000 consumed, 1600 remaining)
+            var data = donutChart.getData();
+            // Assert data is not null
             assertNotNull(data);
+            // Assert data has 1 set
             assertEquals(1, data.getDataSetCount());
 
-            PieDataSet set = (PieDataSet) data.getDataSetByIndex(0);
+            // Get set
+            var set = (PieDataSet) data.getDataSetByIndex(0);
+            // Assert set has 2 entries
             assertEquals(2, set.getEntryCount());
 
-            PieEntry consumed = set.getEntryForIndex(0);
-            PieEntry remaining = set.getEntryForIndex(1);
+            // Get consumed and remaining entries
+            var consumed = set.getEntryForIndex(0);
+            var remaining = set.getEntryForIndex(1);
 
+            // Assert entries have correct values
             assertEquals(1000f, consumed.getY(), 0.001f);
             assertEquals(1600f, remaining.getY(), 0.001f);
         }
@@ -363,15 +391,15 @@ public class DailyWaterGoalActivityTest {
     //  goal 3000, today 0, chart still renders with 0 / 3000.
     // -------------------------------------------------------------------------
     @Test
-    public void fetchAndRender_noData_keepsDefaultsAndRendersChart() throws Exception {
+    public void fetchAndRender_noData_keepsDefaultsAndRendersChart() {
         // Mock RestClient statics
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Get application instance
-            Application app = RuntimeEnvironment.getApplication();
+            var app = RuntimeEnvironment.getApplication();
 
             // Put user
-            putUserInPrefs(app, "john");
+            putUserInPrefs(app);
 
             // Futures for goal and water that return null
             CompletableFuture<JSONObject> goalFuture =
@@ -380,15 +408,21 @@ public class DailyWaterGoalActivityTest {
                     CompletableFuture.completedFuture(null);
 
             // Stub methods
-            restClientMock.when(() -> RestClient.getGoal("john"))
-                    .thenReturn(goalFuture);
-            restClientMock.when(() -> RestClient.getWater("john"))
-                    .thenReturn(waterFuture);
+
+            // Stub getGoal and getWater for "john"
+            restClientMock.when(
+                    // Lambda for RestClient.getGoal call
+                    () -> RestClient.getGoal("john")
+            ).thenReturn(goalFuture);
+
+            // Stub getWater for "john"
+            restClientMock.when(
+                    // Lambda for RestClient.getWater call
+                    () -> RestClient.getWater("john")
+            ).thenReturn(waterFuture);
 
             // Build Activity
-            DailyWaterGoal activity = Robolectric.buildActivity(DailyWaterGoal.class)
-                    .setup()
-                    .get();
+            var activity = Robolectric.buildActivity(DailyWaterGoal.class).setup().get();
 
             // Run pending UI tasks
             Shadows.shadowOf(Looper.getMainLooper()).idle();
@@ -403,7 +437,8 @@ public class DailyWaterGoalActivityTest {
             assertEquals("Today: 0 ml", todayText.getText().toString());
 
             // Donut center text should reflect 0 / 3000
-            String centerText = donutChart.getCenterText().toString();
+            var centerText = donutChart.getCenterText().toString();
+            // Assert center text
             assertEquals("0 / 3,000 ml", centerText);
         }
     }
@@ -413,15 +448,15 @@ public class DailyWaterGoalActivityTest {
     // Back button click → navigate to HomePage Activity.
     // -------------------------------------------------------------------------
     @Test
-    public void backButton_click_navigatesToHomePage() throws Exception {
+    public void backButton_click_navigatesToHomePage() {
         // Mock RestClient to avoid real calls
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Get application
-            Application app = RuntimeEnvironment.getApplication();
+            var app = RuntimeEnvironment.getApplication();
 
             // Put user in prefs
-            putUserInPrefs(app, "john");
+            putUserInPrefs(app);
 
             // Minimal futures for getGoal and getWater
             CompletableFuture<JSONObject> goalFuture =
@@ -429,15 +464,20 @@ public class DailyWaterGoalActivityTest {
             CompletableFuture<JSONObject> waterFuture =
                     CompletableFuture.completedFuture(new JSONObject());
 
-            restClientMock.when(() -> RestClient.getGoal("john"))
-                    .thenReturn(goalFuture);
-            restClientMock.when(() -> RestClient.getWater("john"))
-                    .thenReturn(waterFuture);
+            // Stub getGoal and getWater for "john"
+            restClientMock.when(
+                    // Lambda for RestClient.getGoal call
+                    () -> RestClient.getGoal("john")
+            ).thenReturn(goalFuture);
+
+            // Stub getWater for "john"
+            restClientMock.when(
+                    // Lambda for RestClient.getWater call
+                    () -> RestClient.getWater("john")
+            ).thenReturn(waterFuture);
 
             // Build Activity
-            DailyWaterGoal activity = Robolectric.buildActivity(DailyWaterGoal.class)
-                    .setup()
-                    .get();
+            var activity = Robolectric.buildActivity(DailyWaterGoal.class).setup().get();
 
             // Run pending tasks
             Shadows.shadowOf(Looper.getMainLooper()).idle();
@@ -449,13 +489,15 @@ public class DailyWaterGoalActivityTest {
             backButton.performClick();
 
             // Inspect next started Activity via ShadowActivity
-            ShadowActivity shadowActivity = Shadows.shadowOf(activity);
-            Intent started = shadowActivity.getNextStartedActivity();
+            var shadowActivity = Shadows.shadowOf(activity);
+            // Get started Activity
+            var started = shadowActivity.getNextStartedActivity();
 
             // Assert navigation happened
             assertNotNull(started);
+            // Assert started Activity is HomePage
             assertEquals(HomePage.class.getName(),
-                    started.getComponent().getClassName());
+                    Objects.requireNonNull(started.getComponent()).getClassName());
         }
     }
 }

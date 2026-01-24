@@ -1,7 +1,5 @@
-// Define the package of the test (same as app package)
+// Define the package of the test
 package com.example.myfinaltopapplication;
-// Import Android core classes used inside Activity
-import android.content.Intent;
 import android.os.Looper;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,9 +17,9 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 // Import Robolectric Shadows helpers
 import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowActivity;
 import org.robolectric.shadows.ShadowToast;
 // Import CompletableFuture for async return values
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 // -----------------------------------------------------------------------------
@@ -39,12 +37,10 @@ public class SignupActivityTest {
     // -------------------------------------------------------------------------
     private signup buildActivity() {
         // Build Activity instance with Robolectric and call lifecycle methods
-        signup activity = Robolectric.buildActivity(signup.class)
+        // Return created Activity instance
+        return Robolectric.buildActivity(signup.class)
                 .setup()
                 .get();
-
-        // Return created Activity instance
-        return activity;
     }
 
     // -------------------------------------------------------------------------
@@ -56,14 +52,14 @@ public class SignupActivityTest {
         try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Build Activity under test
-            signup activity = buildActivity();
+            var activity = buildActivity();
 
             // Find username EditText
             EditText usernameInput = activity.findViewById(R.id.editUsername);
             // Find password EditText
             EditText passwordInput = activity.findViewById(R.id.editPassword);
             // Find full name EditText
-            EditText fullnameInput = activity.findViewById(R.id.editFullName);
+            EditText fullNameInput = activity.findViewById(R.id.editFullName);
             // Find age EditText
             EditText ageInput = activity.findViewById(R.id.editAge);
             // Find register Button
@@ -72,7 +68,7 @@ public class SignupActivityTest {
             // Leave all fields empty (validation should fail)
             usernameInput.setText("");
             passwordInput.setText("");
-            fullnameInput.setText("");
+            fullNameInput.setText("");
             ageInput.setText("");
 
             // Click register button to trigger validation logic
@@ -88,24 +84,27 @@ public class SignupActivityTest {
             assertNotNull(toastText);
             // Assert that Toast message equals "fill_all_fields" string resource
             assertEquals(
+                    // Get string from Activity
                     activity.getString(R.string.fill_all_fields),
+                    // Get string from Toast
                     toastText.toString()
             );
 
             // Verify that RestClient.register was NEVER called
             restClientMock.verify(
+                    // Lambda for RestClient.register call
                     () -> RestClient.register(Mockito.any(User.class)),
+                    // Never called (0 times)
                     Mockito.never()
             );
         }
     }
 
     // -------------------------------------------------------------------------
-    // TEST 2: Successful signup → RestClient.register returns true,
-    // Toast הצלחה + ניווט ל-LoginActivity + finish ל-signup.
+    // TEST 2: Successful signup → RestClient.register returns true
     // -------------------------------------------------------------------------
     @Test
-    public void signup_success_callsRegister_showsSuccessToast_andNavigatesToLogin() throws Exception {
+    public void signup_success_callsRegister_showsSuccessToast_andNavigatesToLogin() {
         // Create static mock for RestClient
         try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
 
@@ -114,23 +113,26 @@ public class SignupActivityTest {
                     CompletableFuture.completedFuture(true);
 
             // Stub RestClient.register to return successFuture for any User
-            restClientMock.when(() -> RestClient.register(Mockito.any(User.class)))
+            restClientMock.when(
+                    // Lambda for RestClient.register call
+                    () -> RestClient.register(Mockito.any(User.class)))
+                    // Return successFuture
                     .thenReturn(successFuture);
 
             // Build Activity under test
-            signup activity = buildActivity();
+            var activity = buildActivity();
 
             // Find all input fields
             EditText usernameInput = activity.findViewById(R.id.editUsername);
             EditText passwordInput = activity.findViewById(R.id.editPassword);
-            EditText fullnameInput = activity.findViewById(R.id.editFullName);
+            EditText fullNameInput = activity.findViewById(R.id.editFullName);
             EditText ageInput = activity.findViewById(R.id.editAge);
             Button registerButton = activity.findViewById(R.id.btnRegister);
 
             // Fill valid data into all fields
             usernameInput.setText("john");
             passwordInput.setText("1234");
-            fullnameInput.setText("John Doe");
+            fullNameInput.setText("John Doe");
             ageInput.setText("25");
 
             // Click register button to trigger full signup flow
@@ -141,22 +143,24 @@ public class SignupActivityTest {
 
             // Verify that RestClient.register was called exactly once
             restClientMock.verify(
+                    // Lambda for RestClient.register call
                     () -> RestClient.register(Mockito.any(User.class)),
+                    // Called once
                     Mockito.times(1)
             );
 
             // Get ShadowActivity to inspect navigation
-            ShadowActivity shadowActivity = Shadows.shadowOf(activity);
+            var shadowActivity = Shadows.shadowOf(activity);
 
             // Read started Activity Intent (should be LoginActivity)
-            Intent startedIntent = shadowActivity.getNextStartedActivity();
+            var startedIntent = shadowActivity.getNextStartedActivity();
 
             // Assert that we navigated to another Activity
             assertNotNull(startedIntent);
             // Assert that the target Activity is LoginActivity
             assertEquals(
                     LoginActivity.class.getName(),
-                    startedIntent.getComponent().getClassName()
+                    Objects.requireNonNull(startedIntent.getComponent()).getClassName()
             );
 
             // Read latest Toast text
@@ -173,11 +177,10 @@ public class SignupActivityTest {
     }
 
     // -------------------------------------------------------------------------
-    // TEST 3: Failed signup → RestClient.register returns false,
-    // נשארים באותה Activity + Toast "username_allready_exists".
+    // TEST 3: Failed signup → RestClient.register returns false
     // -------------------------------------------------------------------------
     @Test
-    public void signup_failure_showsErrorToast_andDoesNotNavigate() throws Exception {
+    public void signup_failure_showsErrorToast_andDoesNotNavigate() {
         // Create static mock for RestClient
         try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
 
@@ -190,19 +193,19 @@ public class SignupActivityTest {
                     .thenReturn(failFuture);
 
             // Build Activity under test
-            signup activity = buildActivity();
+            var activity = buildActivity();
 
             // Find all input fields
             EditText usernameInput = activity.findViewById(R.id.editUsername);
             EditText passwordInput = activity.findViewById(R.id.editPassword);
-            EditText fullnameInput = activity.findViewById(R.id.editFullName);
+            EditText fullNameInput = activity.findViewById(R.id.editFullName);
             EditText ageInput = activity.findViewById(R.id.editAge);
             Button registerButton = activity.findViewById(R.id.btnRegister);
 
             // Fill valid data (so validation passes, but server fails)
             usernameInput.setText("john");
             passwordInput.setText("1234");
-            fullnameInput.setText("John Doe");
+            fullNameInput.setText("John Doe");
             ageInput.setText("25");
 
             // Click register button
@@ -218,10 +221,10 @@ public class SignupActivityTest {
             );
 
             // Get ShadowActivity to inspect navigation
-            ShadowActivity shadowActivity = Shadows.shadowOf(activity);
+            var shadowActivity = Shadows.shadowOf(activity);
 
             // Try to get started Activity Intent (should be null on failure)
-            Intent startedIntent = shadowActivity.getNextStartedActivity();
+            var startedIntent = shadowActivity.getNextStartedActivity();
 
             // Assert that no navigation happened
             assertNull(startedIntent);
@@ -233,7 +236,9 @@ public class SignupActivityTest {
             assertNotNull(toastText);
             // Assert that Toast message equals "username_allready_exists"
             assertEquals(
+                    // Get string from Activity
                     activity.getString(R.string.username_allready_exists),
+                    // Get string from Toast
                     toastText.toString()
             );
         }
