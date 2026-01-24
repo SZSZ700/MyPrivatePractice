@@ -254,13 +254,13 @@ public class RestClientTest {
         );
 
         // Create a User object for the duplicate registration attempt
-        User user = new User("john", "1234", 25, "John Doe");
+        var user = new User("john", "1234", 25, "John Doe");
 
         // Call RestClient.register which will send the HTTP request
-        CompletableFuture<Boolean> future = RestClient.register(user);
+        var future = RestClient.register(user);
 
         // Wait for the result
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that the result is false (registration failed)
         assertFalse(result);
@@ -274,7 +274,7 @@ public class RestClientTest {
     @Test
     public void login_success_returnsUserObject() throws Exception {
         // Build the JSON body that the server should return
-        String jsonBody = "{ \"userName\":\"john\", \"password\":\"1234\", \"age\":25, \"fullName\":\"John Doe\" }";
+        var jsonBody = "{ \"userName\":\"john\", \"password\":\"1234\", \"age\":25, \"fullName\":\"John Doe\" }";
 
         // Enqueue a fake 200 OK response with the JSON body
         mockWebServer.enqueue(
@@ -285,10 +285,10 @@ public class RestClientTest {
         );
 
         // Call RestClient.login with valid credentials
-        CompletableFuture<User> future = RestClient.login("john", "1234");
+        var future = RestClient.login("john", "1234");
 
         // Wait for the User object result
-        User user = future.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        var user = future.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Assert that the returned User is not null
         assertNotNull(user);
@@ -312,8 +312,8 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/login", request.getPath());
 
         // verify the request body that the client sent
-        String requestBody = request.getBody().readUtf8();
-        JSONObject sent = new JSONObject(requestBody);
+        var requestBody = request.getBody().readUtf8();
+        var sent = new JSONObject(requestBody);
 
         // Check that the client sent the correct credentials in the JSON body
         assertEquals("john", sent.getString("userName"));
@@ -331,10 +331,10 @@ public class RestClientTest {
         );
 
         // Call login with wrong credentials
-        CompletableFuture<User> future = RestClient.login("john", "wrong");
+        var future = RestClient.login("john", "wrong");
 
         // Wait for the result
-        User user = future.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        var user = future.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Assert that result is null (login failed)
         assertNull(user);
@@ -352,8 +352,8 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/login", request.getPath());
 
         // Assert on the JSON body that was sent
-        String body = request.getBody().readUtf8();
-        JSONObject obj = new JSONObject(body);
+        var body = request.getBody().readUtf8();
+        var obj = new JSONObject(body);
 
         // Check that the username and password in the request body are the ones we passed
         assertEquals("john",  obj.getString("userName"));
@@ -388,13 +388,13 @@ public class RestClientTest {
         );
 
         // Create an updated User object
-        User updated = new User("john", "newPass", 30, "New Name");
+        var updated = new User("john", "newPass", 30, "New Name");
 
         // Call updateUser on RestClient
-        CompletableFuture<Boolean> future = RestClient.updateUser("john", updated);
+        var future = RestClient.updateUser("john", updated);
 
         // Wait for Boolean result
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that the call was successful (true)
         assertTrue(result);
@@ -438,15 +438,15 @@ public class RestClientTest {
         );
 
         // Create a simple updates map with one field
-        Map<String, Object> updates = new LinkedHashMap<>();
+        var updates = new LinkedHashMap<String, Object>();
         // Put new fullName value into the map
         updates.put("fullName", "Patched Name");
 
         // Call patchUser on RestClient
-        CompletableFuture<Boolean> future = RestClient.patchUser("john", updates);
+        var future = RestClient.patchUser("john", updates);
 
         // Wait for Boolean result
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that the operation is reported as successful
         assertTrue(result);
@@ -477,10 +477,10 @@ public class RestClientTest {
         );
 
         // Call deleteUser on RestClient
-        CompletableFuture<Boolean> future = RestClient.deleteUser("john");
+        var future = RestClient.deleteUser("john");
 
         // Wait for the Boolean result
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that the delete operation is successful
         assertTrue(result);
@@ -513,10 +513,10 @@ public class RestClientTest {
         );
 
         // Call headUser on RestClient
-        CompletableFuture<Boolean> future = RestClient.headUser("john");
+        var future = RestClient.headUser("john");
 
         // Wait for Boolean result
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that the HEAD call was successful (true result from RestClient)
         assertTrue(result);
@@ -552,10 +552,10 @@ public class RestClientTest {
         );
 
         // Call updateBmi on RestClient
-        CompletableFuture<Boolean> future = RestClient.updateBmi("john", 23.5);
+        var future = RestClient.updateBmi("john", 23.5);
 
         // Wait for Boolean result
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that the BMI update is successful
         assertTrue(result);
@@ -575,7 +575,7 @@ public class RestClientTest {
         // Deep check: body should be empty (we send PATCH with empty body)
         // Verify that the PATCH request does not send any JSON body,
         // because all the data is passed via the query parameter (?bmi=23.5)
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue("Expected empty body for updateBmi PATCH request",
                 body.isEmpty());
     }
@@ -600,10 +600,10 @@ public class RestClientTest {
         );
 
         // Call getBmi on RestClient
-        CompletableFuture<Double> future = RestClient.getBmi("john");
+        var future = RestClient.getBmi("john");
 
         // Wait for the Double result
-        Double bmi = awaitDouble(future);
+        var bmi = awaitDouble(future);
 
         // Assert that the BMI is not null
         assertNotNull(bmi);
@@ -632,7 +632,7 @@ public class RestClientTest {
     // =============================================================
 
     // Test that updateWater sends a PATCH request with the correct amount query parameter
-// and returns true when the server responds with HTTP 200.
+    // and returns true when the server responds with HTTP 200.
     @Test
     public void updateWater_success_sendsRequestWithAmountAndReturnsTrue() throws Exception {
         // Make sure there are no leftover requests from previous tests
@@ -646,10 +646,10 @@ public class RestClientTest {
         );
 
         // Call updateWater to add 400 ml
-        CompletableFuture<Boolean> future = RestClient.updateWater("john", 400);
+        var future = RestClient.updateWater("john", 400);
 
         // Wait for Boolean result
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that updateWater reports success
         assertTrue(result);
@@ -669,7 +669,7 @@ public class RestClientTest {
         // Deep check: body should be empty (we send PATCH with empty body, only query param)
         // Verify that the PATCH request does not send any JSON body,
         // because all the data (amount) is passed via the query parameter (?amount=400).
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for updateWater PATCH request",
                 body.isEmpty()
@@ -681,7 +681,7 @@ public class RestClientTest {
     // =============================================================
 
     // Test that getWater sends a GET request to the correct path
-// and returns a JSONObject with todayWater and yesterdayWater.
+    // and returns a JSONObject with todayWater and yesterdayWater.
     @Test
     public void getWater_success_returnsJsonObject() throws Exception {
         // Make sure there are no leftover requests from previous tests
@@ -696,10 +696,10 @@ public class RestClientTest {
         );
 
         // Call getWater on RestClient
-        CompletableFuture<JSONObject> future = RestClient.getWater("john");
+        var future = RestClient.getWater("john");
 
         // Wait for the JSONObject result
-        JSONObject obj = awaitJson(future);
+        var obj = awaitJson(future);
 
         // Assert that the JSON object is not null
         assertNotNull(obj);
@@ -723,8 +723,8 @@ public class RestClientTest {
         // Assert that the path is /myapp/api/users/john/water
         assertEquals("/myapp/api/users/john/water", request.getPath());
 
-        // (Optional) Check that the GET request has an empty body
-        String body = request.getBody().readUtf8();
+        // Check that the GET request has an empty body
+        var body = request.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for getWater GET request",
                 body.isEmpty()
@@ -743,7 +743,7 @@ public class RestClientTest {
         drainRequests();
 
         // Build a JSON body with two dates and their totals
-        String body = "{ \"2025-09-29\": 1200, \"2025-09-28\": 2000 }";
+        var body = "{ \"2025-09-29\": 1200, \"2025-09-28\": 2000 }";
 
         // Enqueue a 200 OK response with the JSON body
         mockWebServer.enqueue(
@@ -754,10 +754,10 @@ public class RestClientTest {
         );
 
         // Call getWaterHistoryMap asking for 2 days
-        CompletableFuture<JSONObject> future = RestClient.getWaterHistoryMap("john", 2);
+        var future = RestClient.getWaterHistoryMap("john", 2);
 
         // Wait for the JSONObject result
-        JSONObject obj = awaitJson(future);
+        var obj = awaitJson(future);
 
         // --------- RESPONSE ASSERTIONS ---------
         // Assert that JSON object is not null
@@ -783,7 +783,7 @@ public class RestClientTest {
         // Assert that GET request body is empty
         // For this endpoint all parameters are passed in the query string (?days=2),
         // so the GET request should not send any JSON body.
-        String reqBody = request.getBody().readUtf8();
+        var reqBody = request.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for getWaterHistoryMap GET request",
                 reqBody.isEmpty()
@@ -795,14 +795,14 @@ public class RestClientTest {
     // =============================================================
 
     // Test that getWeeklyAverages sends a GET request to the correct path
-// and parses the JSON response into a Map<String, Integer>.
+    // and parses the JSON response into a Map<String, Integer>.
     @Test
     public void getWeeklyAverages_success_returnsMap() throws Exception {
         // Clear any leftover requests from previous tests (safety)
         drainRequests();
 
         // Build a JSON body with week labels and average values
-        String body = "{ \"Week 1\": 1000, \"Week 2\": 1500, \"Week 3\": 2000, \"Week 4\": 2500 }";
+        var body = "{ \"Week 1\": 1000, \"Week 2\": 1500, \"Week 3\": 2000, \"Week 4\": 2500 }";
 
         // Enqueue a 200 OK response with the JSON body
         mockWebServer.enqueue(
@@ -813,10 +813,10 @@ public class RestClientTest {
         );
 
         // Call getWeeklyAverages on RestClient
-        CompletableFuture<Map<String, Integer>> future = RestClient.getWeeklyAverages("john");
+        var future = RestClient.getWeeklyAverages("john");
 
         // Wait for the Map result
-        Map<String, Integer> map = awaitMap(future);
+        var map = awaitMap(future);
 
         // --------- RESPONSE ASSERTIONS ---------
         // Assert that the map is not null
@@ -846,7 +846,7 @@ public class RestClientTest {
         // This test not only verifies the parsed Map,
         // but also that the client sends a clean GET request to /weeklyAverages
         // with no request body, since all data comes from the server.
-        String reqBody = request.getBody().readUtf8();
+        var reqBody = request.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for getWeeklyAverages GET request",
                 reqBody.isEmpty()
@@ -882,10 +882,10 @@ public class RestClientTest {
         // --------- 1) setGoal REQUEST + RESPONSE ---------
 
         // Call setGoal to update goal to 3400 ml
-        CompletableFuture<Boolean> setFuture = RestClient.setGoal("john", 3400);
+        var setFuture = RestClient.setGoal("john", 3400);
 
         // Wait for the Boolean result
-        Boolean setResult = awaitBoolean(setFuture);
+        var setResult = awaitBoolean(setFuture);
 
         // Assert that setGoal reported success
         assertTrue(setResult);
@@ -903,7 +903,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/john/goal?goalMl=3400", setRequest.getPath());
 
         // For this endpoint, data is in the query string, so body should be empty
-        String setBody = setRequest.getBody().readUtf8();
+        var setBody = setRequest.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for setGoal PUT request",
                 setBody.isEmpty()
@@ -912,10 +912,10 @@ public class RestClientTest {
         // --------- 2) getGoal REQUEST + RESPONSE ---------
 
         // Call getGoal to read back the goal
-        CompletableFuture<JSONObject> getFuture = RestClient.getGoal("john");
+        var getFuture = RestClient.getGoal("john");
 
         // Wait for JSONObject result
-        JSONObject goalObj = awaitJson(getFuture);
+        var goalObj = awaitJson(getFuture);
 
         // Assert that JSON object is not null
         assertNotNull(goalObj);
@@ -936,7 +936,7 @@ public class RestClientTest {
 
         // GET should not send a body here
         // REQUEST ASSERTIONS: verify method, path and empty body
-        String getBody = getRequest.getBody().readUtf8();
+        var getBody = getRequest.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for getGoal GET request",
                 getBody.isEmpty()
@@ -955,7 +955,7 @@ public class RestClientTest {
         drainRequests();
 
         // Build a sample JSON distribution
-        String body = "{ \"Underweight\": 2, \"Normal\": 5, \"Overweight\": 3, \"Obese\": 1 }";
+        var body = "{ \"Underweight\": 2, \"Normal\": 5, \"Overweight\": 3, \"Obese\": 1 }";
 
         // Enqueue a 200 OK response with distribution JSON
         mockWebServer.enqueue(
@@ -966,10 +966,10 @@ public class RestClientTest {
         );
 
         // Call getBmiDistribution on RestClient
-        CompletableFuture<JSONObject> future = RestClient.getBmiDistribution();
+        var future = RestClient.getBmiDistribution();
 
         // Wait for JSONObject result
-        JSONObject obj = awaitJson(future);
+        var obj = awaitJson(future);
 
         // --------- RESPONSE ASSERTIONS ---------
         // Assert that returned object is not null
@@ -993,7 +993,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/stats/bmiDistribution", request.getPath());
 
         // This endpoint is pure GET with no request body
-        String reqBody = request.getBody().readUtf8();
+        var reqBody = request.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for getBmiDistribution GET request",
                 reqBody.isEmpty()
@@ -1035,10 +1035,10 @@ public class RestClientTest {
         // --------- 1) FIRST GET /calories ---------
 
         // Call getCalories to read initial value
-        CompletableFuture<Integer> getInitialFuture = RestClient.getCalories("john");
+        var getInitialFuture = RestClient.getCalories("john");
 
         // Wait for initial calories result
-        Integer initial = awaitInteger(getInitialFuture);
+        var initial = awaitInteger(getInitialFuture);
 
         // Assert that initial calories is 0
         assertNotNull(initial);
@@ -1057,7 +1057,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/john/calories", firstGet.getPath());
 
         // GET should have empty body
-        String firstGetBody = firstGet.getBody().readUtf8();
+        var firstGetBody = firstGet.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for first getCalories GET request",
                 firstGetBody.isEmpty()
@@ -1066,10 +1066,10 @@ public class RestClientTest {
         // --------- 2) PUT /calories?calories=1500 ---------
 
         // Call setCalories to update to 1500
-        CompletableFuture<Boolean> setFuture = RestClient.setCalories("john", 1500);
+        var setFuture = RestClient.setCalories("john", 1500);
 
         // Wait for Boolean result
-        Boolean setResult = awaitBoolean(setFuture);
+        var setResult = awaitBoolean(setFuture);
 
         // Assert that setCalories reports success
         assertTrue(setResult);
@@ -1087,7 +1087,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/john/calories?calories=1500", putReq.getPath());
 
         // Body should be empty – the data is passed via query parameter
-        String putBody = putReq.getBody().readUtf8();
+        var putBody = putReq.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for setCalories PUT request",
                 putBody.isEmpty()
@@ -1096,10 +1096,10 @@ public class RestClientTest {
         // --------- 3) SECOND GET /calories ---------
 
         // Call getCalories again to read updated value
-        CompletableFuture<Integer> getAfterFuture = RestClient.getCalories("john");
+        var getAfterFuture = RestClient.getCalories("john");
 
         // Wait for updated calories result
-        Integer updated = awaitInteger(getAfterFuture);
+        var updated = awaitInteger(getAfterFuture);
 
         // Assert that updated calories is 1500
         assertNotNull(updated);
@@ -1119,7 +1119,7 @@ public class RestClientTest {
 
         // Again, GET should have no body
         // REQUEST ASSERTIONS: verify method, path and empty body
-        String secondGetBody = secondGet.getBody().readUtf8();
+        var secondGetBody = secondGet.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for second getCalories GET request",
                 secondGetBody.isEmpty()
@@ -1144,13 +1144,13 @@ public class RestClientTest {
         );
 
         // Create a sample user object
-        User user = new User("john", "1234", 25, "John Doe");
+        var user = new User("john", "1234", 25, "John Doe");
 
         // Call RestClient.register which will hit MockWebServer
-        CompletableFuture<Boolean> future = RestClient.register(user);
+        var future = RestClient.register(user);
 
         // Wait for the Boolean result
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that the result is false because response is not successful (500)
         assertFalse(result);
@@ -1168,8 +1168,8 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/signup", request.getPath());
 
         // Verify request body JSON
-        String body = request.getBody().readUtf8();
-        JSONObject obj = new JSONObject(body);
+        var body = request.getBody().readUtf8();
+        var obj = new JSONObject(body);
         assertEquals("john", obj.getString("userName"));
         assertEquals("1234", obj.getString("password"));
         assertEquals("John Doe", obj.getString("fullName"));
@@ -1194,10 +1194,10 @@ public class RestClientTest {
         );
 
         // Call login with some username and password
-        CompletableFuture<User> future = RestClient.login("ghost", "pwd");
+        var future = RestClient.login("ghost", "pwd");
 
         // Wait for User result (should be null)
-        User user = future.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        var user = future.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Assert that login returned null on 404
         assertNull(user);
@@ -1215,8 +1215,8 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/login", request.getPath());
 
         // Check JSON body
-        String body = request.getBody().readUtf8();
-        JSONObject obj = new JSONObject(body);
+        var body = request.getBody().readUtf8();
+        var obj = new JSONObject(body);
         assertEquals("ghost", obj.getString("userName"));
         assertEquals("pwd", obj.getString("password"));
     }
@@ -1239,13 +1239,13 @@ public class RestClientTest {
         );
 
         // Create an updated user object
-        User updated = new User("ghost", "newPass", 30, "Missing Person");
+        var updated = new User("ghost", "newPass", 30, "Missing Person");
 
         // Call updateUser on RestClient
-        CompletableFuture<Boolean> future = RestClient.updateUser("ghost", updated);
+        var future = RestClient.updateUser("ghost", updated);
 
         // Wait for Boolean result (expected false)
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that updateUser reports false on 404
         assertFalse(result);
@@ -1263,8 +1263,8 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/ghost", request.getPath());
 
         // Verify JSON body
-        String body = request.getBody().readUtf8();
-        JSONObject obj = new JSONObject(body);
+        var body = request.getBody().readUtf8();
+        var obj = new JSONObject(body);
         assertEquals("ghost", obj.getString("userName"));
         assertEquals("newPass", obj.getString("password"));
         assertEquals("Missing Person", obj.getString("fullName"));
@@ -1289,15 +1289,15 @@ public class RestClientTest {
         );
 
         // Create a map with some field to update
-        Map<String, Object> updates = new LinkedHashMap<>();
+        var updates = new LinkedHashMap<String, Object>();
         // Put a new fullName into updates
         updates.put("fullName", "No One");
 
         // Call patchUser on RestClient
-        CompletableFuture<Boolean> future = RestClient.patchUser("ghost", updates);
+        var future = RestClient.patchUser("ghost", updates);
 
         // Wait for Boolean result (expected false)
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that patchUser reports false on 404
         assertFalse(result);
@@ -1315,8 +1315,8 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/ghost", request.getPath());
 
         // Body should be JSON with {"fullName":"No One"}
-        String body = request.getBody().readUtf8();
-        JSONObject obj = new JSONObject(body);
+        var body = request.getBody().readUtf8();
+        var obj = new JSONObject(body);
         assertEquals("No One", obj.getString("fullName"));
 
         // No extra unexpected fields
@@ -1341,10 +1341,10 @@ public class RestClientTest {
         );
 
         // Call deleteUser on RestClient
-        CompletableFuture<Boolean> future = RestClient.deleteUser("ghost");
+        var future = RestClient.deleteUser("ghost");
 
         // Wait for Boolean result (expected false)
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that deleteUser reports false on 404
         assertFalse(result);
@@ -1362,7 +1362,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/ghost", request.getPath());
 
         // DELETE here does not send a body
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for deleteUser DELETE request",
                 body.isEmpty()
@@ -1386,10 +1386,10 @@ public class RestClientTest {
         );
 
         // Call headUser on RestClient
-        CompletableFuture<Boolean> future = RestClient.headUser("ghost");
+        var future = RestClient.headUser("ghost");
 
         // Wait for Boolean result (expected false)
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that headUser reports false on 404
         assertFalse(result);
@@ -1407,7 +1407,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/ghost", request.getPath());
 
         // HEAD normally has no body
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(body.isEmpty());
     }
 
@@ -1429,10 +1429,10 @@ public class RestClientTest {
         );
 
         // Call updateBmi on RestClient
-        CompletableFuture<Boolean> future = RestClient.updateBmi("ghost", 21.5);
+        var future = RestClient.updateBmi("ghost", 21.5);
 
         // Wait for Boolean result (expected false)
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that updateBmi reports false on 404
         assertFalse(result);
@@ -1444,7 +1444,7 @@ public class RestClientTest {
         assertNotNull(request);
 
         // HTTP method – allow PATCH or POST (like success test)
-        String method = request.getMethod();
+        var method = request.getMethod();
         assertTrue(
                 "Expected HTTP method PATCH or POST but was: " + method,
                 "PATCH".equals(method) || "POST".equals(method)
@@ -1454,7 +1454,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/ghost/bmi?bmi=21.5", request.getPath());
 
         // Body should be empty (we send empty body)
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(body.isEmpty());
     }
 
@@ -1476,10 +1476,10 @@ public class RestClientTest {
         );
 
         // Call getBmi on RestClient
-        CompletableFuture<Double> future = RestClient.getBmi("ghost");
+        var future = RestClient.getBmi("ghost");
 
         // Wait for result (should be null)
-        Double bmi = awaitDouble(future);
+        var bmi = awaitDouble(future);
 
         // Assert that BMI is null on 404
         assertNull(bmi);
@@ -1497,7 +1497,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/ghost", request.getPath());
 
         // GET here should not send a body
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(body.isEmpty());
     }
 
@@ -1519,10 +1519,10 @@ public class RestClientTest {
         );
 
         // Call updateWater on RestClient
-        CompletableFuture<Boolean> future = RestClient.updateWater("ghost", 400);
+        var future = RestClient.updateWater("ghost", 400);
 
         // Wait for Boolean result (expected false)
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that updateWater reports false on 404
         assertFalse(result);
@@ -1534,7 +1534,7 @@ public class RestClientTest {
         assertNotNull(request);
 
         // HTTP method – allow PATCH or POST
-        String method = request.getMethod();
+        var method = request.getMethod();
         assertTrue(
                 "Expected HTTP method PATCH or POST but was: " + method,
                 "PATCH".equals(method) || "POST".equals(method)
@@ -1544,7 +1544,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/ghost/water?amount=400", request.getPath());
 
         // Body should be empty
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(body.isEmpty());
     }
 
@@ -1566,10 +1566,10 @@ public class RestClientTest {
         );
 
         // Call getWater on RestClient
-        CompletableFuture<JSONObject> future = RestClient.getWater("ghost");
+        var future = RestClient.getWater("ghost");
 
         // Wait for JSONObject result (expected null)
-        JSONObject obj = awaitJson(future);
+        var obj = awaitJson(future);
 
         // Assert that getWater returns null on 404
         assertNull(obj);
@@ -1587,7 +1587,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/ghost/water", request.getPath());
 
         // Body should be empty
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(body.isEmpty());
     }
 
@@ -1609,10 +1609,10 @@ public class RestClientTest {
         );
 
         // Call getWaterHistoryMap on RestClient
-        CompletableFuture<JSONObject> future = RestClient.getWaterHistoryMap("ghost", 7);
+        var future = RestClient.getWaterHistoryMap("ghost", 7);
 
         // Wait for JSONObject result (expected null)
-        JSONObject obj = awaitJson(future);
+        var obj = awaitJson(future);
 
         // Assert that result is null on 404
         assertNull(obj);
@@ -1630,7 +1630,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/ghost/waterHistoryMap?days=7", request.getPath());
 
         // Body should be empty
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(body.isEmpty());
     }
 
@@ -1652,10 +1652,10 @@ public class RestClientTest {
         );
 
         // Call getWeeklyAverages on RestClient
-        CompletableFuture<Map<String, Integer>> future = RestClient.getWeeklyAverages("john");
+        var future = RestClient.getWeeklyAverages("john");
 
         // Wait for Map result
-        Map<String, Integer> map = awaitMap(future);
+        var map = awaitMap(future);
 
         // Assert that map is not null
         assertNotNull(map);
@@ -1674,7 +1674,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/john/weeklyAverages", request.getPath());
 
         // GET should not send body
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(body.isEmpty());
     }
 
@@ -1696,10 +1696,10 @@ public class RestClientTest {
         );
 
         // Call getGoal on RestClient
-        CompletableFuture<JSONObject> future = RestClient.getGoal("ghost");
+        var future = RestClient.getGoal("ghost");
 
         // Define a flag to indicate that an exception was thrown
-        boolean threw = false;
+        var threw = false;
 
         // Try to wait for JSONObject result (expected to throw)
         try {
@@ -1724,7 +1724,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/ghost/goal", request.getPath());
 
         // GET should not send body
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(body.isEmpty());
     }
 
@@ -1746,10 +1746,10 @@ public class RestClientTest {
         );
 
         // Call setGoal with invalid value
-        CompletableFuture<Boolean> future = RestClient.setGoal("john", 100);
+        var future = RestClient.setGoal("john", 100);
 
         // Wait for Boolean result (expected false)
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that the future completed normally with false
         assertFalse(result);
@@ -1766,7 +1766,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/john/goal?goalMl=100", request.getPath());
 
         // PUT here uses empty body
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(body.isEmpty());
     }
 
@@ -1788,10 +1788,10 @@ public class RestClientTest {
         );
 
         // Call getBmiDistribution on RestClient
-        CompletableFuture<JSONObject> future = RestClient.getBmiDistribution();
+        var future = RestClient.getBmiDistribution();
 
         // Wait for JSONObject result (expected null)
-        JSONObject obj = awaitJson(future);
+        var obj = awaitJson(future);
 
         // Assert that result is null on server error
         assertNull(obj);
@@ -1808,7 +1808,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/stats/bmiDistribution", request.getPath());
 
         // GET should not send body
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(body.isEmpty());
     }
 
@@ -1830,10 +1830,10 @@ public class RestClientTest {
         );
 
         // Call getCalories on RestClient
-        CompletableFuture<Integer> future = RestClient.getCalories("john");
+        var future = RestClient.getCalories("john");
 
         // Wait for Integer result (expected null)
-        Integer value = awaitInteger(future);
+        var value = awaitInteger(future);
 
         // Assert that getCalories returns null on 400
         assertNull(value);
@@ -1850,7 +1850,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/john/calories", request.getPath());
 
         // GET should not send body
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(body.isEmpty());
     }
 
@@ -1872,14 +1872,13 @@ public class RestClientTest {
         );
 
         // Call setCalories with invalid value
-        CompletableFuture<Boolean> future = RestClient.setCalories("john", -10);
+        var future = RestClient.setCalories("john", -10);
 
         // Wait for Boolean result (expected false)
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that setCalories reports false on 400
         assertTrue(result == null || !result);
-        // assertFalse(result);
 
         // --------- REQUEST ASSERTIONS ---------
         // Consume request
@@ -1893,7 +1892,7 @@ public class RestClientTest {
         assertEquals("/myapp/api/users/john/calories?calories=-10", request.getPath());
 
         // PUT here uses empty body
-        String body = request.getBody().readUtf8();
+        var body = request.getBody().readUtf8();
         assertTrue(body.isEmpty());
     }
 }
