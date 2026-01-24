@@ -94,7 +94,7 @@ public class WaterChartActivity extends AppCompatActivity {
                 var labels = new ArrayList<String>();
 
                 // Collect JSON keys (dates)
-                Iterator<String> keys = obj.keys();
+                var keys = obj.keys();
                 // Convert to ArrayList for sorting
                 var sortedKeys = new ArrayList<String>();
                 // Add all keys to list
@@ -105,7 +105,7 @@ public class WaterChartActivity extends AppCompatActivity {
 
                 // Convert each JSON value into a BarEntry
                 var index = 0;
-                for (String date : sortedKeys) {
+                for (var date : sortedKeys) {
                     // Get water amount for this date
                     var amount = obj.optInt(date, 0);
 
@@ -176,7 +176,7 @@ public class WaterChartActivity extends AppCompatActivity {
         // --------------------------------------------------
         // 2. Fetch weekly averages data from REST client
         // --------------------------------------------------
-        CompletableFuture<Map<String, Integer>> futureWeekly = RestClient.getWeeklyAverages(username);
+        var futureWeekly = RestClient.getWeeklyAverages(username);
 
         // Handle asynchronous response
         futureWeekly.thenAccept(weeklyMap -> runOnUiThread(() -> {
@@ -188,23 +188,26 @@ public class WaterChartActivity extends AppCompatActivity {
                 }
 
                 // Prepare entries for weekly chart
-                ArrayList<BarEntry> weeklyEntries = new ArrayList<>();
-                ArrayList<String> weekLabels = new ArrayList<>();
+                var weeklyEntries = new ArrayList<BarEntry>();
+                var weekLabels = new ArrayList<String>();
 
                 // Convert weekly averages into chart entries
-                int idx = 0;
-                for (Map.Entry<String, Integer> entry : weeklyMap.entrySet()) {
+                var idx = 0;
+                // Iterate over map entries
+                for (var entry : weeklyMap.entrySet()) {
                     weeklyEntries.add(new BarEntry(idx, entry.getValue()));
+                    // Add week label to list
                     weekLabels.add(entry.getKey());
+                    // Increment index
                     idx++;
                 }
 
                 // Create dataset for weekly chart
-                BarDataSet weeklySet = new BarDataSet(weeklyEntries, "");
+                var weeklySet = new BarDataSet(weeklyEntries, "");
                 weeklySet.setColor(getResources().getColor(android.R.color.holo_green_light));
 
                 // Configure dataset styling
-                BarData weeklyData = new BarData(weeklySet);
+                var weeklyData = new BarData(weeklySet);
                 weeklyData.setBarWidth(0.5f);       // Bar width
                 weeklyData.setValueTextSize(10f);   // Value text size
 
@@ -212,7 +215,7 @@ public class WaterChartActivity extends AppCompatActivity {
                 barChartWeekly.setData(weeklyData);
 
                 // Configure X-axis for weekly chart
-                XAxis xAxisW = barChartWeekly.getXAxis();
+                var xAxisW = barChartWeekly.getXAxis();
                 xAxisW.setGranularity(1f);                     // Step size = 1
                 xAxisW.setPosition(XAxis.XAxisPosition.BOTTOM); // Labels at bottom
                 xAxisW.setDrawGridLines(false);                // Remove grid lines
@@ -222,7 +225,7 @@ public class WaterChartActivity extends AppCompatActivity {
                 xAxisW.setValueFormatter(new ValueFormatter() {
                     @Override
                     public String getFormattedValue(float value) {
-                        int i = (int) value;
+                        var i = (int) value;
                         if (i >= 0 && i < weekLabels.size()) return weekLabels.get(i);
                         return "";
                     }
@@ -242,7 +245,10 @@ public class WaterChartActivity extends AppCompatActivity {
         }));
 
         backButton.setOnClickListener(view -> {
+            // Navigate to HomePage
+            // create intent to navigate to HomePage
             Intent intent = new Intent(this, HomePage.class);
+            // start HomePage
             startActivity(intent);
         });
     }
