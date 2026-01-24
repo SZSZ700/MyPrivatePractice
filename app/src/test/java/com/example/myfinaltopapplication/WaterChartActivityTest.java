@@ -2,8 +2,6 @@
 package com.example.myfinaltopapplication;
 // Import Android classes used inside the Activity
 import android.app.Application;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Looper;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -20,20 +18,17 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowActivity;
 // Import Mockito for static mocking of RestClient
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 // Import Java collections and concurrency
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 // Import MPAndroidChart classes for checking chart data
 import com.github.mikephil.charting.charts.BarChart;
-import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
-import com.github.mikephil.charting.data.BarEntry;
 
 // -----------------------------------------------------------------------------
 // WaterChartActivityTest
@@ -51,15 +46,17 @@ public class WaterChartActivityTest {
     // -------------------------------------------------------------------------
     // Helper: store a user in SharedPreferences before creating the Activity
     // -------------------------------------------------------------------------
-    private void putUserInPrefs(Application app, String username) {
+    private void putUserInPrefs(Application app) {
         // Get SharedPreferences file by name
-        SharedPreferences prefs = app.getSharedPreferences(
+        var prefs = app.getSharedPreferences(
                 app.getString(R.string.myprefs),
                 Application.MODE_PRIVATE
         );
         // Store current user in SharedPreferences
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(app.getString(R.string.currentuser), username);
+        var editor = prefs.edit();
+        // Store username in SharedPreferences
+        editor.putString(app.getString(R.string.currentuser), "john");
+        // Commit changes to SharedPreferences
         editor.commit();
     }
 
@@ -71,15 +68,15 @@ public class WaterChartActivityTest {
     //     were each called exactly once.
     // -------------------------------------------------------------------------
     @Test
-    public void waterChart_noHistoryData_showsNoDataTitle() throws Exception {
+    public void waterChart_noHistoryData_showsNoDataTitle() {
         // Mock static methods of RestClient
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Get application instance from Robolectric
-            Application app = RuntimeEnvironment.getApplication();
+            var app = RuntimeEnvironment.getApplication();
 
             // Put logged-in user "john" into SharedPreferences
-            putUserInPrefs(app, "john");
+            this.putUserInPrefs(app);
 
             // Prepare future for getWaterHistoryMap returning null
             CompletableFuture<JSONObject> historyFuture =
@@ -87,6 +84,7 @@ public class WaterChartActivityTest {
 
             // Stub RestClient.getWaterHistoryMap("john", 7) to return null future
             restClientMock.when(
+                    // Lambda for RestClient.getWaterHistoryMap(...)
                     () -> RestClient.getWaterHistoryMap("john", 7)
             ).thenReturn(historyFuture);
 
@@ -96,13 +94,12 @@ public class WaterChartActivityTest {
 
             // Stub RestClient.getWeeklyAverages("john") to return empty map
             restClientMock.when(
+                    // Lambda for RestClient.getWeeklyAverages(...)
                     () -> RestClient.getWeeklyAverages("john")
             ).thenReturn(weeklyFuture);
 
             // Build and start WaterChartActivity
-            WaterChartActivity activity = Robolectric.buildActivity(WaterChartActivity.class)
-                    .setup()
-                    .get();
+            var activity = Robolectric.buildActivity(WaterChartActivity.class).setup().get();
 
             // Run all pending UI tasks (runOnUiThread)
             Shadows.shadowOf(Looper.getMainLooper()).idle();
@@ -115,13 +112,16 @@ public class WaterChartActivityTest {
 
             // Verify that getWaterHistoryMap was called once with "john",7
             restClientMock.verify(
+                    // Lambda for RestClient.getWaterHistoryMap(...)
                     () -> RestClient.getWaterHistoryMap("john", 7),
                     Mockito.times(1)
             );
 
             // Verify that getWeeklyAverages was called once with "john"
             restClientMock.verify(
+                    // Lambda for RestClient.getWeeklyAverages(...)
                     () -> RestClient.getWeeklyAverages("john"),
+                    // Called once
                     Mockito.times(1)
             );
         }
@@ -137,18 +137,18 @@ public class WaterChartActivityTest {
     @Test
     public void waterChart_withHistoryData_draws7DayChart() throws Exception {
         // Mock static methods of RestClient
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Get application from Robolectric
-            Application app = RuntimeEnvironment.getApplication();
+            var app = RuntimeEnvironment.getApplication();
 
             // Put logged in user "john"
-            putUserInPrefs(app, "john");
+            putUserInPrefs(app);
 
             // Build fake JSON history:
             // 2025-09-28 → 1000 ml
             // 2025-09-29 → 2000 ml
-            JSONObject historyJson = new JSONObject();
+            var historyJson = new JSONObject();
             historyJson.put("2025-09-28", 1000);
             historyJson.put("2025-09-29", 2000);
 
@@ -158,6 +158,7 @@ public class WaterChartActivityTest {
 
             // Stub getWaterHistoryMap to return our JSON for "john",7
             restClientMock.when(
+                    // Lambda for RestClient.getWaterHistoryMap(...)
                     () -> RestClient.getWaterHistoryMap("john", 7)
             ).thenReturn(historyFuture);
 
@@ -167,13 +168,12 @@ public class WaterChartActivityTest {
 
             // Stub getWeeklyAverages
             restClientMock.when(
+                    // Lambda for RestClient.getWeeklyAverages(...)
                     () -> RestClient.getWeeklyAverages("john")
             ).thenReturn(weeklyFuture);
 
             // Build and start WaterChartActivity
-            WaterChartActivity activity = Robolectric.buildActivity(WaterChartActivity.class)
-                    .setup()
-                    .get();
+            var activity = Robolectric.buildActivity(WaterChartActivity.class).setup().get();
 
             // Run pending UI tasks
             Shadows.shadowOf(Looper.getMainLooper()).idle();
@@ -182,21 +182,22 @@ public class WaterChartActivityTest {
             BarChart chart7 = activity.findViewById(R.id.barChart7days);
 
             // Make sure chart has data
-            BarData data = chart7.getData();
+            var data = chart7.getData();
+            // Assert that data is not null
             assertNotNull(data);
 
             // There should be exactly 1 DataSet
             assertEquals(1, data.getDataSetCount());
 
             // Get the single DataSet
-            BarDataSet set = (BarDataSet) data.getDataSetByIndex(0);
+            var set = (BarDataSet) data.getDataSetByIndex(0);
 
             // There should be 2 entries (for two dates)
             assertEquals(2, set.getEntryCount());
 
             // Get first and second entries
-            BarEntry first = set.getEntryForIndex(0);
-            BarEntry second = set.getEntryForIndex(1);
+            var first = set.getEntryForIndex(0);
+            var second = set.getEntryForIndex(1);
 
             // Assert Y-values match our JSON (1000, 2000)
             assertEquals(1000f, first.getY(), 0.001f);
@@ -204,6 +205,7 @@ public class WaterChartActivityTest {
 
             // Check chart title text
             TextView title = activity.findViewById(R.id.chartTitle);
+            // Assert that the title is correct
             assertEquals("Water History - Last 7 days", title.getText().toString());
         }
     }
@@ -215,28 +217,30 @@ public class WaterChartActivityTest {
     //   - Check that Y-values match the Map (order preserved via LinkedHashMap)
     // -------------------------------------------------------------------------
     @Test
-    public void waterChart_withWeeklyAverages_drawsWeeklyChart() throws Exception {
+    public void waterChart_withWeeklyAverages_drawsWeeklyChart() {
         // Mock static methods of RestClient
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Get application instance
-            Application app = RuntimeEnvironment.getApplication();
+            var app = RuntimeEnvironment.getApplication();
 
             // Put user "john" into SharedPreferences
-            putUserInPrefs(app, "john");
+            putUserInPrefs(app);
 
             // History JSON can be empty for this test (not relevant here)
-            JSONObject historyJson = new JSONObject();
+            var historyJson = new JSONObject();
+
             CompletableFuture<JSONObject> historyFuture =
                     CompletableFuture.completedFuture(historyJson);
 
             // Stub getWaterHistoryMap with empty JSON
             restClientMock.when(
+                    // Lambda for RestClient.getWaterHistoryMap(...)
                     () -> RestClient.getWaterHistoryMap("john", 7)
             ).thenReturn(historyFuture);
 
             // Build LinkedHashMap for weekly averages to preserve insertion order
-            LinkedHashMap<String, Integer> weekly = new LinkedHashMap<>();
+            var weekly = new LinkedHashMap<String, Integer>();
             weekly.put("Week 1", 1000);
             weekly.put("Week 2", 1500);
             weekly.put("Week 3", 2000);
@@ -248,13 +252,12 @@ public class WaterChartActivityTest {
 
             // Stub getWeeklyAverages
             restClientMock.when(
+                    // Lambda for RestClient.getWeeklyAverages(...)
                     () -> RestClient.getWeeklyAverages("john")
             ).thenReturn(weeklyFuture);
 
             // Build and start WaterChartActivity
-            WaterChartActivity activity = Robolectric.buildActivity(WaterChartActivity.class)
-                    .setup()
-                    .get();
+            var activity = Robolectric.buildActivity(WaterChartActivity.class).setup().get();
 
             // Run pending UI tasks
             Shadows.shadowOf(Looper.getMainLooper()).idle();
@@ -263,24 +266,26 @@ public class WaterChartActivityTest {
             BarChart weeklyChart = activity.findViewById(R.id.barChartWeekly);
 
             // Make sure it has data
-            BarData weeklyData = weeklyChart.getData();
+            var weeklyData = weeklyChart.getData();
+            // Assert that data is not null
             assertNotNull(weeklyData);
 
             // Should be exactly 1 DataSet
             assertEquals(1, weeklyData.getDataSetCount());
 
             // Get DataSet
-            BarDataSet weekSet = (BarDataSet) weeklyData.getDataSetByIndex(0);
+            var weekSet = (BarDataSet) weeklyData.getDataSetByIndex(0);
 
             // Should have 4 entries
             assertEquals(4, weekSet.getEntryCount());
 
             // Check Y-values of entries by index
-            BarEntry e0 = weekSet.getEntryForIndex(0);
-            BarEntry e1 = weekSet.getEntryForIndex(1);
-            BarEntry e2 = weekSet.getEntryForIndex(2);
-            BarEntry e3 = weekSet.getEntryForIndex(3);
+            var e0 = weekSet.getEntryForIndex(0);
+            var e1 = weekSet.getEntryForIndex(1);
+            var e2 = weekSet.getEntryForIndex(2);
+            var e3 = weekSet.getEntryForIndex(3);
 
+            // Assert Y-values match our Map
             assertEquals(1000f, e0.getY(), 0.001f);
             assertEquals(1500f, e1.getY(), 0.001f);
             assertEquals(2000f, e2.getY(), 0.001f);
@@ -293,35 +298,35 @@ public class WaterChartActivityTest {
     // Clicking the Back button should start HomePage Activity.
     // -------------------------------------------------------------------------
     @Test
-    public void waterChart_backButton_navigatesToHomePage() throws Exception {
+    public void waterChart_backButton_navigatesToHomePage() {
         // Mock static RestClient to avoid real calls during onCreate
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Get application
-            Application app = RuntimeEnvironment.getApplication();
+            var app = RuntimeEnvironment.getApplication();
 
             // Put user "john" into SharedPreferences
-            putUserInPrefs(app, "john");
+            putUserInPrefs(app);
 
             // Fake minimal futures for both calls so Activity can initialize
             CompletableFuture<JSONObject> historyFuture =
                     CompletableFuture.completedFuture(new JSONObject());
+
             CompletableFuture<Map<String, Integer>> weeklyFuture =
                     CompletableFuture.completedFuture(Collections.emptyMap());
 
             // Stub both RestClient methods
             restClientMock.when(
+                    // Lambda for RestClient.getWaterHistoryMap(...)
                     () -> RestClient.getWaterHistoryMap("john", 7)
             ).thenReturn(historyFuture);
-
             restClientMock.when(
+                    // Lambda for RestClient.getWeeklyAverages(...)
                     () -> RestClient.getWeeklyAverages("john")
             ).thenReturn(weeklyFuture);
 
             // Build and start WaterChartActivity
-            WaterChartActivity activity = Robolectric.buildActivity(WaterChartActivity.class)
-                    .setup()
-                    .get();
+            var activity = Robolectric.buildActivity(WaterChartActivity.class).setup().get();
 
             // Run pending UI tasks
             Shadows.shadowOf(Looper.getMainLooper()).idle();
@@ -333,10 +338,10 @@ public class WaterChartActivityTest {
             backBtn.performClick();
 
             // Get ShadowActivity to inspect next started Activity
-            ShadowActivity shadowActivity = Shadows.shadowOf(activity);
+            var shadowActivity = Shadows.shadowOf(activity);
 
             // Get next started Intent
-            Intent started = shadowActivity.getNextStartedActivity();
+            var started = shadowActivity.getNextStartedActivity();
 
             // Assert that an Activity was started
             assertNotNull(started);
@@ -344,7 +349,7 @@ public class WaterChartActivityTest {
             // Assert that the target Activity is HomePage
             assertEquals(
                     HomePage.class.getName(),
-                    started.getComponent().getClassName()
+                    Objects.requireNonNull(started.getComponent()).getClassName()
             );
         }
     }
