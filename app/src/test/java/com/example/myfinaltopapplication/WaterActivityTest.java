@@ -1,8 +1,6 @@
 package com.example.myfinaltopapplication;
 // Android imports
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Looper;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -21,10 +19,11 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.Shadows;
 import org.robolectric.android.controller.ActivityController;
-import org.robolectric.shadows.ShadowActivity;
 import org.robolectric.shadows.ShadowToast;
 // JSON + Future
 import org.json.JSONObject;
+
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 // -----------------------------------------------------------------------------
@@ -46,12 +45,23 @@ public class WaterActivityTest {
     // -------------------------------------------------------------------------
     private WaterActivity buildActivityNoUser(MockedStatic<RestClient> restClientMock) {
         // Stub backend calls so they won't actually run (defensive)
-        restClientMock.when(() -> RestClient.getWater(Mockito.anyString()))
-                .thenReturn(CompletableFuture.completedFuture(null));
-        restClientMock.when(() -> RestClient.getWaterHistoryMap(Mockito.anyString(), Mockito.anyInt()))
-                .thenReturn(CompletableFuture.completedFuture(null));
-        restClientMock.when(() -> RestClient.getGoal(Mockito.anyString()))
-                .thenReturn(CompletableFuture.completedFuture(null));
+        // Stub getWater
+        restClientMock.when(
+                // Lambda for RestClient.getWater(...)
+                () -> RestClient.getWater(Mockito.anyString())
+        ).thenReturn(CompletableFuture.completedFuture(null));
+
+        // Stub getWaterHistoryMap (may or may not be used depending on history)
+        restClientMock.when(
+                // Lambda for RestClient.getWaterHistoryMap(...)
+                () -> RestClient.getWaterHistoryMap(Mockito.anyString(), Mockito.anyInt())
+        ).thenReturn(CompletableFuture.completedFuture(null));
+
+        // Stub getGoal (may or may not be used depending on history)
+        restClientMock.when(
+                // Lambda for RestClient.getGoal(...)
+                () -> RestClient.getGoal(Mockito.anyString())
+        ).thenReturn(CompletableFuture.completedFuture(null));
 
         // Build controller, but DO NOT touch SharedPreferences before setup()
         ActivityController<WaterActivity> controller =
@@ -75,26 +85,31 @@ public class WaterActivityTest {
     // goalJson: JSON that backend getGoal(...) should return
     // -------------------------------------------------------------------------
     private WaterActivity buildActivityWithUser(
-            String userName,
             int todayLocal,
             int yestLocal,
             JSONObject waterJson,
             JSONObject historyJson,
             JSONObject goalJson,
             MockedStatic<RestClient> restClientMock
-    ) throws Exception {
+    ) {
 
         // Stub backend getWater(...) to return given JSON for this user
-        restClientMock.when(() -> RestClient.getWater(userName))
-                .thenReturn(CompletableFuture.completedFuture(waterJson));
+        restClientMock.when(
+                // Lambda for RestClient.getWater(...)
+                () -> RestClient.getWater("john")
+        ).thenReturn(CompletableFuture.completedFuture(waterJson));
 
         // Stub backend history
-        restClientMock.when(() -> RestClient.getWaterHistoryMap(userName, 7))
-                .thenReturn(CompletableFuture.completedFuture(historyJson));
+        restClientMock.when(
+                // Lambda for RestClient.getWaterHistoryMap(...)
+                () -> RestClient.getWaterHistoryMap("john", 7)
+        ).thenReturn(CompletableFuture.completedFuture(historyJson));
 
-        // Stub getGoal (may or may not be used depending on history)
-        restClientMock.when(() -> RestClient.getGoal(userName))
-                .thenReturn(CompletableFuture.completedFuture(goalJson));
+        // Stub getGoal
+        restClientMock.when(
+                // Lambda for RestClient.getGoal(...)
+                () -> RestClient.getGoal("john")
+        ).thenReturn(CompletableFuture.completedFuture(goalJson));
 
         // Prepare controller (onCreate not called yet)
         ActivityController<WaterActivity> controller =
@@ -104,12 +119,13 @@ public class WaterActivityTest {
         WaterActivity activity = controller.get();
 
         // Fill SharedPreferences with currentuser + initial water values
-        SharedPreferences prefs = activity.getSharedPreferences(
+        var prefs = activity.getSharedPreferences(
                 activity.getString(R.string.myprefs),
                 Context.MODE_PRIVATE
         );
+
         prefs.edit()
-                .putString(activity.getString(R.string.currentuser), userName)
+                .putString(activity.getString(R.string.currentuser), "john")
                 .putInt("todayWater", todayLocal)
                 .putInt("yesterdayWater", yestLocal)
                 .commit();
@@ -120,6 +136,7 @@ public class WaterActivityTest {
         // Process pending UI tasks (runOnUiThread callbacks)
         Shadows.shadowOf(Looper.getMainLooper()).idle();
 
+        // Return activity instance
         return activity;
     }
 
@@ -127,23 +144,28 @@ public class WaterActivityTest {
     // TEST 1: No logged-in user -> redirect to LoginActivity + Toast message.
     // -------------------------------------------------------------------------
     @Test
-    public void noCurrentUser_redirectsToLoginAndShowsToast() throws Exception {
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+    public void noCurrentUser_redirectsToLoginAndShowsToast() {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
             // Build activity with NO user in prefs
-            WaterActivity activity = buildActivityNoUser(restClientMock);
+            var activity = buildActivityNoUser(restClientMock);
 
             // Inspect navigation using ShadowActivity
-            ShadowActivity shadowActivity = Shadows.shadowOf(activity);
-            Intent startedIntent = shadowActivity.getNextStartedActivity();
+            var shadowActivity = Shadows.shadowOf(activity);
+            // Get started Intent
+            var startedIntent = shadowActivity.getNextStartedActivity();
 
             // We expect navigation to LoginActivity
+            // Assert that we navigated to another Activity
             assertNotNull(startedIntent);
+            // Assert that the target Activity is LoginActivity
             assertEquals(LoginActivity.class.getName(),
-                    startedIntent.getComponent().getClassName());
+                    Objects.requireNonNull(startedIntent.getComponent()).getClassName());
 
             // Check latest Toast text
             CharSequence toastText = ShadowToast.getTextOfLatestToast();
+            // Assert that Toast was shown
             assertNotNull(toastText);
+            // Assert that Toast message equals "You must log in first"
             assertEquals("You must log in first", toastText.toString());
 
             // Activity should be finishing
@@ -157,25 +179,23 @@ public class WaterActivityTest {
     // -------------------------------------------------------------------------
     @Test
     public void onCreate_withUser_syncsWaterFromServerAndUpdatesPrefsAndUi() throws Exception {
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Backend JSON that should override local values
-            JSONObject waterJson = new JSONObject();
+            var waterJson = new JSONObject();
             waterJson.put("todayWater", 1200);
             waterJson.put("yesterdayWater", 800);
 
             // For this test we don't care about stats → history empty, goal null
-            JSONObject emptyHistory = new JSONObject(); // length() == 0
-            JSONObject nullGoal = null;
+            var emptyHistory = new JSONObject(); // length() == 0
 
             // Build activity with user "john" and local values (will be overridden)
-            WaterActivity activity = buildActivityWithUser(
-                    "john",
+            var activity = buildActivityWithUser(
                     50,   // local todayWater
                     30,   // local yesterdayWater
                     waterJson,
                     emptyHistory,
-                    nullGoal,
+                    null,
                     restClientMock
             );
 
@@ -188,11 +208,12 @@ public class WaterActivityTest {
             assertEquals("Yesterday: 800 ml", yesterdayText.getText().toString());
 
             // SharedPreferences should also be updated
-            SharedPreferences prefs = activity.getSharedPreferences(
+            var prefs = activity.getSharedPreferences(
                     activity.getString(R.string.myprefs),
                     Context.MODE_PRIVATE
             );
 
+            // Assert that SharedPreferences were updated
             assertEquals(1200, prefs.getInt("todayWater", -1));
             assertEquals(800, prefs.getInt("yesterdayWater", -1));
         }
@@ -207,37 +228,47 @@ public class WaterActivityTest {
     // -------------------------------------------------------------------------
     @Test
     public void updateWater_success_updatesTextPrefsAndShowsSuccessToast() throws Exception {
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Initial backend state: 0 today, 0 yesterday
-            JSONObject waterJson = new JSONObject();
+            var waterJson = new JSONObject();
             waterJson.put("todayWater", 0);
             waterJson.put("yesterdayWater", 0);
 
             // History / goal not important in this test
-            JSONObject emptyHistory = new JSONObject();
-            JSONObject nullGoal = null;
+            var emptyHistory = new JSONObject();
 
             // Stub updateWater("john", 200) to succeed
-            restClientMock.when(() -> RestClient.updateWater("john", 200))
-                    .thenReturn(CompletableFuture.completedFuture(true));
+            restClientMock.when(
+                    // Lambda for RestClient.updateWater(...)
+                    () -> RestClient.updateWater("john", 200)
+            ).thenReturn(CompletableFuture.completedFuture(true));
 
             // Stub getWater / history / goal used in onCreate
-            restClientMock.when(() -> RestClient.getWater("john"))
-                    .thenReturn(CompletableFuture.completedFuture(waterJson));
-            restClientMock.when(() -> RestClient.getWaterHistoryMap("john", 7))
-                    .thenReturn(CompletableFuture.completedFuture(emptyHistory));
-            restClientMock.when(() -> RestClient.getGoal("john"))
-                    .thenReturn(CompletableFuture.completedFuture(nullGoal));
+            restClientMock.when(
+                    // Lambda for RestClient.getWater(...)
+                    () -> RestClient.getWater("john")
+            ).thenReturn(CompletableFuture.completedFuture(waterJson));
+
+            // Stub getWaterHistoryMap
+            restClientMock.when(
+                    // Lambda for RestClient.getWaterHistoryMap(...)
+                    () -> RestClient.getWaterHistoryMap("john", 7)
+            ).thenReturn(CompletableFuture.completedFuture(emptyHistory));
+
+            // Stub getGoal
+            restClientMock.when(
+                    // Lambda for RestClient.getGoal(...)
+                    () -> RestClient.getGoal("john")
+            ).thenReturn(CompletableFuture.completedFuture(null));
 
             // Build activity with logged-in user "john" (local today/yesterday = 0)
-            WaterActivity activity = buildActivityWithUser(
-                    "john",
+            var activity = buildActivityWithUser(
                     0,
                     0,
                     waterJson,
                     emptyHistory,
-                    nullGoal,
+                    null,
                     restClientMock
             );
 
@@ -255,15 +286,18 @@ public class WaterActivityTest {
             assertEquals("So far today: 200 ml", totalWaterText.getText().toString());
 
             // SharedPreferences todayWater should be 200
-            SharedPreferences prefs = activity.getSharedPreferences(
+            var prefs = activity.getSharedPreferences(
                     activity.getString(R.string.myprefs),
                     Context.MODE_PRIVATE
             );
+            // Assert that SharedPreferences were updated
             assertEquals(200, prefs.getInt("todayWater", -1));
 
             // Toast text should be "+200 ml saved!"
             CharSequence toastText = ShadowToast.getTextOfLatestToast();
+            // Assert that Toast was shown
             assertNotNull(toastText);
+            // Assert that Toast message equals "+200 ml saved!"
             assertEquals("+200 ml saved!", toastText.toString());
         }
     }
@@ -276,36 +310,46 @@ public class WaterActivityTest {
     // -------------------------------------------------------------------------
     @Test
     public void updateWater_failure_doesNotChangePrefsAndShowsErrorToast() throws Exception {
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Backend state for onCreate
-            JSONObject waterJson = new JSONObject();
+            var waterJson = new JSONObject();
             waterJson.put("todayWater", 0);
             waterJson.put("yesterdayWater", 0);
 
-            JSONObject emptyHistory = new JSONObject();
-            JSONObject nullGoal = null;
+            var emptyHistory = new JSONObject();
 
             // Stub updateWater to FAIL
-            restClientMock.when(() -> RestClient.updateWater("john", 200))
-                    .thenReturn(CompletableFuture.completedFuture(false));
+            restClientMock.when(
+                    // Lambda for RestClient.updateWater(...)
+                    () -> RestClient.updateWater("john", 200)
+            ).thenReturn(CompletableFuture.completedFuture(false));
 
             // Stub calls from onCreate
-            restClientMock.when(() -> RestClient.getWater("john"))
-                    .thenReturn(CompletableFuture.completedFuture(waterJson));
-            restClientMock.when(() -> RestClient.getWaterHistoryMap("john", 7))
-                    .thenReturn(CompletableFuture.completedFuture(emptyHistory));
-            restClientMock.when(() -> RestClient.getGoal("john"))
-                    .thenReturn(CompletableFuture.completedFuture(nullGoal));
+            restClientMock.when(
+                    // Lambda for RestClient.getWater(...)
+                    () -> RestClient.getWater("john")
+            ).thenReturn(CompletableFuture.completedFuture(waterJson));
+
+            // Stub getWaterHistoryMap
+            restClientMock.when(
+                    // Lambda for RestClient.getWaterHistoryMap(...)
+                    () -> RestClient.getWaterHistoryMap("john", 7)
+            ).thenReturn(CompletableFuture.completedFuture(emptyHistory));
+
+            // Stub getGoal
+            restClientMock.when(
+                    // Lambda for RestClient.getGoal(...)
+                    () -> RestClient.getGoal("john")
+            ).thenReturn(CompletableFuture.completedFuture(null));
 
             // Build activity
-            WaterActivity activity = buildActivityWithUser(
-                    "john",
+            var activity = buildActivityWithUser(
                     0,
                     0,
                     waterJson,
                     emptyHistory,
-                    nullGoal,
+                    null,
                     restClientMock
             );
 
@@ -323,15 +367,18 @@ public class WaterActivityTest {
             assertEquals("So far today: 200 ml", totalWaterText.getText().toString());
 
             // BUT SharedPreferences should remain 0 (updateWater failed)
-            SharedPreferences prefs = activity.getSharedPreferences(
+            var prefs = activity.getSharedPreferences(
                     activity.getString(R.string.myprefs),
                     Context.MODE_PRIVATE
             );
+            // Assert that SharedPreferences were NOT updated
             assertEquals(0, prefs.getInt("todayWater", 0));
 
             // Toast message should indicate failure
             CharSequence toastText = ShadowToast.getTextOfLatestToast();
+            // Assert that Toast was shown
             assertNotNull(toastText);
+            // Assert that Toast message equals "Failed to update water"
             assertEquals("Failed to update water", toastText.toString());
         }
     }
@@ -342,23 +389,22 @@ public class WaterActivityTest {
     // -------------------------------------------------------------------------
     @Test
     public void historyEmpty_showsNoHistoryStats() throws Exception {
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
-            // getWater: some basic values (not important here)
-            JSONObject waterJson = new JSONObject();
+            // getWater: some basic values
+            var waterJson = new JSONObject();
             waterJson.put("todayWater", 500);
             waterJson.put("yesterdayWater", 300);
 
             // Empty history → triggers "No history data available"
-            JSONObject emptyHistory = new JSONObject();
+            var emptyHistory = new JSONObject();
 
-            // Goal JSON (won't be used because early return)
-            JSONObject goalJson = new JSONObject();
+            // Goal JSON
+            var goalJson = new JSONObject();
             goalJson.put("goalMl", 3000);
 
             // Build activity with user "john"
-            WaterActivity activity = buildActivityWithUser(
-                    "john",
+            var activity = buildActivityWithUser(
                     0,
                     0,
                     waterJson,
@@ -381,40 +427,50 @@ public class WaterActivityTest {
             // Progress bar 0
             assertEquals(0, goalProgressBar.getProgress());
             // Best/lowest labels
+            // Best/lowest should be "no data"
             assertEquals("Best day: no data", bestDayText.getText().toString());
+            // Best/lowest should be "no data"
             assertEquals("Lowest day: no data", lowestDayText.getText().toString());
         }
     }
 
     // -------------------------------------------------------------------------
-    // TEST 6: Home button (bhome) starts HomePage activity.
+    // TEST 6: Home button starts HomePage activity.
     // -------------------------------------------------------------------------
     @Test
     public void clickingHomeButton_startsHomePage() throws Exception {
-        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+        try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Basic backend stubs for onCreate
-            JSONObject waterJson = new JSONObject();
+            var waterJson = new JSONObject();
             waterJson.put("todayWater", 0);
             waterJson.put("yesterdayWater", 0);
-            JSONObject emptyHistory = new JSONObject();
-            JSONObject nullGoal = null;
+            var emptyHistory = new JSONObject();
 
-            restClientMock.when(() -> RestClient.getWater("john"))
-                    .thenReturn(CompletableFuture.completedFuture(waterJson));
-            restClientMock.when(() -> RestClient.getWaterHistoryMap("john", 7))
-                    .thenReturn(CompletableFuture.completedFuture(emptyHistory));
-            restClientMock.when(() -> RestClient.getGoal("john"))
-                    .thenReturn(CompletableFuture.completedFuture(nullGoal));
+            restClientMock.when(
+                    // Lambda for RestClient.getWater(...)
+                    () -> RestClient.getWater("john")
+            ).thenReturn(CompletableFuture.completedFuture(waterJson));
+
+            // Stub getWaterHistoryMap
+            restClientMock.when(
+                    // Lambda for RestClient.getWaterHistoryMap(...)
+                    () -> RestClient.getWaterHistoryMap("john", 7)
+            ).thenReturn(CompletableFuture.completedFuture(emptyHistory));
+
+            // Stub getGoal
+            restClientMock.when(
+                    // Lambda for RestClient.getGoal(...)
+                    () -> RestClient.getGoal("john")
+            ).thenReturn(CompletableFuture.completedFuture(null));
 
             // Build activity
-            WaterActivity activity = buildActivityWithUser(
-                    "john",
+            var activity = buildActivityWithUser(
                     0,
                     0,
                     waterJson,
                     emptyHistory,
-                    nullGoal,
+                    null,
                     restClientMock
             );
 
@@ -428,12 +484,16 @@ public class WaterActivityTest {
             Shadows.shadowOf(Looper.getMainLooper()).idle();
 
             // Inspect started activity
-            ShadowActivity shadowActivity = Shadows.shadowOf(activity);
-            Intent startedIntent = shadowActivity.getNextStartedActivity();
+            var shadowActivity = Shadows.shadowOf(activity);
+            // Get started Intent
+            var startedIntent = shadowActivity.getNextStartedActivity();
 
+            // We expect navigation to HomePage
+            // Assert that we navigated to another Activity
             assertNotNull(startedIntent);
+            // Assert that the target Activity is HomePage
             assertEquals(HomePage.class.getName(),
-                    startedIntent.getComponent().getClassName());
+                    Objects.requireNonNull(startedIntent.getComponent()).getClassName());
         }
     }
 }
