@@ -12,8 +12,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 // Import JSON object for parsing and building JSON bodies
 import org.json.JSONObject;
-// Import reflection classes to override static client in RestClient
-import java.lang.reflect.Field;
 // Import collections for map-based responses
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -76,18 +74,18 @@ public class RestClientTest {
         Log.d("TEST", "MockWebServer started at: " + mockWebServer.url("/"));
 
         // Use reflection to read the current static OkHttpClient from RestClient
-        Field clientField = RestClient.class.getDeclaredField("client");
+        var clientField = RestClient.class.getDeclaredField("client");
         // Allow access to the private static field
         clientField.setAccessible(true);
         // Save the original client so we can restore it later
         originalClient = (OkHttpClient) clientField.get(null);
 
         // Build a new OkHttpClient that rewrites the host and port to MockWebServer
-        OkHttpClient testClient = new OkHttpClient.Builder()
+        var testClient = new OkHttpClient.Builder()
                 // Add an interceptor that changes each request URL to point to MockWebServer
                 .addInterceptor(chain -> {
                     // Capture the original outgoing request
-                    okhttp3.Request originalRequest = chain.request();
+                    var originalRequest = chain.request();
                     // Extract the original URL from the request
                     HttpUrl originalUrl = originalRequest.url();
 
@@ -118,7 +116,7 @@ public class RestClientTest {
     @AfterClass
     public static void tearDownClass() throws Exception {
         // Use reflection to get the static client field in RestClient
-        Field clientField = RestClient.class.getDeclaredField("client");
+        var clientField = RestClient.class.getDeclaredField("client");
         // Allow access to the private field
         clientField.setAccessible(true);
         // Restore the original client instance back to RestClient
@@ -183,13 +181,15 @@ public class RestClientTest {
         );
 
         // Create a sample User object with test data
-        User user = new User("john", "1234", 25, "John Doe");
+        var user = new User(
+                "john", "1234", 25, "John Doe"
+        );
 
         // Call RestClient.register which will send the HTTP request asynchronously
-        CompletableFuture<Boolean> future = RestClient.register(user);
+        var future = RestClient.register(user);
 
         // Wait for the result of the CompletableFuture
-        Boolean result = awaitBoolean(future);
+        var result = awaitBoolean(future);
 
         // Assert that the result is true (successful registration)
         assertTrue(result);
@@ -216,12 +216,11 @@ public class RestClientTest {
         // Make sure we actually captured some HTTP request
         assertNotNull("Expected at least one HTTP request", request);
 
-        // (Optional debug)
         System.out.println("DEBUG register path = " + request.getPath());
         System.out.println("DEBUG register method = " + request.getMethod());
 
-        // Assert that the HTTP method is POST (or PUT if your RestClient uses it)
-        String method = request.getMethod();
+        // Assert that the HTTP method is POST
+        var method = request.getMethod();
         assertTrue(
                 "Expected HTTP method POST or PUT but was: " + method,
                 "POST".equals(method) || "PUT".equals(method)
@@ -578,7 +577,7 @@ public class RestClientTest {
         // because all the data is passed via the query parameter (?bmi=23.5)
         String body = request.getBody().readUtf8();
         assertTrue("Expected empty body for updateBmi PATCH request",
-                body == null || body.isEmpty());
+                body.isEmpty());
     }
 
 
@@ -673,7 +672,7 @@ public class RestClientTest {
         String body = request.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for updateWater PATCH request",
-                body == null || body.isEmpty()
+                body.isEmpty()
         );
     }
 
@@ -728,7 +727,7 @@ public class RestClientTest {
         String body = request.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for getWater GET request",
-                body == null || body.isEmpty()
+                body.isEmpty()
         );
     }
 
@@ -787,7 +786,7 @@ public class RestClientTest {
         String reqBody = request.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for getWaterHistoryMap GET request",
-                reqBody == null || reqBody.isEmpty()
+                reqBody.isEmpty()
         );
     }
 
@@ -850,7 +849,7 @@ public class RestClientTest {
         String reqBody = request.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for getWeeklyAverages GET request",
-                reqBody == null || reqBody.isEmpty()
+                reqBody.isEmpty()
         );
     }
 
@@ -907,7 +906,7 @@ public class RestClientTest {
         String setBody = setRequest.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for setGoal PUT request",
-                setBody == null || setBody.isEmpty()
+                setBody.isEmpty()
         );
 
         // --------- 2) getGoal REQUEST + RESPONSE ---------
@@ -940,7 +939,7 @@ public class RestClientTest {
         String getBody = getRequest.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for getGoal GET request",
-                getBody == null || getBody.isEmpty()
+                getBody.isEmpty()
         );
     }
 
@@ -997,7 +996,7 @@ public class RestClientTest {
         String reqBody = request.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for getBmiDistribution GET request",
-                reqBody == null || reqBody.isEmpty()
+                reqBody.isEmpty()
         );
     }
 
@@ -1061,7 +1060,7 @@ public class RestClientTest {
         String firstGetBody = firstGet.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for first getCalories GET request",
-                firstGetBody == null || firstGetBody.isEmpty()
+                firstGetBody.isEmpty()
         );
 
         // --------- 2) PUT /calories?calories=1500 ---------
@@ -1091,7 +1090,7 @@ public class RestClientTest {
         String putBody = putReq.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for setCalories PUT request",
-                putBody == null || putBody.isEmpty()
+                putBody.isEmpty()
         );
 
         // --------- 3) SECOND GET /calories ---------
@@ -1123,7 +1122,7 @@ public class RestClientTest {
         String secondGetBody = secondGet.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for second getCalories GET request",
-                secondGetBody == null || secondGetBody.isEmpty()
+                secondGetBody.isEmpty()
         );
     }
 
@@ -1320,7 +1319,7 @@ public class RestClientTest {
         JSONObject obj = new JSONObject(body);
         assertEquals("No One", obj.getString("fullName"));
 
-        // No extra unexpected fields (optional – אם תרצה ממש הדוק)
+        // No extra unexpected fields
         assertEquals(1, obj.length());
     }
 
@@ -1366,7 +1365,7 @@ public class RestClientTest {
         String body = request.getBody().readUtf8();
         assertTrue(
                 "Expected empty body for deleteUser DELETE request",
-                body == null || body.isEmpty()
+                body.isEmpty()
         );
     }
 
@@ -1409,7 +1408,7 @@ public class RestClientTest {
 
         // HEAD normally has no body
         String body = request.getBody().readUtf8();
-        assertTrue(body == null || body.isEmpty());
+        assertTrue(body.isEmpty());
     }
 
     // =============================================================
@@ -1456,7 +1455,7 @@ public class RestClientTest {
 
         // Body should be empty (we send empty body)
         String body = request.getBody().readUtf8();
-        assertTrue(body == null || body.isEmpty());
+        assertTrue(body.isEmpty());
     }
 
     // =============================================================
@@ -1499,7 +1498,7 @@ public class RestClientTest {
 
         // GET here should not send a body
         String body = request.getBody().readUtf8();
-        assertTrue(body == null || body.isEmpty());
+        assertTrue(body.isEmpty());
     }
 
     // =============================================================
@@ -1534,7 +1533,7 @@ public class RestClientTest {
         RecordedRequest request = mockWebServer.takeRequest(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
 
-        // HTTP method – allow PATCH or POST (כמו בטסט הצלחה)
+        // HTTP method – allow PATCH or POST
         String method = request.getMethod();
         assertTrue(
                 "Expected HTTP method PATCH or POST but was: " + method,
@@ -1546,7 +1545,7 @@ public class RestClientTest {
 
         // Body should be empty
         String body = request.getBody().readUtf8();
-        assertTrue(body == null || body.isEmpty());
+        assertTrue(body.isEmpty());
     }
 
     // =============================================================
@@ -1589,7 +1588,7 @@ public class RestClientTest {
 
         // Body should be empty
         String body = request.getBody().readUtf8();
-        assertTrue(body == null || body.isEmpty());
+        assertTrue(body.isEmpty());
     }
 
     // =============================================================
@@ -1632,7 +1631,7 @@ public class RestClientTest {
 
         // Body should be empty
         String body = request.getBody().readUtf8();
-        assertTrue(body == null || body.isEmpty());
+        assertTrue(body.isEmpty());
     }
 
     // =============================================================
@@ -1676,7 +1675,7 @@ public class RestClientTest {
 
         // GET should not send body
         String body = request.getBody().readUtf8();
-        assertTrue(body == null || body.isEmpty());
+        assertTrue(body.isEmpty());
     }
 
     // =============================================================
@@ -1726,7 +1725,7 @@ public class RestClientTest {
 
         // GET should not send body
         String body = request.getBody().readUtf8();
-        assertTrue(body == null || body.isEmpty());
+        assertTrue(body.isEmpty());
     }
 
     // =============================================================
@@ -1768,7 +1767,7 @@ public class RestClientTest {
 
         // PUT here uses empty body
         String body = request.getBody().readUtf8();
-        assertTrue(body == null || body.isEmpty());
+        assertTrue(body.isEmpty());
     }
 
     // =============================================================
@@ -1810,7 +1809,7 @@ public class RestClientTest {
 
         // GET should not send body
         String body = request.getBody().readUtf8();
-        assertTrue(body == null || body.isEmpty());
+        assertTrue(body.isEmpty());
     }
 
     // =============================================================
@@ -1852,7 +1851,7 @@ public class RestClientTest {
 
         // GET should not send body
         String body = request.getBody().readUtf8();
-        assertTrue(body == null || body.isEmpty());
+        assertTrue(body.isEmpty());
     }
 
     // =============================================================
@@ -1879,7 +1878,7 @@ public class RestClientTest {
         Boolean result = awaitBoolean(future);
 
         // Assert that setCalories reports false on 400
-        assertTrue(result == null || !result ? true : false); // אם אתה רוצה ממש רק assertFalse:
+        assertTrue(result == null || !result);
         // assertFalse(result);
 
         // --------- REQUEST ASSERTIONS ---------
@@ -1895,6 +1894,6 @@ public class RestClientTest {
 
         // PUT here uses empty body
         String body = request.getBody().readUtf8();
-        assertTrue(body == null || body.isEmpty());
+        assertTrue(body.isEmpty());
     }
 }
