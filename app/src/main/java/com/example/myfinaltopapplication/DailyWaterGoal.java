@@ -1,6 +1,5 @@
 // Define package
 package com.example.myfinaltopapplication;
-
 // Android imports
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -14,13 +13,10 @@ import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 // AppCompat
 import androidx.appcompat.app.AppCompatActivity;
-
 // JSON
 import org.json.JSONObject;
-
 // Java utils
 import java.util.ArrayList;
 import java.util.Locale;
@@ -76,9 +72,10 @@ public class DailyWaterGoal extends AppCompatActivity {
         setupChartAppearance();
 
         // Back click → finish
-        backButton.setOnClickListener(v ->
-        {
+        backButton.setOnClickListener(v -> {
+            // create intent to navigate to HomePage
             Intent intent = new Intent(this, HomePage.class);
+            // start HomePage
             startActivity(intent);
         });
 
@@ -91,6 +88,7 @@ public class DailyWaterGoal extends AppCompatActivity {
 
     @Override
     protected void onResume() {
+        // Call parent implementation
         super.onResume();
         // Refresh whenever page is visible again (in case goal changed elsewhere)
         fetchAndRender();
@@ -99,7 +97,7 @@ public class DailyWaterGoal extends AppCompatActivity {
     // Handles click on "Save goal" button
     private void onSaveGoalClicked() {
         // Get the text, validate not empty
-        String txt = goalInput.getText().toString().trim();
+        var txt = goalInput.getText().toString().trim();
         if (TextUtils.isEmpty(txt)) {
             Toast.makeText(this, "Enter a daily goal in ml", Toast.LENGTH_SHORT).show();
             return;
@@ -114,7 +112,7 @@ public class DailyWaterGoal extends AppCompatActivity {
             return;
         }
 
-        // Basic sanity range (adjust as you want)
+        // Basic sanity range
         if (newGoal < 500 || newGoal > 10000) {
             Toast.makeText(this, "Goal should be between 500 and 10000 ml", Toast.LENGTH_SHORT).show();
             return;
@@ -131,11 +129,14 @@ public class DailyWaterGoal extends AppCompatActivity {
                     if (ok) {
                         // Update local state and UI
                         goalMl = newGoal;
+                        // Show toast and update labels
                         Toast.makeText(this, "Goal updated", Toast.LENGTH_SHORT).show();
                         // Update labels + chart
                         updateHeaderLabels();
                         renderChart();
                     } else {
+                        // Show error toast if failed
+                        Log.e("DAILY_WATER", "Failed to update goal");
                         Toast.makeText(this, "Failed to update goal", Toast.LENGTH_SHORT).show();
                     }
                 }))
@@ -143,8 +144,10 @@ public class DailyWaterGoal extends AppCompatActivity {
                     // Hide loading on error
                     runOnUiThread(() -> {
                         setLoading(false);
+                        // Show error toast with exception message
                         Toast.makeText(this, "Error: " + ex.getMessage(), Toast.LENGTH_SHORT).show();
                     });
+                    // Return null
                     return null;
                 });
     }
@@ -165,13 +168,15 @@ public class DailyWaterGoal extends AppCompatActivity {
                 .thenAccept(v -> runOnUiThread(() -> {
                     try {
                         // Parse goal JSON {"goalMl": 2600}
-                        JSONObject jGoal = fGoal.getNow(null);
+                        var jGoal = fGoal.getNow(null);
+
                         if (jGoal != null && jGoal.has("goalMl")) {
                             goalMl = jGoal.optInt("goalMl", goalMl);
                         }
 
                         // Parse water JSON {"todayWater": 1800, "yesterdayWater": ...}
-                        JSONObject jWater = fWater.getNow(null);
+                        var jWater = fWater.getNow(null);
+
                         if (jWater != null && jWater.has("todayWater")) {
                             todayMl = jWater.optInt("todayWater", 0);
                         }
@@ -181,7 +186,9 @@ public class DailyWaterGoal extends AppCompatActivity {
                         renderChart();
 
                     } catch (Exception e) {
+                        // Log parsing error
                         Log.e("DONUT", "Parsing error", e);
+                        // Show toast
                         Toast.makeText(this, "Failed to parse server data", Toast.LENGTH_SHORT).show();
                     } finally {
                         // Hide spinner
@@ -191,9 +198,12 @@ public class DailyWaterGoal extends AppCompatActivity {
                 .exceptionally(ex -> {
                     // On any error, hide loader and show toast
                     runOnUiThread(() -> {
+                        Log.e("DONUT", "Error loading data", ex);
                         setLoading(false);
+                        // Show error toast with exception message
                         Toast.makeText(this, "Load error: " + ex.getMessage(), Toast.LENGTH_SHORT).show();
                     });
+                    // Return null
                     return null;
                 });
     }
@@ -214,7 +224,7 @@ public class DailyWaterGoal extends AppCompatActivity {
         donutChart.setDrawHoleEnabled(true);
         donutChart.setHoleRadius(68f);       // Inner hole size (percent of radius)
         donutChart.setTransparentCircleRadius(72f); // Outer transparent ring
-        // Disable center text initially (we will set actual numbers each render)
+        // Disable center text initially
         donutChart.setDrawCenterText(true);
         donutChart.setCenterTextTypeface(Typeface.DEFAULT_BOLD);
         // Tweak legend position/shape
@@ -224,17 +234,17 @@ public class DailyWaterGoal extends AppCompatActivity {
         legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
         legend.setOrientation(Legend.LegendOrientation.HORIZONTAL);
         legend.setWordWrapEnabled(true);
-        // Disable entry labels (we rely on legend and center text)
+        // Disable entry labels
         donutChart.setDrawEntryLabels(false);
     }
 
     // Renders the donut with current todayMl and goalMl
     private void renderChart() {
         // Compute "remaining" but never negative
-        int remaining = Math.max(0, goalMl - todayMl);
+        var remaining = Math.max(0, goalMl - todayMl);
 
         // Build entries: consumed vs remaining
-        ArrayList<PieEntry> entries = new ArrayList<>();
+        var entries = new ArrayList<PieEntry>();
         entries.add(new PieEntry(todayMl, "Consumed"));
         entries.add(new PieEntry(remaining, "Remaining"));
 
@@ -254,7 +264,7 @@ public class DailyWaterGoal extends AppCompatActivity {
         });
 
         // Attach dataset to chart data
-        PieData data = new PieData(set);
+        var data = new PieData(set);
         donutChart.setData(data);
 
         // Center text shows absolute numbers (e.g., 1800 / 2600)

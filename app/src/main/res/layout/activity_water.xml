@@ -7,7 +7,6 @@
     android:gravity="center_horizontal"
     android:background="#E3F2FD">
 
-    <!-- כותרת ראשית -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -17,7 +16,6 @@
         android:textColor="#1565C0"
         android:layout_marginBottom="20dp" />
 
-    <!-- תיבת טקסט להצגת שתייה מאתמול -->
     <TextView
         android:id="@+id/yesterdayText"
         android:layout_width="match_parent"
@@ -29,7 +27,6 @@
         android:padding="12dp"
         android:layout_marginBottom="20dp" />
 
-    <!-- תיבת טקסט להצגת סך השתייה עד כה -->
     <TextView
         android:id="@+id/totalWaterText"
         android:layout_width="wrap_content"
@@ -39,7 +36,6 @@
         android:textColor="#0D47A1"
         android:layout_marginBottom="24dp" />
 
-    <!-- כפתור שתייה 150 -->
     <Button
         android:id="@+id/drink150"
         android:layout_width="match_parent"
@@ -49,7 +45,6 @@
         android:text="Plastic cup - 150 ml"
         android:textColor="#FFF" />
 
-    <!-- כפתור שתייה 200 -->
     <Button
         android:id="@+id/drink200"
         android:layout_width="match_parent"
@@ -59,7 +54,6 @@
         android:text="@string/paper_cup_200_ml"
         android:textColor="#FFF" />
 
-    <!-- כפתור שתייה 1000 -->
     <Button
         android:id="@+id/drink1000"
         android:layout_width="match_parent"
@@ -69,15 +63,12 @@
         android:text="@string/water_bottle_1000_ml"
         android:textColor="#FFF" />
 
-    <!-- כפתור חזרה לבית -->
     <ImageButton
         android:id="@+id/imageButton4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:backgroundTint="#E3F2FD"
         app:srcCompat="?attr/homeAsUpIndicator" />
-
-    <!-- **** חדש: סקשן סטטיסטיקת יעד **** -->
 
     <TextView
         android:id="@+id/goalSummaryTitle"
@@ -128,5 +119,4 @@
         android:gravity="center"
         android:layout_marginTop="4dp"
         android:textColor="#004D40" />
-
 </LinearLayout>

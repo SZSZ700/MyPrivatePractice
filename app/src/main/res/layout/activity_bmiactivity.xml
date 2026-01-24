@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="מחשבון BMI"
+        android:text="@string/bmi_calculator"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="#1565C0"
@@ -19,14 +19,14 @@
         android:id="@+id/weightEdit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="משקל (ק״ג)"
+        android:hint="@string/weight_kg"
         android:inputType="numberDecimal" />
 
     <EditText
         android:id="@+id/heightEdit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="גובה (ס״מ)"
+        android:hint="@string/height_cm"
         android:inputType="numberDecimal"
         android:layout_marginTop="10dp" />
 
@@ -34,7 +34,7 @@
         android:id="@+id/calcButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="חשב BMI"
+        android:text="@string/calculate_bmi"
         android:layout_marginTop="20dp" />
 
     <TextView
@@ -59,13 +59,11 @@
         android:layout_height="163dp"
         android:layout_marginTop="16dp" />
 
-    <!-- ====== Daily calories section ====== -->
-
     <TextView
         android:id="@+id/caloriesSectionTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Daily calories"
+        android:text="@string/daily_calories"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="#1565C0"
@@ -75,7 +73,7 @@
         android:id="@+id/caloriesInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Calories amount (kcal)"
+        android:hint="@string/calories_amount_kcal"
         android:inputType="number" />
 
     <LinearLayout
@@ -90,7 +88,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="+ Add" />
+            android:text="@string/add" />
 
         <Button
             android:id="@+id/subtractCaloriesButton"
@@ -98,7 +96,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:text="- Remove" />
+            android:text="@string/remove" />
 
         <Button
             android:id="@+id/resetCaloriesButton"
@@ -106,14 +104,14 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:text="Reset" />
+            android:text="@string/reset" />
     </LinearLayout>
 
     <TextView
         android:id="@+id/caloriesStatusText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Today calories: 0 kcal"
+        android:text="@string/today_calories_0_kcal"
         android:textSize="16sp"
         android:layout_marginTop="8dp"
         android:gravity="center" />

@@ -26,8 +26,8 @@ public class HomePage extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);          // Call parent constructor
-        EdgeToEdge.enable(this);                     // Enable full screen UI (edge-to-edge)
+        super.onCreate(savedInstanceState); // Call parent constructor
+        EdgeToEdge.enable(this); // Enable full screen UI (edge-to-edge)
 
         // ---------------------------------------------------------------------
         // Link this Activity to its layout file (activity_home_page.xml)
@@ -49,7 +49,7 @@ public class HomePage extends AppCompatActivity {
             public void onClick(View view) {
                 // Create intent to open BMIActivity
                 Intent bmi = new Intent(HomePage.this, BMIActivity.class);
-                startActivity(bmi);                  // Start BMIActivity
+                startActivity(bmi); // Start BMIActivity
             }
         });
         // ---------------------------------------------------------------------
@@ -61,7 +61,7 @@ public class HomePage extends AppCompatActivity {
             public void onClick(View view) {
                 // Create intent to open WaterActivity
                 Intent wte = new Intent(HomePage.this, WaterActivity.class);
-                startActivity(wte);                  // Start WaterActivity
+                startActivity(wte); // Start WaterActivity
             }
         });
         // ---------------------------------------------------------------------

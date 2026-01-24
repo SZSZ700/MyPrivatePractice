@@ -73,44 +73,54 @@ public class LoginActivity extends AppCompatActivity {
             // Handle asynchronous server response
             loginFuture.thenAccept(user -> runOnUiThread(() -> {
                 if (user != null) {
-                    // ✅ If login successful → save user session locally
+                    // If login successful → save user session locally
                     SharedPreferences prefs = getSharedPreferences(getString(R.string.myprefs), MODE_PRIVATE);
                     SharedPreferences.Editor editor = prefs.edit();
                     editor.putString(getString(R.string.currentuser), user.getUserName()); // Save username
-                    editor.putInt(getString(R.string.age), user.getAge());                 // Save age
-                    editor.putString("fullName", user.getFullName());                      // Save full name
+                    editor.putInt(getString(R.string.age), user.getAge()); // Save age
+                    editor.putString("fullName", user.getFullName()); // Save full name
 
                     // ---------------------------------------------------------------------
                     // Save water data (today + yesterday) from server response
                     // ---------------------------------------------------------------------
                     try {
-                        // RestClient.getWater מחזיר JSON – נקרא אותו כאן
-                        RestClient.getWater(user.getUserName()).thenAccept(obj -> runOnUiThread(() -> {
+                        // RestClient.getWater → sends GET /api/users/{username}/water
+                        RestClient.getWater(user.getUserName())
+                                .thenAccept(obj -> runOnUiThread(() -> {
                             if (obj != null) {
+                                // If water data found, save to SharedPreferences
                                 int today = obj.optInt("todayWater", 0);
+                                // If yesterday not found, set to 0
                                 int yesterday = obj.optInt("yesterdayWater", 0);
 
                                 editor.putInt("todayWater", today);
                                 editor.putInt("yesterdayWater", yesterday);
 
-                                // נשמור מיידית כדי לוודא שהמים קיימים בשאר העמודים
+                                // save changes to SharedPreferences using editor
                                 editor.commit();
 
+                                // Log for debugging
                                 android.util.Log.d("LOGIN_PREFS",
                                         "Saved water at login: today=" + today + ", yesterday=" + yesterday);
                             } else {
+                                // If water data not found, set to 0
                                 editor.putInt("todayWater", 0);
+                                // Set yesterday to 0 as well, if not found
                                 editor.putInt("yesterdayWater", 0);
+                                // Save changes to SharedPreferences
                                 editor.commit();
                             }
                         }));
                     } catch (Exception e) {
+                        // If water data not found, set to 0
                         editor.putInt("todayWater", 0);
+                        // Set yesterday to 0 as well, if not found
                         editor.putInt("yesterdayWater", 0);
+                        // Save changes to SharedPreferences
                         editor.commit();
                     }
 
-                    // ✅ נשמור את שאר הנתונים (username/age/fullName)
+                    // Save changes to SharedPreferences
                     editor.apply();
 
                     // Show success toast with user’s full name
@@ -122,7 +132,7 @@ public class LoginActivity extends AppCompatActivity {
                     startActivity(intent);
                     finish(); // Close LoginActivity so user can’t go back
                 } else {
-                    // ❌ If login failed (wrong credentials)
+                    // If login failed (wrong credentials)
                     Toast.makeText(LoginActivity.this,
                             "Invalid username or password", Toast.LENGTH_SHORT).show();
                 }
@@ -135,6 +145,7 @@ public class LoginActivity extends AppCompatActivity {
         signUpBtn.setOnClickListener(v -> {
             // Open signup Activity for registration
             Intent intent = new Intent(LoginActivity.this, signup.class);
+            // Start the signup Activity
             startActivity(intent);
         });
     }

@@ -21,20 +21,16 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 // Import CompletableFuture for async calls to server
 import java.util.concurrent.CompletableFuture;
-
 // Import logging for debug messages
 import android.util.Log;
-
 // Import MPAndroidChart classes for BMI PieChart
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.utils.ColorTemplate;
-
 // Import JSON for BMI distribution response
 import org.json.JSONObject;
-
 // Import Java util for list handling
 import java.util.ArrayList;
 
@@ -74,7 +70,7 @@ public class BMIActivity extends AppCompatActivity {
 
     // Current daily calories value
     private int currentCalories = 0;
-    // Simple static target for calories (you can tweak it later or make it BMI-based)
+    // Simple static target for calories (kcal)
     private static final int TARGET_CALORIES = 2000;
 
     // -------------------------------------------------------------------------
@@ -90,14 +86,19 @@ public class BMIActivity extends AppCompatActivity {
         // ---------------------------------------------------------------------
         // Load current logged-in user from SharedPreferences
         // ---------------------------------------------------------------------
-        SharedPreferences prefs = getSharedPreferences(getString(R.string.myprefs), MODE_PRIVATE);
+        // Load user session preferences (local storage)
+        var prefs = getSharedPreferences(getString(R.string.myprefs), MODE_PRIVATE);
         currentUser = prefs.getString(getString(R.string.currentuser), null);
 
         // If user is not logged in → force redirect to login
         if (currentUser == null) {
+            // Show error toast
             Toast.makeText(this, "You must log in first", Toast.LENGTH_SHORT).show();
+            // create intent to navigate to LoginActivity
             Intent login = new Intent(BMIActivity.this, LoginActivity.class);
+            // start LoginActivity
             startActivity(login);
+            // close BMIActivity so the user cannot go back
             finish();
             return; // Stop execution here
         }
@@ -123,7 +124,9 @@ public class BMIActivity extends AppCompatActivity {
         // ---------------------------------------------------------------------
         // Try to load saved BMI from server
         // ---------------------------------------------------------------------
+        // Load BMI from server
         RestClient.getBmi(currentUser).thenAccept(bmi -> runOnUiThread(() -> {
+            // If BMI exists in server → display it
             if (bmi != null) {
                 // If BMI exists in server → display it
                 resultText.setText("Saved BMI: " + String.format("%.2f", bmi));
@@ -163,8 +166,9 @@ public class BMIActivity extends AppCompatActivity {
         // ---------------------------------------------------------------------
         calcButton.setOnClickListener(v -> {
             // Read user inputs (weight and height) as strings
-            String weightStr = weightEdit.getText().toString().trim();
-            String heightStr = heightEdit.getText().toString().trim();
+            // Trim to remove leading/trailing spaces
+            var weightStr = weightEdit.getText().toString().trim();
+            var heightStr = heightEdit.getText().toString().trim();
 
             // Validate that both fields are not empty
             if (weightStr.isEmpty() || heightStr.isEmpty()) {
@@ -174,15 +178,16 @@ public class BMIActivity extends AppCompatActivity {
 
             try {
                 // Convert weight and height to numbers
-                double weight = Double.parseDouble(weightStr);
-                double heightM = Double.parseDouble(heightStr) / 100.0; // convert cm to meters
+                var weight = Double.parseDouble(weightStr);
+                var heightM = Double.parseDouble(heightStr) / 100.0; // convert cm to meters
                 // Calculate BMI = weight / (height^2)
-                double bmi = weight / (heightM * heightM);
+                var bmi = weight / (heightM * heightM);
 
                 // Display calculated BMI immediately
                 resultText.setText("Your BMI is " + String.format("%.2f", bmi));
 
                 // Save BMI to server using RestClient
+                // Use currentUser to identify the user for authentication
                 RestClient.updateBmi(currentUser, bmi).thenAccept(success -> runOnUiThread(() -> {
                     if (success) {
                         // If server update succeeded → save locally
@@ -211,40 +216,59 @@ public class BMIActivity extends AppCompatActivity {
         // Calories buttons - add / subtract / reset
         // ---------------------------------------------------------------------
         addCaloriesButton.setOnClickListener(v -> {
-            String txt = caloriesInput.getText().toString().trim();
+            // Read user input as string and trim
+            var txt = caloriesInput.getText().toString().trim();
+
             if (txt.isEmpty()) {
+                // show toast if input is empty
                 Toast.makeText(BMIActivity.this, "Please enter calories amount", Toast.LENGTH_SHORT).show();
+                // stop execution here
                 return;
             }
+
             try {
-                int delta = Integer.parseInt(txt);
+
+                var delta = Integer.parseInt(txt);
+
                 if (delta <= 0) {
+                    // show toast if input is not positive
                     Toast.makeText(BMIActivity.this, "Amount must be positive", Toast.LENGTH_SHORT).show();
+                    // stop execution here
                     return;
                 }
+
                 // Increase today's calories
                 currentCalories += delta;
                 // Update status text
-                updateCaloriesStatusText();
+                this.updateCaloriesStatusText();
                 // Save to server
-                saveCaloriesToServer();
+                this.saveCaloriesToServer();
             } catch (NumberFormatException e) {
                 Toast.makeText(BMIActivity.this, "Invalid calories number", Toast.LENGTH_SHORT).show();
             }
         });
 
         subtractCaloriesButton.setOnClickListener(v -> {
-            String txt = caloriesInput.getText().toString().trim();
+            // Read user input as string and trim
+            var txt = caloriesInput.getText().toString().trim();
+
             if (txt.isEmpty()) {
+                // show toast if input is empty
                 Toast.makeText(BMIActivity.this, "Please enter calories amount", Toast.LENGTH_SHORT).show();
+                // stop execution here
                 return;
             }
+
             try {
-                int delta = Integer.parseInt(txt);
+                var delta = Integer.parseInt(txt);
+
                 if (delta <= 0) {
+                    // show toast if input is not positive
                     Toast.makeText(BMIActivity.this, "Amount must be positive", Toast.LENGTH_SHORT).show();
+                    // stop execution here
                     return;
                 }
+
                 // Decrease today's calories
                 currentCalories -= delta;
                 if (currentCalories < 0) {
@@ -263,23 +287,25 @@ public class BMIActivity extends AppCompatActivity {
             // Reset calories to zero
             currentCalories = 0;
             // Update status text
-            updateCaloriesStatusText();
+            this.updateCaloriesStatusText();
             // Save to server
-            saveCaloriesToServer();
+            this.saveCaloriesToServer();
         });
 
         // ---------------------------------------------------------------------
         // Back button - return to HomePage
         // ---------------------------------------------------------------------
         backHome.setOnClickListener(v -> {
-            Intent bhome = new Intent(BMIActivity.this, HomePage.class);
+            // create intent to navigate to HomePage
+            var bhome = new Intent(BMIActivity.this, HomePage.class);
+            // start HomePage
             startActivity(bhome);
         });
 
         // ---------------------------------------------------------------------
         // Load global BMI distribution for PieChart (does not affect old logic)
         // ---------------------------------------------------------------------
-        loadBmiDistributionChart();
+        this.loadBmiDistributionChart();
     }
 
     // -------------------------------------------------------------------------
@@ -297,7 +323,7 @@ public class BMIActivity extends AppCompatActivity {
             status = "Above target";
         }
 
-        String msg = "Today calories: " + currentCalories + " kcal (" +
+        var msg = "Today calories: " + currentCalories + " kcal (" +
                 status + ", target " + TARGET_CALORIES + " kcal)";
         caloriesStatusText.setText(msg);
     }
@@ -310,12 +336,18 @@ public class BMIActivity extends AppCompatActivity {
         RestClient.setCalories(currentUser, currentCalories).thenAccept(success ->
                 runOnUiThread(() -> {
                     if (success) {
-                        SharedPreferences prefs = getSharedPreferences(getString(R.string.myprefs), MODE_PRIVATE);
+                        // Update local backup
+                        var prefs = getSharedPreferences(getString(R.string.myprefs), MODE_PRIVATE);
+                        // create editor to save locally
                         SharedPreferences.Editor editor = prefs.edit();
+                        // save today's calories
                         editor.putInt("lastCalories", currentCalories);
+                        // save changes to SharedPreferences
                         editor.apply();
+                        // Show confirmation toast
                         Toast.makeText(BMIActivity.this, "Calories saved", Toast.LENGTH_SHORT).show();
                     } else {
+                        // If failed → show error toast
                         Toast.makeText(BMIActivity.this, "Failed to save calories", Toast.LENGTH_SHORT).show();
                     }
                 })
@@ -337,7 +369,7 @@ public class BMIActivity extends AppCompatActivity {
         bmiPieChart.setNoDataText("No BMI statistics available");
 
         // Call REST API to get global BMI distribution
-        CompletableFuture<JSONObject> future = RestClient.getBmiDistribution();
+        var future = RestClient.getBmiDistribution();
 
         // Handle async response
         future.thenAccept(obj -> runOnUiThread(() -> {
@@ -349,13 +381,13 @@ public class BMIActivity extends AppCompatActivity {
                 }
 
                 // Prepare entries for each BMI category
-                ArrayList<PieEntry> entries = new ArrayList<>();
+                var entries = new ArrayList<PieEntry>();
 
                 // Read counts from JSON (0 if missing)
-                int under = obj.optInt("Underweight", 0);
-                int normal = obj.optInt("Normal", 0);
-                int over = obj.optInt("Overweight", 0);
-                int obese = obj.optInt("Obese", 0);
+                var under = obj.optInt("Underweight", 0);
+                var normal = obj.optInt("Normal", 0);
+                var over = obj.optInt("Overweight", 0);
+                var obese = obj.optInt("Obese", 0);
 
                 // Add only categories with at least one user
                 if (under > 0) {
@@ -379,7 +411,7 @@ public class BMIActivity extends AppCompatActivity {
                 }
 
                 // Create data set for PieChart
-                PieDataSet dataSet = new PieDataSet(entries, "");
+                var dataSet = new PieDataSet(entries, "");
                 // Use built-in color template
                 dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
                 // Text size for values on slices

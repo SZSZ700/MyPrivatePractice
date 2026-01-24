@@ -7,13 +7,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.TextView;
-
 // Import AppCompatActivity as base class for Activity
 import androidx.appcompat.app.AppCompatActivity;
-
 // Import JSON handling for parsing server responses
 import org.json.JSONObject;
-
 // Import Java utilities for formatting, collections, and concurrency
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,7 +20,6 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
 // Import MPAndroidChart library for chart rendering
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -70,16 +66,16 @@ public class WaterChartActivity extends AppCompatActivity {
         backButton = findViewById(R.id.imageButton);        // Back button
 
         // Retrieve logged-in username from SharedPreferences (fallback = "guest")
-        String username = getSharedPreferences(getString(R.string.myprefs), MODE_PRIVATE)
+        var username = getSharedPreferences(getString(R.string.myprefs), MODE_PRIVATE)
                 .getString(getString(R.string.currentuser), "guest");
 
         // Number of days for daily chart (last 7 days)
-        int days = 7;
+        var days = 7;
 
         // --------------------------------------------------
         // 1. Fetch last 7 days data from REST client
         // --------------------------------------------------
-        CompletableFuture<JSONObject> future = RestClient.getWaterHistoryMap(username, days);
+        var future = RestClient.getWaterHistoryMap(username, days);
 
         // Handle asynchronous response
         future.thenAccept(obj -> runOnUiThread(() -> {
@@ -94,44 +90,48 @@ public class WaterChartActivity extends AppCompatActivity {
                 Log.d("CHART_DATA", "Got JSON: " + obj.toString());
 
                 // Prepare chart entries (bars) and labels (X-axis)
-                ArrayList<BarEntry> entries = new ArrayList<>();
-                ArrayList<String> labels = new ArrayList<>();
+                var entries = new ArrayList<BarEntry>();
+                var labels = new ArrayList<String>();
 
                 // Collect JSON keys (dates)
                 Iterator<String> keys = obj.keys();
-                ArrayList<String> sortedKeys = new ArrayList<>();
+                // Convert to ArrayList for sorting
+                var sortedKeys = new ArrayList<String>();
+                // Add all keys to list
                 while (keys.hasNext()) sortedKeys.add(keys.next());
 
                 // Sort the dates in ascending order
                 Collections.sort(sortedKeys, Comparator.naturalOrder());
 
                 // Convert each JSON value into a BarEntry
-                int index = 0;
+                var index = 0;
                 for (String date : sortedKeys) {
                     // Get water amount for this date
-                    int amount = obj.optInt(date, 0);
+                    var amount = obj.optInt(date, 0);
 
                     // Add entry (X=index, Y=amount)
                     entries.add(new BarEntry(index, amount));
 
                     // Format date to short (MM-dd) for labels
                     try {
-                        String shortLabel = new SimpleDateFormat("MM-dd", Locale.getDefault())
+                        var shortLabel = new SimpleDateFormat("MM-dd", Locale.getDefault())
                                 .format(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(date));
+                        // Add label to list
                         labels.add(shortLabel);
                     } catch (Exception e) {
                         // Fallback to original date if parsing fails
                         labels.add(date);
                     }
+                    // Increment index
                     index++;
                 }
 
                 // Create dataset for 7-day chart
-                BarDataSet dataSet = new BarDataSet(entries, "");
+                var dataSet = new BarDataSet(entries, "");
                 dataSet.setColor(getResources().getColor(android.R.color.holo_blue_light));
 
                 // Configure dataset appearance
-                BarData data = new BarData(dataSet);
+                var data = new BarData(dataSet);
                 data.setBarWidth(0.7f);       // Bar width
                 data.setValueTextSize(10f);   // Value text size above bar
 
@@ -139,7 +139,7 @@ public class WaterChartActivity extends AppCompatActivity {
                 barChart7days.setData(data);
 
                 // Configure X-axis for 7-day chart
-                XAxis xAxis = barChart7days.getXAxis();
+                var xAxis = barChart7days.getXAxis();
                 xAxis.setGranularity(1f);                     // Step size = 1
                 xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // Labels at bottom
                 xAxis.setDrawGridLines(false);                // Remove grid lines
@@ -150,7 +150,7 @@ public class WaterChartActivity extends AppCompatActivity {
                 xAxis.setValueFormatter(new ValueFormatter() {
                     @Override
                     public String getFormattedValue(float value) {
-                        int i = (int) value;
+                        var i = (int) value;
                         if (i >= 0 && i < labels.size()) return labels.get(i);
                         return "";
                     }

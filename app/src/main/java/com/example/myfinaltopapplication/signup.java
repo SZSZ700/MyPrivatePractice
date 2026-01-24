@@ -49,6 +49,7 @@ public class signup extends AppCompatActivity {
         // ---------------------------------------------------------------------
         // Bind UI components from layout file to Java fields
         // ---------------------------------------------------------------------
+        // Bind input fields and button
         usernameInput = findViewById(R.id.editUsername);
         passwordInput = findViewById(R.id.editPassword);
         fullnameInput = findViewById(R.id.editFullName);
@@ -62,6 +63,7 @@ public class signup extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // Read input values from text fields
+                // Trim to remove leading/trailing spaces
                 String usern = usernameInput.getText().toString().trim();
                 String pass = passwordInput.getText().toString().trim();
                 String full = fullnameInput.getText().toString().trim();
@@ -85,13 +87,15 @@ public class signup extends AppCompatActivity {
                 // Handle async server response
                 future.thenAccept(success -> runOnUiThread(() -> {
                     if (success) {
-                        // ✅ Registration successful → show toast and go to LoginActivity
+                        // Registration successful → show toast and go to LoginActivity
                         Toast.makeText(signup.this, R.string.sign_up_succesfully, Toast.LENGTH_SHORT).show();
+                        // Create Intent to navigate to LoginActivity
                         Intent intent = new Intent(signup.this, LoginActivity.class);
+                        // Start LoginActivity
                         startActivity(intent);
                         finish(); // Close signup so user can’t go back
                     } else {
-                        // ❌ Registration failed (likely username already exists)
+                        // Registration failed (likely username already exists)
                         Toast.makeText(signup.this, R.string.username_allready_exists, Toast.LENGTH_SHORT).show();
                     }
                 }));

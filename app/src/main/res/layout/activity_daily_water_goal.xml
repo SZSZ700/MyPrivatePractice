@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Root scroll to handle smaller screens -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
 
-    <!-- Vertical column -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -13,7 +11,6 @@
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
-        <!-- Top bar: back + title -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -40,7 +37,6 @@
                 android:padding="8dp" />
         </LinearLayout>
 
-        <!-- Donut chart -->
         <com.github.mikephil.charting.charts.PieChart
             android:id="@+id/donutChart"
             android:layout_width="match_parent"
@@ -48,7 +44,6 @@
             android:layout_marginTop="12dp"
             android:layout_marginBottom="12dp" />
 
-        <!-- Labels row: goal + today -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -72,7 +67,6 @@
                 android:textSize="14sp" />
         </LinearLayout>
 
-        <!-- Set new goal input -->
         <EditText
             android:id="@+id/goalInput"
             android:layout_width="match_parent"
@@ -82,7 +76,6 @@
             android:padding="10dp"
             android:background="@android:drawable/edit_text" />
 
-        <!-- Save button -->
         <Button
             android:id="@+id/saveGoalBtn"
             android:layout_width="match_parent"
@@ -90,7 +83,6 @@
             android:text="@string/save_goal"
             android:layout_marginTop="10dp" />
 
-        <!-- Loading spinner -->
         <ProgressBar
             android:id="@+id/loading"
             style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Large"
@@ -98,6 +90,5 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             android:layout_marginTop="12dp" />
-
     </LinearLayout>
 </ScrollView>

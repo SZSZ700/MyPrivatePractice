@@ -78,6 +78,7 @@ public class WaterActivity extends AppCompatActivity {
             Toast.makeText(this, "You must log in first", Toast.LENGTH_SHORT).show();
             // Navigate to LoginActivity
             Intent login = new Intent(WaterActivity.this, LoginActivity.class);
+            // Start LoginActivity
             startActivity(login);
             // Close WaterActivity so the user cannot go back
             finish();
@@ -102,7 +103,8 @@ public class WaterActivity extends AppCompatActivity {
 
         // Load locally saved data for today and yesterday from SharedPreferences
         totalDrank = prefs.getInt("todayWater", 0);
-        int yesterdayAmountLocal = prefs.getInt("yesterdayWater", 0);
+        // Load yesterday's amount from SharedPreferences
+        var yesterdayAmountLocal = prefs.getInt("yesterdayWater", 0);
         // Update the UI with local values
         totalWaterText.setText("So far today: " + totalDrank + " ml");
         yesterdayText.setText("Yesterday: " + yesterdayAmountLocal + " ml");
@@ -112,9 +114,9 @@ public class WaterActivity extends AppCompatActivity {
             // If server returned a valid JSON object
             if (obj != null) {
                 // Extract today's water amount from JSON (default = 0)
-                int today = obj.optInt("todayWater", 0);
+                var today = obj.optInt("todayWater", 0);
                 // Extract yesterday's water amount from JSON (default = 0)
-                int yesterday = obj.optInt("yesterdayWater", 0);
+                var yesterday = obj.optInt("yesterdayWater", 0);
 
                 // Update local variable for today's consumption
                 totalDrank = today;
@@ -126,7 +128,7 @@ public class WaterActivity extends AppCompatActivity {
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt("todayWater", today);
                 editor.putInt("yesterdayWater", yesterday);
-                // commit במקום apply → לשמור מיידית
+                // save changes to SharedPreferences immediately
                 editor.commit();
 
                 // Log values to Logcat
@@ -143,7 +145,9 @@ public class WaterActivity extends AppCompatActivity {
 
         // Set click listener for home button → navigates to HomePage
         bhome.setOnClickListener(v -> {
+            // create intent to navigate to HomePage
             Intent bh = new Intent(WaterActivity.this, HomePage.class);
+            // start HomePage
             startActivity(bh);
         });
 
@@ -152,7 +156,7 @@ public class WaterActivity extends AppCompatActivity {
         // --------------------------------------------------
 
         // Number of days to check for statistics (same as history graph: 7 last days)
-        int daysForStats = 7;
+        var daysForStats = 7;
 
         // Call backend to get daily totals for last N days
         CompletableFuture<JSONObject> historyFuture =
@@ -163,6 +167,7 @@ public class WaterActivity extends AppCompatActivity {
             try {
                 // If no data at all from server
                 if (obj == null || obj.length() == 0) {
+                    // change UI to show no data available
                     goalSummaryTitle.setText("Goal consistency (last " + daysForStats + " days)");
                     goalSummaryText.setText("No history data available");
                     goalProgressBar.setProgress(0);
@@ -173,7 +178,9 @@ public class WaterActivity extends AppCompatActivity {
 
                 // Collect all date keys from JSON
                 Iterator<String> keys = obj.keys();
-                ArrayList<String> sortedKeys = new ArrayList<>();
+                // Sort keys in ascending order (oldest -> newest)
+                var sortedKeys = new ArrayList<String>();
+                // Add all keys to the list
                 while (keys.hasNext()) {
                     sortedKeys.add(keys.next());
                 }
@@ -182,15 +189,18 @@ public class WaterActivity extends AppCompatActivity {
                 Collections.sort(sortedKeys, Comparator.naturalOrder());
 
                 // Number of days that actually exist in the JSON
-                int totalDays = sortedKeys.size();
+                var totalDays = sortedKeys.size();
 
                 // Array to store the total amount per day aligned with sortedKeys
-                int[] dailyAmounts = new int[totalDays];
+                var dailyAmounts = new int[totalDays];
 
                 // Fill the dailyAmounts array
                 for (int i = 0; i < totalDays; i++) {
-                    String date = sortedKeys.get(i);
-                    int amount = obj.optInt(date, 0);
+                    // Extract date from the list
+                    var date = sortedKeys.get(i);
+                    // Extract amount for the current date
+                    var amount = obj.optInt(date, 0);
+                    // Store the amount in the array
                     dailyAmounts[i] = amount;
                 }
 
@@ -199,17 +209,21 @@ public class WaterActivity extends AppCompatActivity {
                 // -------------------------------
 
                 // Best day initialized as "no data"
-                int bestAmount = -1;
+                var bestAmount = -1;
+                // Best date initialized as null
                 String bestDate = null;
 
                 // Lowest non-zero day initialized as max int
-                int lowestAmount = Integer.MAX_VALUE;
+                var lowestAmount = Integer.MAX_VALUE;
+                // Lowest date initialized as null
                 String lowestDate = null;
 
                 // Loop through all days and detect best / lowest
-                for (int i = 0; i < totalDays; i++) {
-                    int amount = dailyAmounts[i];
-                    String date = sortedKeys.get(i);
+                for (var i = 0; i < totalDays; i++) {
+                    // Extract amount and date for the current day
+                    var amount = dailyAmounts[i];
+                    // Extract date for the current day
+                    var date = sortedKeys.get(i);
 
                     // Update best day (max amount)
                     if (amount > bestAmount) {
@@ -225,28 +239,27 @@ public class WaterActivity extends AppCompatActivity {
                 }
 
                 // Prepare labels for display
-                String bestLabel = (bestDate != null) ? bestDate : "no data";
-                String lowestLabel = (lowestDate != null) ? lowestDate : "no data";
+                var bestLabel = (bestDate != null) ? bestDate : "no data";
+                var lowestLabel = (lowestDate != null) ? lowestDate : "no data";
 
                 // Try to format dates from yyyy-MM-dd to MM-dd
                 try {
-                    SimpleDateFormat from = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                    SimpleDateFormat to = new SimpleDateFormat("MM-dd", Locale.getDefault());
+                    var from = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    var to = new SimpleDateFormat("MM-dd", Locale.getDefault());
 
-                    if (bestDate != null) {
-                        bestLabel = to.format(from.parse(bestDate));
-                    }
-                    if (lowestDate != null) {
-                        lowestLabel = to.format(from.parse(lowestDate));
-                    }
+                    if (bestDate != null) { bestLabel = to.format(from.parse(bestDate)); }
+
+                    if (lowestDate != null) { lowestLabel = to.format(from.parse(lowestDate)); }
                 } catch (Exception ignore) {
                     // If parsing fails, keep original format
                 }
 
                 // Update UI for best day
                 if (bestDate != null) {
+                    // update UI to show best day
                     bestDayText.setText("Best day: " + bestLabel + " (" + bestAmount + " ml)");
                 } else {
+                    // If no best day is available → show "no data"
                     bestDayText.setText("Best day: no data");
                 }
 
@@ -273,18 +286,21 @@ public class WaterActivity extends AppCompatActivity {
                         }
 
                         // Extract goalMl from JSON (fallback = 3000ml)
-                        int goalMl = goalObj.optInt("goalMl", 3000);
+                        var goalMl = goalObj.optInt("goalMl", 3000);
 
                         // Count days where daily total >= goalMl
-                        int daysReached = 0;
-                        for (int i = 0; i < totalDays; i++) {
+                        var daysReached = 0;
+                        // Loop through all days and count days that reached the goal
+                        for (var i = 0; i < totalDays; i++) {
+                            // Check if current day's total >= goalMl
                             if (dailyAmounts[i] >= goalMl) {
+                                // Increase count of days reached
                                 daysReached++;
                             }
                         }
 
                         // Compute percentage of days that reached the goal
-                        int percent = (int) Math.round((daysReached * 100.0) / totalDays);
+                        var percent = (int) Math.round((daysReached * 100.0) / totalDays);
 
                         // Update UI with summary and progress bar
                         goalSummaryTitle.setText("Goal consistency (last " + totalDays + " days)");
@@ -327,10 +343,12 @@ public class WaterActivity extends AppCompatActivity {
             // If update succeeded
             if (success) {
                 // Save updated total to SharedPreferences
-                SharedPreferences prefs = getSharedPreferences(getString(R.string.myprefs), MODE_PRIVATE);
+                var prefs = getSharedPreferences(getString(R.string.myprefs), MODE_PRIVATE);
+                // create editor to save locally
                 SharedPreferences.Editor editor = prefs.edit();
+                // save today's total
                 editor.putInt("todayWater", totalDrank);
-                // commit במקום apply → לשמור מיידית
+                // save changes to SharedPreferences immediately
                 editor.commit();
 
                 // Log value to Logcat

@@ -38,6 +38,31 @@
     <string name="goal_3_000_ml">Goal: 3,000 ml</string>
     <string name="daily_water_vs_goal">Daily Water vs Goal</string>
     <string name="backb">Back</string>
+    <string name="log_in">log-in</string>
+    <string name="username">username</string>
+    <string name="password">password</string>
+    <string name="login">login</string>
+    <string name="signup">signup</string>
+    <string name="sign_up">sign-up</string>
+    <string name="username111">username</string>
+    <string name="password111">password</string>
+    <string name="full_name">full name</string>
+    <string name="ageage">age</string>
+    <string name="done">done</string>
+    <string name="bmi111">BMI</string>
+    <string name="watter">watter</string>
+    <string name="statistics">statistics</string>
+    <string name="daily_goal">Daily Goal</string>
+    <string name="bmi_calculator">BMI calculator:</string>
+    <string name="weight_kg">weight (kg)</string>
+    <string name="height_cm">height (cm)</string>
+    <string name="calculate_bmi">calculate BMI</string>
+    <string name="daily_calories">Daily calories</string>
+    <string name="calories_amount_kcal">Calories amount (kcal)</string>
+    <string name="add">+ Add</string>
+    <string name="remove">- Remove</string>
+    <string name="reset">Reset</string>
+    <string name="today_calories_0_kcal">Today calories: 0 kcal</string>
 
     <!-- התזכורות לשתיית מים -->
     <string-array name="reminder_options">

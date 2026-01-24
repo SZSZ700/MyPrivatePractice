@@ -16,53 +16,47 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:text="log-in"
+            android:text="@string/log_in"
             android:textColor="#000000"
             android:textSize="24sp"
             android:textStyle="bold" />
 
-        <!-- שדה שם משתמש -->
         <EditText
             android:id="@+id/editTextText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:background="@android:drawable/edit_text"
-            android:hint="username"
+            android:hint="@string/username"
             android:padding="12dp" />
 
-        <!-- שדה סיסמה -->
         <EditText
             android:id="@+id/editTextTextPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
             android:background="@android:drawable/edit_text"
-            android:hint="password"
+            android:hint="@string/password"
             android:inputType="textPassword"
             android:padding="12dp" />
 
-        <!-- כפתור התחברות -->
         <Button
             android:id="@+id/button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:backgroundTint="#2196F3"
-            android:text="login"
+            android:text="@string/login"
             android:textColor="#FFFFFF"
             android:textStyle="bold" />
 
-        <!-- כפתור מעבר להרשמה -->
         <Button
             android:id="@+id/button2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:backgroundTint="#E0E0E0"
-            android:text="signup"
+            android:text="@string/signup"
             android:textColor="#2196F3" />
-
-        <!-- כפתור חזרה לדף הבית -->
     </LinearLayout>
 </ScrollView>

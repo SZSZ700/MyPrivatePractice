@@ -1,11 +1,11 @@
 package com.example.myfinaltopapplication;
-import android.content.Intent;                   // For navigating between activities
-import android.os.Bundle;                       // For saving/restoring activity state
+import android.content.Intent; // For navigating between activities
+import android.os.Bundle; // For saving/restoring activity state
 import android.util.Log;
-import android.view.View;                       // For handling view events (like button clicks)
-import android.widget.ImageButton;              // For using ImageButton UI component
-import androidx.activity.EdgeToEdge;            // For enabling edge-to-edge layout
-import androidx.appcompat.app.AppCompatActivity;// Base class for Android activities
+import android.view.View; // For handling view events (like button clicks)
+import android.widget.ImageButton; // For using ImageButton UI component
+import androidx.activity.EdgeToEdge; // For enabling edge-to-edge layout
+import androidx.appcompat.app.AppCompatActivity; // Base class for Android activities
 
 // -----------------------------------------------------------------------------
 // MainActivity: This is the entry point of the Android app
@@ -24,7 +24,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);   // Call parent constructor
         EdgeToEdge.enable(this); // Enable edge-to-edge layout
         setContentView(R.layout.activity_main); // Inflate the UI layout (activity_main.xml)
-
 
         // Initialize the image button (find it by its ID from XML)
         signupPage = findViewById(R.id.imageButton2);

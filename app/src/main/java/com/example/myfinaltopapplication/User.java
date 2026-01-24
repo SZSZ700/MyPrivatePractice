@@ -3,7 +3,6 @@ package com.example.myfinaltopapplication;
 // This is the client-side User model
 // It is used ONLY on Android side to send/receive data via REST
 public class User {
-
     // Username field
     private String userName;
     // Password field
