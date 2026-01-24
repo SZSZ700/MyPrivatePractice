@@ -8,7 +8,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 // -------------------------------------------------------------------------
 @SpringBootApplication
 public class Application {
-
     // -------------------------------------------------------------------------
     // Main method - the starting point of the Spring Boot application
     // -------------------------------------------------------------------------
