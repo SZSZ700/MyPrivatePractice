@@ -119,4 +119,10 @@
         android:gravity="center"
         android:layout_marginTop="4dp"
         android:textColor="#004D40" />
+
+    <Switch
+        android:id="@+id/switchWaterReminder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="allow notfications" />
 </LinearLayout>

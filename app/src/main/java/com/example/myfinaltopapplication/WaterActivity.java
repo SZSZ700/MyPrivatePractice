@@ -2,6 +2,9 @@
 package com.example.myfinaltopapplication;
 
 // Import Android Intent class for navigation between screens
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 // Import SharedPreferences for saving and loading user session data locally
 import android.content.SharedPreferences;
@@ -9,6 +12,7 @@ import android.content.SharedPreferences;
 import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 // Import all UI widgets like TextView, Button, Spinner, Toast
+import android.os.SystemClock;
 import android.widget.*;
 // Import AppCompatActivity as the base class for Activities
 import androidx.appcompat.app.AppCompatActivity;
@@ -57,6 +61,13 @@ public class WaterActivity extends AppCompatActivity {
     // TextView for lowest (non-zero) drinking day
     private TextView lowestDayText;
 
+    // -- FOR NOTIFICATIONS -- //
+    private Switch switchWaterReminder;
+    private static final String KEY_WATER_REMINDER_ENABLED = "waterReminderEnabled";
+
+    private static final int REMINDER_REQ_CODE = 2001;
+    // -- FOR NOTIFICATIONS -- //
+
     // -------------------------------------------------------------------------
     // onCreate - called when the Activity is first created
     // -------------------------------------------------------------------------
@@ -93,6 +104,7 @@ public class WaterActivity extends AppCompatActivity {
         drink200 = findViewById(R.id.drink200);
         drink1000 = findViewById(R.id.drink1000);
         bhome = findViewById(R.id.imageButton4);
+        switchWaterReminder = findViewById(R.id.switchWaterReminder);
         // views for goal statistics and best/worst day
         goalSummaryTitle = findViewById(R.id.goalSummaryTitle);
         goalSummaryText = findViewById(R.id.goalSummaryText);
@@ -142,6 +154,27 @@ public class WaterActivity extends AppCompatActivity {
         drink200.setOnClickListener(v -> updateWater(200));
         // Set click listener for 1000 ml button → calls updateWater(1000)
         drink1000.setOnClickListener(v -> updateWater(1000));
+
+        // -- FOR NOTIFICATIONS -- //
+        // Load switch state from SharedPreferences
+        boolean enabled = prefs.getBoolean(KEY_WATER_REMINDER_ENABLED, false);
+        switchWaterReminder.setChecked(enabled);
+        if (enabled) startWaterReminderEvery2Hours();
+
+        // Set switch listener for water reminder
+        switchWaterReminder.setOnCheckedChangeListener((buttonView, isChecked) -> {
+
+            // Save switch state to SharedPreferences
+            prefs.edit().putBoolean(KEY_WATER_REMINDER_ENABLED, isChecked).apply();
+
+            // on/off water reminder
+            if (isChecked) {
+                startWaterReminderEvery2Hours();
+            } else {
+                stopWaterReminder();
+            }
+        });
+        // -- FOR NOTIFICATIONS -- //
 
         // Set click listener for home button → navigates to HomePage
         bhome.setOnClickListener(v -> {
@@ -361,6 +394,75 @@ public class WaterActivity extends AppCompatActivity {
                 Toast.makeText(this, "Failed to update water", Toast.LENGTH_SHORT).show();
             }
         }));
+    }
+
+    // -------------------------------------------------------------------------
+    // startWaterReminderEvery2Hours - called when user enables water reminder
+    // -------------------------------------------------------------------------
+    private void startWaterReminderEvery2Hours() {
+
+        // Get AlarmManager instance
+        AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        // Create Intent to start WaterReminderReceiver
+        Intent i = new Intent(this, WaterReminderReceiver.class);
+
+        // Create PendingIntent to handle the Intent
+        PendingIntent pi = PendingIntent.getBroadcast(
+                // Context
+                this,
+                // Request code for the PendingIntent
+                REMINDER_REQ_CODE,
+                // Intent to start WaterReminderReceiver
+                i,
+                // Flags for the PendingIntent
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        // Set repeating alarm every 2 hours
+        long intervalMillis = 2L * 60L * 60L * 1000L; // 2 hours
+        // Set first trigger time
+        long firstTrigger = SystemClock.elapsedRealtime() + intervalMillis;
+
+        // Schedule the alarm
+        am.setInexactRepeating(
+                // Alarm type
+                AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                // First trigger time
+                firstTrigger,
+                // Interval between triggers
+                intervalMillis,
+                pi
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // stopWaterReminder - called when user disable water reminder
+    // -------------------------------------------------------------------------
+    private void stopWaterReminder() {
+
+        // Get AlarmManager instance
+        AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        // Create Intent to stop WaterReminderReceiver
+        Intent i = new Intent(this, WaterReminderReceiver.class);
+
+        // Create PendingIntent to handle the Intent
+        PendingIntent pi = PendingIntent.getBroadcast(
+                // Context
+                this,
+                // Request code for the PendingIntent
+                REMINDER_REQ_CODE,
+                // Intent to stop the reminder
+                i,
+                // Flags for the PendingIntent
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        // Cancel the alarm
+        am.cancel(pi);
+        // Cancel the PendingIntent
+        pi.cancel();
     }
 }
 

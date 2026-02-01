@@ -1,16 +1,24 @@
 package com.example.myfinaltopapplication;
 // Android imports
+import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Looper;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 // JUnit + assertions
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 // Mockito static mocking
+import androidx.test.core.app.ApplicationProvider;
+
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 // Robolectric
@@ -19,10 +27,11 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.Shadows;
 import org.robolectric.android.controller.ActivityController;
+import org.robolectric.shadows.ShadowAlarmManager;
+import org.robolectric.shadows.ShadowNotificationManager;
 import org.robolectric.shadows.ShadowToast;
 // JSON + Future
 import org.json.JSONObject;
-
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
@@ -494,6 +503,297 @@ public class WaterActivityTest {
             // Assert that the target Activity is HomePage
             assertEquals(HomePage.class.getName(),
                     Objects.requireNonNull(startedIntent.getComponent()).getClassName());
+        }
+    }
+
+    // Define the preference key exactly as in WaterActivity
+    private static final String KEY_WATER_REMINDER_ENABLED = "waterReminderEnabled";
+
+    // -------------------------------------------------------------------------
+    // Helper: Seed SharedPreferences with a logged-in user so WaterActivity won't finish()
+    // -------------------------------------------------------------------------
+    private void seedLoggedInUserPrefs(Context context) {
+
+        // Get the same SharedPreferences file WaterActivity uses
+        SharedPreferences prefs = context.getSharedPreferences(
+                context.getString(R.string.myprefs),
+                Context.MODE_PRIVATE
+        );
+
+        // Save a non-null current user so WaterActivity does not redirect to LoginActivity
+        prefs.edit()
+                .putString(context.getString(R.string.currentuser), "testUser")
+                .putInt("todayWater", 0)
+                .putInt("yesterdayWater", 0)
+                .putBoolean(KEY_WATER_REMINDER_ENABLED, false)
+                .apply();
+    }
+
+    // -------------------------------------------------------------------------
+    // Helper: Build WaterActivity safely with RestClient mocked (prevents side effects)
+    // -------------------------------------------------------------------------
+    private WaterActivity buildWaterActivityWithRestClientMock(MockedStatic<RestClient> restClientMock) throws Exception {
+
+        // Get application context
+        Context context = ApplicationProvider.getApplicationContext();
+
+        // Seed prefs so activity continues normally
+        seedLoggedInUserPrefs(context);
+
+        // Create fake JSON response for getWater
+        JSONObject waterJson = new JSONObject();
+        // Put today water amount
+        waterJson.put("todayWater", 0);
+        // Put yesterday water amount
+        waterJson.put("yesterdayWater", 0);
+
+        // Stub RestClient.getWater to return completed future immediately
+        restClientMock.when(() -> RestClient.getWater("testUser"))
+                .thenReturn(CompletableFuture.completedFuture(waterJson));
+
+        // Create fake JSON history map for last 7 days
+        JSONObject historyJson = new JSONObject();
+        // Put at least one date so WaterActivity stats code won't behave oddly
+        historyJson.put("2025-01-01", 0);
+
+        // Stub RestClient.getWaterHistoryMap to return completed future immediately
+        restClientMock.when(() -> RestClient.getWaterHistoryMap("testUser", 7))
+                .thenReturn(CompletableFuture.completedFuture(historyJson));
+
+        // Create fake goal JSON response
+        JSONObject goalJson = new JSONObject();
+        // Put goal ml
+        goalJson.put("goalMl", 3000);
+
+        // Stub RestClient.getGoal to return completed future immediately
+        restClientMock.when(() -> RestClient.getGoal("testUser"))
+                .thenReturn(CompletableFuture.completedFuture(goalJson));
+
+        // Build the activity
+        WaterActivity activity = Robolectric.buildActivity(WaterActivity.class)
+                .create()
+                .start()
+                .resume()
+                .get();
+
+        // Flush main looper tasks scheduled by onCreate async callbacks
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
+
+        // Return the built activity
+        return activity;
+    }
+
+    // -------------------------------------------------------------------------
+    // Helper: Get "next alarm" in a version-safe way (preferred over list size)
+    // -------------------------------------------------------------------------
+    private ShadowAlarmManager.ScheduledAlarm getNextAlarm(ShadowAlarmManager shadowAm) {
+
+        // Try to peek without consuming (preferred if available)
+        try {
+            // Call peekNextScheduledAlarm via reflection-less direct method if present
+            return shadowAm.peekNextScheduledAlarm();
+        } catch (Throwable ignored) {
+            // Fall back to getNextScheduledAlarm if peek is not available
+            return shadowAm.getScheduledAlarms().get(0);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 1: Toggle ON -> saves prefs + registers alarm (deep + stable)
+    // -------------------------------------------------------------------------
+    @Test
+    public void reminderToggle_on_savesPrefs_andRegistersAlarm() throws Exception {
+
+        // Create static mock for RestClient
+        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+
+            // Build WaterActivity with seeded prefs and RestClient stubs
+            WaterActivity activity = buildWaterActivityWithRestClientMock(restClientMock);
+
+            // Find the reminder switch in the layout
+            Switch reminderSwitch = activity.findViewById(R.id.switchWaterReminder);
+
+            // Turn ON the switch (this triggers OnCheckedChangeListener)
+            reminderSwitch.setChecked(true);
+
+            // Flush UI tasks to ensure the listener completed
+            Shadows.shadowOf(Looper.getMainLooper()).idle();
+
+            // Read preferences from the same prefs file
+            SharedPreferences prefs = activity.getSharedPreferences(
+                    activity.getString(R.string.myprefs),
+                    Context.MODE_PRIVATE
+            );
+
+            // Assert the boolean was saved as true
+            assertTrue(prefs.getBoolean(KEY_WATER_REMINDER_ENABLED, false));
+
+            // Get AlarmManager service
+            AlarmManager am = (AlarmManager) activity.getSystemService(Context.ALARM_SERVICE);
+
+            // Get shadow AlarmManager
+            ShadowAlarmManager shadowAm = Shadows.shadowOf(am);
+
+            // Obtain the next scheduled alarm in a stable way
+            ShadowAlarmManager.ScheduledAlarm alarm = getNextAlarm(shadowAm);
+
+            // Assert alarm exists (meaning schedule happened)
+            assertNotNull(alarm);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 2: Toggle OFF -> saves prefs false + cancels alarm (deep + stable)
+    // -------------------------------------------------------------------------
+    @Test
+    public void reminderToggle_off_savesPrefs_andCancelsAlarm() throws Exception {
+
+        // Create static mock for RestClient
+        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+
+            // Build WaterActivity with seeded prefs and RestClient stubs
+            WaterActivity activity = buildWaterActivityWithRestClientMock(restClientMock);
+
+            // Find the reminder switch in the layout
+            Switch reminderSwitch = activity.findViewById(R.id.switchWaterReminder);
+
+            // Turn ON first so we have an alarm to cancel
+            reminderSwitch.setChecked(true);
+
+            // Flush UI tasks to ensure scheduling happened
+            Shadows.shadowOf(Looper.getMainLooper()).idle();
+
+            // Get AlarmManager service
+            AlarmManager am = (AlarmManager) activity.getSystemService(Context.ALARM_SERVICE);
+
+            // Get shadow AlarmManager
+            ShadowAlarmManager shadowAm = Shadows.shadowOf(am);
+
+            // Verify there is some scheduled alarm
+            assertNotNull(getNextAlarm(shadowAm));
+
+            // Turn OFF the switch (should call stopWaterReminder)
+            reminderSwitch.setChecked(false);
+
+            // Flush UI tasks to ensure cancellation happened
+            Shadows.shadowOf(Looper.getMainLooper()).idle();
+
+            // Read preferences again
+            SharedPreferences prefs = activity.getSharedPreferences(
+                    activity.getString(R.string.myprefs),
+                    Context.MODE_PRIVATE
+            );
+
+            // Assert the boolean was saved as false
+            assertFalse(prefs.getBoolean(KEY_WATER_REMINDER_ENABLED, true));
+
+            // After cancel, next alarm should be null (or no scheduled alarms remain)
+            assertNull(getNextAlarm(shadowAm));
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 3: Receiver -> posts EXACT notification title/text as in your code
+    // -------------------------------------------------------------------------
+    @Test
+    public void receiver_onReceive_postsNotification_withExpectedTitleAndText() {
+
+        // Get application context
+        Context context = ApplicationProvider.getApplicationContext();
+
+        // Get NotificationManager service
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // Get shadow NotificationManager
+        ShadowNotificationManager shadowNm = Shadows.shadowOf(nm);
+
+        // Assert no notifications exist at start
+        assertEquals(0, shadowNm.getAllNotifications().size());
+
+        // Create the receiver instance
+        WaterReminderReceiver receiver = new WaterReminderReceiver();
+
+        // Create an intent targeting the receiver
+        Intent intent = new Intent(context, WaterReminderReceiver.class);
+
+        // Trigger onReceive manually
+        receiver.onReceive(context, intent);
+
+        // Fetch notifications posted so far
+        assertEquals(1, shadowNm.getAllNotifications().size());
+
+        // Grab the notification object
+        Notification n = shadowNm.getAllNotifications().get(0);
+
+        // Read title from extras
+        String title = n.extras.getString(Notification.EXTRA_TITLE);
+
+        // Read text from extras
+        String text = n.extras.getString(Notification.EXTRA_TEXT);
+
+        // Assert title matches your receiver code
+        assertEquals("Water reminder", title);
+
+        // Assert text matches your receiver code
+        assertEquals("Time to drink water 💧", text);
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 4: End-to-end: Toggle ON registers alarm + receiver posts notification
+    // -------------------------------------------------------------------------
+    @Test
+    public void reminderToggle_on_thenReceiver_postsNotification_endToEnd() throws Exception {
+
+        // Create static mock for RestClient
+        try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
+
+            // Build WaterActivity with seeded prefs and RestClient stubs
+            WaterActivity activity = buildWaterActivityWithRestClientMock(restClientMock);
+
+            // Find the reminder switch
+            Switch reminderSwitch = activity.findViewById(R.id.switchWaterReminder);
+
+            // Turn ON reminder
+            reminderSwitch.setChecked(true);
+
+            // Flush UI tasks
+            Shadows.shadowOf(Looper.getMainLooper()).idle();
+
+            // Get AlarmManager service
+            AlarmManager am = (AlarmManager) activity.getSystemService(Context.ALARM_SERVICE);
+
+            // Get shadow AlarmManager
+            ShadowAlarmManager shadowAm = Shadows.shadowOf(am);
+
+            // Assert alarm exists
+            assertNotNull(getNextAlarm(shadowAm));
+
+            // Get NotificationManager service
+            NotificationManager nm = (NotificationManager) activity.getSystemService(Context.NOTIFICATION_SERVICE);
+
+            // Get shadow NotificationManager
+            ShadowNotificationManager shadowNm = Shadows.shadowOf(nm);
+
+            // Assert no notifications exist before receiver triggers
+            assertEquals(0, shadowNm.getAllNotifications().size());
+
+            // Create receiver
+            WaterReminderReceiver receiver = new WaterReminderReceiver();
+
+            // Trigger receiver
+            receiver.onReceive(activity, new Intent(activity, WaterReminderReceiver.class));
+
+            // Assert notification exists
+            assertEquals(1, shadowNm.getAllNotifications().size());
+
+            // Grab the notification
+            Notification n = shadowNm.getAllNotifications().get(0);
+
+            // Assert title
+            assertEquals("Water reminder", n.extras.getString(Notification.EXTRA_TITLE));
+
+            // Assert text
+            assertEquals("Time to drink water 💧", n.extras.getString(Notification.EXTRA_TEXT));
         }
     }
 }
