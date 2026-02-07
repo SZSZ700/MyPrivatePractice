@@ -5,7 +5,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
-import org.example.EnvConfig;
+import org.example.CapstoneProject.EnvConfiguration.EnvConfig;
 import org.example.model.User;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;

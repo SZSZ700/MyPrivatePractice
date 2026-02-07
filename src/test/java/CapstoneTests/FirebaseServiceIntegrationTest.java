@@ -1,6 +1,6 @@
 // Define the package for this test class
 package CapstoneTests;
-import org.example.Application;
+import org.example.CapstoneProject.Application;
 // Import assertion methods from JUnit Jupiter
 import org.example.CapstoneProject.service.FirebaseService;
 import org.junit.jupiter.api.AfterAll;

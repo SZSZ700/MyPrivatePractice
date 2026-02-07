@@ -1,5 +1,5 @@
 // Define the package of the Spring Boot application
-package org.example;
+package org.example.CapstoneProject;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

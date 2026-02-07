@@ -1,6 +1,6 @@
 // Define the package for this integration test class
 package CapstoneTests;
-import org.example.Application;
+import org.example.CapstoneProject.Application;
 // Import JUnit 5 test annotations
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;

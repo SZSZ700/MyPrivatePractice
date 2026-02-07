@@ -1,4 +1,4 @@
-package org.example;
+package org.example.CapstoneProject.EnvConfiguration;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
