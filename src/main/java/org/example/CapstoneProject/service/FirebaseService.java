@@ -17,8 +17,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 public class FirebaseService {
-
-    // Reference to /Users root
     // NOTE:
     // This DatabaseReference instance is shared across all requests and threads.
     // Firebase's SDK is thread-safe, and each call (addListenerForSingleValueEvent,
