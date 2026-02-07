@@ -1,10 +1,10 @@
 package org.example;
 
 public class Memory {
-    private Node<Data> start;
+    private final Node<Data> start;
 
     public Memory(int totalSize) {
-        this.start = new Node<Data>(new Data(totalSize));
+        this.start = new Node<>(new Data(totalSize));
     }
 
     private int totalMemorySize(){
