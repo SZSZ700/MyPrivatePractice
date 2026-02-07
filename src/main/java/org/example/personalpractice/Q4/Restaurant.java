@@ -1,8 +1,8 @@
 // Declare the package this class belongs to.
-package org.example.Q4;
+package org.example.personalpractice.Q4;
 
 // Import the custom Node type used for the linked list of tables.
-import org.example.Node;
+import org.example.personalpractice.Node;
 
 // Import LinkedList to implement the client queue and the temporary restoration queue.
 import java.util.LinkedList;
@@ -73,7 +73,7 @@ public class Restaurant {
                 tableToAdd.setFree(size);
 
                 // Wrap the table inside a Node to insert into the linked list.
-                var nodeToAdd = new Node<Table>(tableToAdd);
+                var nodeToAdd = new Node<>(tableToAdd);
 
                 // If the list is empty, this node becomes both head and tail.
                 if (chain == null) {

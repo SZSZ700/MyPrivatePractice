@@ -1,5 +1,5 @@
 // Declare the package this configuration class belongs to.
-package org.example.Q4;
+package org.example.personalpractice.Q4;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 // Import ObjectProvider so Spring can supply prototype instances on demand.

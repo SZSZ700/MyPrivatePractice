@@ -1,5 +1,5 @@
 // Declare the package this class belongs to.
-package org.example.Q4;
+package org.example.personalpractice.Q4;
 
 // Define a simple data class that represents a restaurant table.
 public class Table {
