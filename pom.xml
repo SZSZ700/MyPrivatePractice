@@ -17,7 +17,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <!-- Spring Boot מגדיר גרסאות אחידות לכל התלויות -->
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -118,14 +117,13 @@
 
     <build>
         <plugins>
-            <!-- תוסף Spring Boot להרצה כ־jar -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>3.3.2</version>
             </plugin>
 
-            <!-- קומפילציה עם Java 23 -->
+            <!-- compilation with Java 23 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
