@@ -1,4 +1,4 @@
-package org.example;
+package org.example.personalpractice;
 
 public class BinNode<T> {
     private BinNode<T> left;  // חיבור לילד השמאלי

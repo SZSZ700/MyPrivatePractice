@@ -1,4 +1,4 @@
-package org.example;
+package org.example.personalpractice;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.function.Consumer;

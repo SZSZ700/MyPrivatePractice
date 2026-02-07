@@ -1,4 +1,4 @@
-package org.example;
+package org.example.personalpractice;
 
 public class MyNode {
     private int value;

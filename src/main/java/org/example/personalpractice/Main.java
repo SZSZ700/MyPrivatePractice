@@ -1,5 +1,4 @@
-package org.example;
-import org.example.Q4.Restaurant;
+package org.example.personalpractice;
 import java.awt.*;
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -11,7 +10,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import javax.crypto.Cipher;
 import javax.swing.Timer;
 import javax.swing.*;
 import java.util.Date;
@@ -21,14 +19,6 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-/*
-import com.mongodb.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
-import org.bson.Document;
-*/
 
 public class Main {
 
