@@ -8666,9 +8666,6 @@ public class Main {
 
     //---------------------------------------------------------------------------------------------------------------//
 
-    //מפתח הצפנה
-    private static final String secret = "1234567890123456";
-
     public static void main (String[]args)throws Exception{
         var scanner = new Scanner(System.in);
 
@@ -8676,11 +8673,6 @@ public class Main {
         var ansyM1 = scanner.next();
 
         if (ansyM1.equalsIgnoreCase("y")) {
-        /*
-         Runnable (interface) -  ("ניתנת להרצה").
-         Thread (class) - משמש להרצת המשימה (Runnable) בשירשור נפרד.
-         synchronized (methoud)- משמש למנוע התנגשויות בגישה לנתונים משותפים (ספריות למשל) כשהמשימות רצות בשירשורים.
-         */
             var q = new LinkedList<Runnable>();//תור מטיפוס (פונקציות [להרצה])
             //swing
             q.offer(() -> {
