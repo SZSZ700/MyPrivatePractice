@@ -1,5 +1,4 @@
-package org.example.model;
-
+package org.example.CapstoneProject.model;
 import java.util.List;
 import java.util.Map;
 
