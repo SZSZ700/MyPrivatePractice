@@ -6415,31 +6415,6 @@ public class Main {
         return true;
     }
 
-    public ListNode swapPairs(ListNode A) {
-        // ניצור stam node שיקל על הטיפול בראש הרשימה
-        ListNode stam = new ListNode(0);
-        stam.next = A;
-
-        // מצביע זמני שיעבור בזוגות
-        ListNode prev = stam;
-
-        while (prev.next != null && prev.next.next != null) {
-            ListNode first = prev.next;
-            ListNode second = first.next;
-
-            //החלפת חוליות
-            first.next = second.next;
-            second.next = first;
-            prev.next = second;
-
-            //הזזת prev קדימה
-            prev = first;
-        }
-
-        // ראש הרשימה החדש
-        return stam.next;
-    }
-
     //שאלה מ"ס 1
     //סעיף א'
     public static Queue<Integer> QDN(int num){
@@ -8065,7 +8040,7 @@ public class Main {
 
     //O(n)^2
     Function<Queue<Integer>, Queue<Integer>> sidq = (q) -> {
-        //temp queue ffor restoration
+        //temp queue for restoration
         var temp = new LinkedList<Integer>();
         //final queue
         var finalq = new LinkedList<Integer>();
@@ -9067,68 +9042,6 @@ public class Main {
 
                 System.out.println("function 3: check if there is tree in linkedlist that shown twice");
                 System.out.println("(hashmap solution) Any repeated tree? " + anyStringRepeat(n1));  // צפוי: true כי t1 == t3 במבנה ובערכים
-                System.out.println("----------------------------------------------------------");
-            });
-            //Threads
-            q.offer(() -> {
-                System.out.println("Active threads section?");
-                String answer = scanner.next();
-
-                if (answer.equalsIgnoreCase("y")) {
-                    //how many threads active now in main
-                    System.out.println("how many threads active now in main" + Thread.activeCount());
-
-                    //change current thread main
-                    Thread.currentThread().setName("main");
-
-                    //update current thread priority
-                    Thread.currentThread().setPriority(10);
-
-                    //check if this thread is alive
-                    boolean alive = Thread.currentThread().isAlive();
-
-                    //create second mini thread inside main thread
-                    MyThread t2 = new MyThread();
-
-                    //start second thread inside of thread main
-                    t2.start();
-
-                    //print if second thread is daemon
-                    System.out.print("if this thread is a diamond" + t2.isDaemon());
-
-                    //put the second thread as daemon
-                    t2.setDaemon(true);
-
-                    System.out.println("create and run two more threads - caution code not completed can cause errors?");
-                    String ttread = scanner.next();
-
-                    if (ttread.equalsIgnoreCase("y")) {
-
-                        Thread a1 = new Thread() {
-                            @Override
-                            public void run() {
-                                super.run();
-                            }
-                        };
-
-                        Thread a2 = new Thread() {
-                            @Override
-                            public void run() {
-                                super.run();
-                            }
-                        };
-
-                        a1.start();
-                        a2.start();
-
-                        try {
-                            a2.join();
-                            a1.join();
-                        } catch (InterruptedException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }
-                }
                 System.out.println("----------------------------------------------------------");
             });
             //BinNode question...
