@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 // Import static assertion methods for cleaner code
 import static org.junit.jupiter.api.Assertions.*;
 // Import the User model used by FirebaseService
-import org.example.model.User;
+import org.example.CapstoneProject.model.User;
 // Import JSONObject used by getWater method
 import org.json.JSONObject;
 // Import standard Java concurrency utilities

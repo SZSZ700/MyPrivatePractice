@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 // Import the FirebaseService to prepare data directly in Firebase for tests
 import org.example.CapstoneProject.service.FirebaseService;
 // Import the User model used in requests and responses
-import org.example.model.User;
+import org.example.CapstoneProject.model.User;
 // Import Spring's TestRestTemplate for real HTTP calls to the running server
 import org.springframework.boot.test.web.client.TestRestTemplate;
 // Import ResponseEntity and HttpStatus for inspecting HTTP responses
