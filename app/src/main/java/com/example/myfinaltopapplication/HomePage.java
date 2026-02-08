@@ -1,13 +1,9 @@
 package com.example.myfinaltopapplication;           // Package declaration
 import android.content.Intent;                       // For switching between activities
 import android.os.Bundle;                            // For saving/restoring activity state
-import android.view.View;                            // For handling button clicks
 import android.widget.Button;                        // UI component for buttons
 import androidx.activity.EdgeToEdge;                 // Enables edge-to-edge UI layout
 import androidx.appcompat.app.AppCompatActivity;     // Base class for Android activities
-import androidx.core.graphics.Insets;                // (Optional, if needed for window insets)
-import androidx.core.view.ViewCompat;                // Utility for view adjustments
-import androidx.core.view.WindowInsetsCompat;        // Utility for window insets
 
 // -----------------------------------------------------------------------------
 // HomePage Activity
@@ -18,9 +14,13 @@ public class HomePage extends AppCompatActivity {
 
     // -------------------------------------------------------------------------
     // Class fields (UI components)
+    @SuppressWarnings("FieldCanBeLocal")
     private Button bmiPage;    // Button for navigating to BMI calculator activity
+    @SuppressWarnings("FieldCanBeLocal")
     private Button waterPage;  // Button for navigating to Water tracking activity
+    @SuppressWarnings("FieldCanBeLocal")
     private Button graphPage;  // Button for navigating to Graphs/Statistics activity
+    @SuppressWarnings("FieldCanBeLocal")
     private Button dailyGoal; // Button for navigating to Daily Water Goal activity
     // -------------------------------------------------------------------------
 
@@ -44,25 +44,19 @@ public class HomePage extends AppCompatActivity {
 
         // ---------------------------------------------------------------------
         // Set click listener for BMI button
-        bmiPage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Create intent to open BMIActivity
-                Intent bmi = new Intent(HomePage.this, BMIActivity.class);
-                startActivity(bmi); // Start BMIActivity
-            }
+        bmiPage.setOnClickListener(view -> {
+            // Create intent to open BMIActivity
+            Intent bmi = new Intent(HomePage.this, BMIActivity.class);
+            startActivity(bmi); // Start BMIActivity
         });
         // ---------------------------------------------------------------------
 
         // ---------------------------------------------------------------------
         // Set click listener for Water button
-        waterPage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Create intent to open WaterActivity
-                Intent wte = new Intent(HomePage.this, WaterActivity.class);
-                startActivity(wte); // Start WaterActivity
-            }
+        waterPage.setOnClickListener(view -> {
+            // Create intent to open WaterActivity
+            Intent wte = new Intent(HomePage.this, WaterActivity.class);
+            startActivity(wte); // Start WaterActivity
         });
         // ---------------------------------------------------------------------
 
@@ -70,25 +64,19 @@ public class HomePage extends AppCompatActivity {
         // Future extension:
         // You can add navigation to a Graphs/Statistics page here for final project
         // ---------------------------------------------------------------------
-        graphPage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Create intent to open GraphsActivity
-                Intent graph = new Intent(HomePage.this, WaterChartActivity.class);
-                startActivity(graph); // Start GraphsActivity
-            }
+        graphPage.setOnClickListener(view -> {
+            // Create intent to open GraphsActivity
+            Intent graph = new Intent(HomePage.this, WaterChartActivity.class);
+            startActivity(graph); // Start GraphsActivity
         });
         // ---------------------------------------------------------------------
 
         // ---------------------------------------------------------------------
         // Set click listener for Daily Water Goal button
-        dailyGoal.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Create intent to open DailyWaterGoalActivity
-                Intent daily = new Intent(HomePage.this, DailyWaterGoal.class);
-                startActivity(daily); // Start DailyWaterGoalActivity
-            }
+        dailyGoal.setOnClickListener(view -> {
+            // Create intent to open DailyWaterGoalActivity
+            Intent daily = new Intent(HomePage.this, DailyWaterGoal.class);
+            startActivity(daily); // Start DailyWaterGoalActivity
         });
     }
 }
