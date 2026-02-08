@@ -9,7 +9,6 @@ import org.json.JSONObject;
 // Import exception handling for input/output operations
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 // Import CompletableFuture for asynchronous programming
@@ -515,6 +514,7 @@ public class RestClient {
     // =========================================================
     // Helper: completes a JSONObject future
     // =========================================================
+    @SuppressWarnings("unused")
     private static Callback callbackJson(CompletableFuture<JSONObject> future) {
         return new Callback() {
             @Override
