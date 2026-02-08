@@ -63,6 +63,8 @@
     <string name="remove">- Remove</string>
     <string name="reset">Reset</string>
     <string name="today_calories_0_kcal">Today calories: 0 kcal</string>
+    <string name="so_far_today">"So far today: "</string>
+    <string name="ml1">" ml"</string>
 
     <!-- התזכורות לשתיית מים -->
     <string-array name="reminder_options">

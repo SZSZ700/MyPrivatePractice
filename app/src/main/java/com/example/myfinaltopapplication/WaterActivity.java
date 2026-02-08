@@ -2,6 +2,7 @@
 package com.example.myfinaltopapplication;
 
 // Import Android Intent class for navigation between screens
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -34,15 +35,25 @@ import org.json.JSONObject;
 public class WaterActivity extends AppCompatActivity {
     // TextView to display how much water was consumed today
     private TextView totalWaterText;
+
     // TextView to display how much water was consumed yesterday
+    @SuppressWarnings("FieldCanBeLocal")
     private TextView yesterdayText;
+
     // Button to log 150 ml of water
+    @SuppressWarnings("FieldCanBeLocal")
     private Button drink150;
+
     // Button to log 200 ml of water
+    @SuppressWarnings("FieldCanBeLocal")
     private Button drink200;
+
     // Button to log 1000 ml of water
+    @SuppressWarnings("FieldCanBeLocal")
     private Button drink1000;
+
     // ImageButton to navigate back to Home page
+    @SuppressWarnings("FieldCanBeLocal")
     private ImageButton bhome;
 
     // Holds the currently logged-in username (loaded from SharedPreferences)
@@ -62,6 +73,8 @@ public class WaterActivity extends AppCompatActivity {
     private TextView lowestDayText;
 
     // -- FOR NOTIFICATIONS -- //
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
+    @SuppressWarnings("FieldCanBeLocal")
     private Switch switchWaterReminder;
     private static final String KEY_WATER_REMINDER_ENABLED = "waterReminderEnabled";
 
@@ -71,6 +84,7 @@ public class WaterActivity extends AppCompatActivity {
     // -------------------------------------------------------------------------
     // onCreate - called when the Activity is first created
     // -------------------------------------------------------------------------
+    @SuppressLint({"SetTextI18n", "ApplySharedPref"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Call parent implementation to initialize Activity
@@ -118,7 +132,7 @@ public class WaterActivity extends AppCompatActivity {
         // Load yesterday's amount from SharedPreferences
         var yesterdayAmountLocal = prefs.getInt("yesterdayWater", 0);
         // Update the UI with local values
-        totalWaterText.setText("So far today: " + totalDrank + " ml");
+        totalWaterText.setText(getString(R.string.so_far_today) + totalDrank + getString(R.string.ml1));
         yesterdayText.setText("Yesterday: " + yesterdayAmountLocal + " ml");
 
         // Fetch latest water log from the backend (Spring Boot → Firebase)
@@ -219,6 +233,7 @@ public class WaterActivity extends AppCompatActivity {
                 }
 
                 // Sort dates ascending (oldest -> newest) so indexes are stable
+                //noinspection Java8ListSort
                 Collections.sort(sortedKeys, Comparator.naturalOrder());
 
                 // Number of days that actually exist in the JSON
@@ -365,6 +380,7 @@ public class WaterActivity extends AppCompatActivity {
     // updateWater - called when user logs new water consumption
     // amount = amount of water consumed (ml)
     // -------------------------------------------------------------------------
+    @SuppressLint({"SetTextI18n", "ApplySharedPref"})
     private void updateWater(int amount) {
         // Increase today's total amount
         totalDrank += amount;
