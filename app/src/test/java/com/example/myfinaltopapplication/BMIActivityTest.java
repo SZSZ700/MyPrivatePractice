@@ -74,7 +74,7 @@ public class BMIActivityTest {
         try (var ignored = Mockito.mockStatic(RestClient.class)) {
 
             // Get application instance
-            var app = RuntimeEnvironment.getApplication();
+            @SuppressWarnings("unused") var app = RuntimeEnvironment.getApplication();
 
             // Build BMIActivity
             var activity = Robolectric.buildActivity(BMIActivity.class)
