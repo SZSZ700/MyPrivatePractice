@@ -530,7 +530,7 @@ public class WaterActivityTest {
     }
 
     // -------------------------------------------------------------------------
-    // Helper: Build WaterActivity safely with RestClient mocked (prevents side effects)
+    // Helper: Build WaterActivity safely with RestClient mocked
     // -------------------------------------------------------------------------
     private WaterActivity buildWaterActivityWithRestClientMock(MockedStatic<RestClient> restClientMock) throws Exception {
 
@@ -584,11 +584,10 @@ public class WaterActivityTest {
     }
 
     // -------------------------------------------------------------------------
-    // Helper: Get "next alarm" in a version-safe way (preferred over list size)
+    // Helper: Get "next alarm" in a version-safe way
     // -------------------------------------------------------------------------
     private ShadowAlarmManager.ScheduledAlarm getNextAlarm(ShadowAlarmManager shadowAm) {
-
-        // Try to peek without consuming (preferred if available)
+        // Try to peek without consuming
         try {
             // Call peekNextScheduledAlarm via reflection-less direct method if present
             return shadowAm.peekNextScheduledAlarm();
@@ -603,7 +602,6 @@ public class WaterActivityTest {
     // -------------------------------------------------------------------------
     @Test
     public void reminderToggle_on_savesPrefs_andRegistersAlarm() throws Exception {
-
         // Create static mock for RestClient
         try (MockedStatic<RestClient> restClientMock = Mockito.mockStatic(RestClient.class)) {
 
@@ -697,7 +695,6 @@ public class WaterActivityTest {
     // -------------------------------------------------------------------------
     @Test
     public void receiver_onReceive_postsNotification_withExpectedTitleAndText() {
-
         // Get application context
         Context context = ApplicationProvider.getApplicationContext();
 
