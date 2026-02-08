@@ -512,6 +512,7 @@ public class UsersController {
         return firebaseService.getBmiDistribution()
                 .thenApply(result -> {
                     // Never null – always at least empty map
+                    //noinspection Convert2MethodRef
                     return ResponseEntity
                             .ok(result);
                 })
