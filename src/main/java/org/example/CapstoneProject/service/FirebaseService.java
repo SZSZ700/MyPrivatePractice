@@ -70,7 +70,7 @@ public class FirebaseService {
 
         // Debug log: Firebase reference details
         System.out.println("DEBUG: usersRef PATH = " + usersRef.getPath());
-        System.out.println("DEBUG: usersRef URL  = " + usersRef.toString());
+        System.out.println("DEBUG: usersRef URL  = " + usersRef);
 
         // Read all users once
         usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -491,7 +491,8 @@ public class FirebaseService {
                                 @Override
                                 public Transaction.Result doTransaction(MutableData currentData) {
                                     // Try to read current value as a List<Long> (array-like structure)
-                                    List<Long> dayList = currentData.getValue(new GenericTypeIndicator<List<Long>>() {});
+                                    List<Long> dayList = currentData.getValue(new GenericTypeIndicator<>() {
+                                    });
 
                                     // If there's no list yet for today, create one
                                     if (dayList == null) {
@@ -501,12 +502,13 @@ public class FirebaseService {
                                     // Ensure index 0 exists (daily sum slot)
                                     if (dayList.isEmpty()) {
                                         dayList.add(0L); // index 0 = sum
-                                    } else if (dayList.get(0) == null) {
+                                    } else //noinspection SequencedCollectionMethodCanBeUsed
+                                        if (dayList.get(0) == null) {
                                         dayList.set(0, 0L);
                                     }
 
                                     // Update the daily sum (index 0)
-                                    long currentSum = dayList.get(0);
+                                    @SuppressWarnings("SequencedCollectionMethodCanBeUsed") long currentSum = dayList.get(0);
                                     long newSum = currentSum + waterAmount;
                                     dayList.set(0, newSum);
 
@@ -535,7 +537,8 @@ public class FirebaseService {
 
                                     // Debug: log the final state after commit
                                     try {
-                                        List<Long> finalList = snapshot.getValue(new GenericTypeIndicator<List<Long>>() {});
+                                        List<Long> finalList = snapshot.getValue(new GenericTypeIndicator<>() {
+                                        });
                                         System.out.println("DEBUG updateWater -> committed, finalList=" + finalList);
                                     } catch (Exception ignored) { }
 
@@ -697,6 +700,7 @@ public class FirebaseService {
                             } catch (Exception e) {
                                 // Log error and complete future with null if exception occurs
                                 System.err.println("ERROR getWaterHistoryMap -> exception: " + e.getMessage());
+                                //noinspection CallToPrintStackTrace
                                 e.printStackTrace();
                                 future.complete(null);
                                 return;
@@ -802,6 +806,7 @@ public class FirebaseService {
                                 return;
                             } catch (Exception e) {
                                 // If any exception occurs, complete future with empty map
+                                //noinspection CallToPrintStackTrace
                                 e.printStackTrace();
                                 future.complete(Collections.emptyMap());
                                 return;
@@ -907,6 +912,7 @@ public class FirebaseService {
                         // For each match, update goalMl field
                         for (DataSnapshot userSnap : snap.getChildren()) {
 
+                            //noinspection unused
                             userSnap.getRef().child("goalMl").setValue(goalMl, (err, ref) -> {
                                 if (err != null) { fut.complete(false); }
 
@@ -961,7 +967,7 @@ public class FirebaseService {
                     // If no BMI recorded for this user → skip (not counted)
                     if (bmi == null) { continue; }
 
-                    double value = bmi.doubleValue();
+                    @SuppressWarnings("UnnecessaryUnboxing") double value = bmi.doubleValue();
 
                     // Classify into category
                     if (value < 18.5) { underweight++; }
@@ -1064,6 +1070,7 @@ public class FirebaseService {
 
                         // For each match, update "calories" field
                         for (DataSnapshot userSnap : snap.getChildren()) {
+                            //noinspection unused
                             userSnap.getRef().child("calories").setValue(calories, (err, ref) -> {
                                 if (err != null) {
                                     System.err.println("ERROR updateCalories -> " + err.getMessage());
