@@ -99,6 +99,7 @@ public class UsersControllerIntegrationTest {
     }
 
     // Helper method to create a user in Firebase directly using FirebaseService
+    @SuppressWarnings("UnusedReturnValue")
     private User createUserInFirebase(String username, String password) throws Exception {
         // Create a new User object with the requested username and password
         User user = buildUser(username, password);
@@ -372,7 +373,7 @@ public class UsersControllerIntegrationTest {
 
     // Test that updateUser returns 404 when user does not exist
     @Test
-    void updateUser_nonExistingUser_returns404() throws Exception {
+    void updateUser_nonExistingUser_returns404() {
         // Build a username that does not exist
         String username = "updateNoSuch_" + System.currentTimeMillis();
 
@@ -612,13 +613,13 @@ public class UsersControllerIntegrationTest {
         createUserInFirebase(username, "p");
 
         // Perform a GET request to read initial water values
-        ResponseEntity<Map> beforeResponse =
+        @SuppressWarnings("rawtypes") ResponseEntity<Map> beforeResponse =
                 this.restTemplate.getForEntity("/api/users/" + username + "/water", Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, beforeResponse.getStatusCode());
         // Extract the response body as a Map
-        Map<String, Object> beforeBody = beforeResponse.getBody();
+        @SuppressWarnings("unchecked") Map<String, Object> beforeBody = beforeResponse.getBody();
         // Assert that the map is not null
         assertNotNull(beforeBody);
         // Extract today's water as a Number and convert to long
@@ -644,13 +645,13 @@ public class UsersControllerIntegrationTest {
         assertEquals("Water updated successfully", patchResponse.getBody());
 
         // Perform another GET request to read updated water totals
-        ResponseEntity<Map> afterResponse =
+        @SuppressWarnings("rawtypes") ResponseEntity<Map> afterResponse =
                 this.restTemplate.getForEntity("/api/users/" + username + "/water", Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, afterResponse.getStatusCode());
         // Extract body as Map
-        Map<String, Object> afterBody = afterResponse.getBody();
+        @SuppressWarnings("unchecked") Map<String, Object> afterBody = afterResponse.getBody();
         // Assert that body is not null
         assertNotNull(afterBody);
         // Extract today's water after update
@@ -694,13 +695,13 @@ public class UsersControllerIntegrationTest {
         String url = "/api/users/" + username + "/waterHistoryMap?days=" + days;
 
         // Perform GET request expecting a Map body
-        ResponseEntity<Map> response =
+        @SuppressWarnings("rawtypes") ResponseEntity<Map> response =
                 this.restTemplate.getForEntity(url, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
         // Extract response body as Map
-        Map<String, Object> body = response.getBody();
+        @SuppressWarnings("unchecked") Map<String, Object> body = response.getBody();
         // Assert that body is not null
         assertNotNull(body);
         // Assert that the map contains exactly "days" entries
@@ -751,13 +752,13 @@ public class UsersControllerIntegrationTest {
         String url = "/api/users/" + username + "/weeklyAverages";
 
         // Perform GET request expecting Map<String,Integer> body (as raw Map)
-        ResponseEntity<Map> response =
+        @SuppressWarnings("rawtypes") ResponseEntity<Map> response =
                 this.restTemplate.getForEntity(url, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
         // Extract body as Map
-        Map<String, Object> body = response.getBody();
+        @SuppressWarnings("unchecked") Map<String, Object> body = response.getBody();
         // Assert that body is not null
         assertNotNull(body);
         // Assert that there are exactly 4 entries (Week 1..Week 4)
@@ -800,7 +801,7 @@ public class UsersControllerIntegrationTest {
         String setUrl = "/api/users/" + username + "/goal?goalMl=" + newGoal;
 
         // Perform PUT request expecting Map body
-        ResponseEntity<Map> setResponse =
+        @SuppressWarnings("rawtypes") ResponseEntity<Map> setResponse =
                 this.restTemplate.exchange(setUrl,
                         HttpMethod.PUT,
                         null,
@@ -809,7 +810,7 @@ public class UsersControllerIntegrationTest {
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, setResponse.getStatusCode());
         // Extract body as Map
-        Map<String, Object> setBody = setResponse.getBody();
+        @SuppressWarnings("unchecked") Map<String, Object> setBody = setResponse.getBody();
         // Assert that body is not null
         assertNotNull(setBody);
         // Assert that status field is "OK"
@@ -819,13 +820,13 @@ public class UsersControllerIntegrationTest {
         String getUrl = "/api/users/" + username + "/goal";
 
         // Perform GET request expecting Map body
-        ResponseEntity<Map> getResponse =
+        @SuppressWarnings("rawtypes") ResponseEntity<Map> getResponse =
                 this.restTemplate.getForEntity(getUrl, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, getResponse.getStatusCode());
         // Extract body as Map
-        Map<String, Object> getBody = getResponse.getBody();
+        @SuppressWarnings("unchecked") Map<String, Object> getBody = getResponse.getBody();
         // Assert that body is not null
         assertNotNull(getBody);
         // Extract goalMl as Number and compare with newGoal
@@ -846,7 +847,7 @@ public class UsersControllerIntegrationTest {
         String url = "/api/users/" + username + "/goal?goalMl=100";
 
         // Perform PUT request expecting Map body
-        ResponseEntity<Map> response =
+        @SuppressWarnings("rawtypes") ResponseEntity<Map> response =
                 this.restTemplate.exchange(url,
                         HttpMethod.PUT,
                         null,
@@ -855,7 +856,7 @@ public class UsersControllerIntegrationTest {
         // Assert that HTTP status is 400 Bad Request
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         // Extract body as Map
-        Map<String, Object> body = response.getBody();
+        @SuppressWarnings("unchecked") Map<String, Object> body = response.getBody();
         // Assert that body is not null
         assertNotNull(body);
         // Assert that status field equals "INVALID_OR_NOT_FOUND"
@@ -871,13 +872,13 @@ public class UsersControllerIntegrationTest {
         String url = "/api/users/stats/bmiDistribution";
 
         // Perform GET request expecting Map body
-        ResponseEntity<Map> response =
+        @SuppressWarnings("rawtypes") ResponseEntity<Map> response =
                 this.restTemplate.getForEntity(url, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
         // Extract body as Map
-        Map<String, Object> body = response.getBody();
+        @SuppressWarnings("unchecked") Map<String, Object> body = response.getBody();
         // Assert that body is not null (can be empty map, but not null)
         assertNotNull(body);
     }
@@ -896,13 +897,13 @@ public class UsersControllerIntegrationTest {
         String getInitialUrl = "/api/users/" + username + "/calories";
 
         // Perform initial GET request expecting Map body
-        ResponseEntity<Map> initialResponse =
+        @SuppressWarnings("rawtypes") ResponseEntity<Map> initialResponse =
                 this.restTemplate.getForEntity(getInitialUrl, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, initialResponse.getStatusCode());
         // Extract initial body as Map
-        Map<String, Object> initialBody = initialResponse.getBody();
+        @SuppressWarnings("unchecked") Map<String, Object> initialBody = initialResponse.getBody();
         // Assert that body is not null
         assertNotNull(initialBody);
         // Extract "calories" field as Number
@@ -924,13 +925,13 @@ public class UsersControllerIntegrationTest {
         assertEquals(HttpStatus.NO_CONTENT, validResponse.getStatusCode());
 
         // Perform GET request again to verify updated calories
-        ResponseEntity<Map> afterValidResponse =
+        @SuppressWarnings("rawtypes") ResponseEntity<Map> afterValidResponse =
                 this.restTemplate.getForEntity(getInitialUrl, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, afterValidResponse.getStatusCode());
         // Extract body as Map
-        Map<String, Object> afterValidBody = afterValidResponse.getBody();
+        @SuppressWarnings("unchecked") Map<String, Object> afterValidBody = afterValidResponse.getBody();
         // Assert that body is not null
         assertNotNull(afterValidBody);
         // Extract "calories" after valid update
@@ -965,13 +966,13 @@ public class UsersControllerIntegrationTest {
         assertEquals(HttpStatus.BAD_REQUEST, invalidHighResponse.getStatusCode());
 
         // Perform GET request again to verify calories did not change after invalid updates
-        ResponseEntity<Map> afterInvalidResponse =
+        @SuppressWarnings("rawtypes") ResponseEntity<Map> afterInvalidResponse =
                 this.restTemplate.getForEntity(getInitialUrl, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, afterInvalidResponse.getStatusCode());
         // Extract body as Map
-        Map<String, Object> afterInvalidBody = afterInvalidResponse.getBody();
+        @SuppressWarnings("unchecked") Map<String, Object> afterInvalidBody = afterInvalidResponse.getBody();
         // Assert that body is not null
         assertNotNull(afterInvalidBody);
         // Extract "calories" after invalid updates
