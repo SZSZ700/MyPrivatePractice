@@ -21,6 +21,7 @@ public class User {
     }
 
     // Constructor with username + password only
+    @SuppressWarnings("unused")
     public User(String userName, String password) {
         this.userName = userName;
         this.password = password;
@@ -28,18 +29,23 @@ public class User {
 
     // Getters and setters
     public String getUserName() { return userName; }
+    @SuppressWarnings("unused")
     public void setUserName(String userName) { this.userName = userName; }
 
     public String getPassword() { return password; }
+    @SuppressWarnings("unused")
     public void setPassword(String password) { this.password = password; }
 
     public int getAge() { return age; }
+    @SuppressWarnings("unused")
     public void setAge(int age) { this.age = age; }
 
     public String getFullName() { return fullName; }
+    @SuppressWarnings("unused")
     public void setFullName(String fullName) { this.fullName = fullName; }
 
     // For debugging / logging
+    @SuppressWarnings("NullableProblems")
     @Override
     public String toString() {
         return "User{" +
