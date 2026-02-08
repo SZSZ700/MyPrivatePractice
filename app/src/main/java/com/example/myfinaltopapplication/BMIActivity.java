@@ -2,6 +2,7 @@
 package com.example.myfinaltopapplication;
 
 // Import Android Intent class for navigation between screens
+import android.annotation.SuppressLint;
 import android.content.Intent;
 // Import SharedPreferences for local key-value data storage
 import android.content.SharedPreferences;
@@ -19,8 +20,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 // Import base class for Android activities
 import androidx.appcompat.app.AppCompatActivity;
-// Import CompletableFuture for async calls to server
-import java.util.concurrent.CompletableFuture;
 // Import logging for debug messages
 import android.util.Log;
 // Import MPAndroidChart classes for BMI PieChart
@@ -29,8 +28,6 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.utils.ColorTemplate;
-// Import JSON for BMI distribution response
-import org.json.JSONObject;
 // Import Java util for list handling
 import java.util.ArrayList;
 
@@ -45,10 +42,12 @@ public class BMIActivity extends AppCompatActivity {
     // Input field for height (cm)
     private EditText heightEdit;
     // Button to trigger BMI calculation
+    @SuppressWarnings("FieldCanBeLocal")
     private Button calcButton;
     // TextView to show calculated or saved BMI
     private TextView resultText;
     // Back button to go home
+    @SuppressWarnings("FieldCanBeLocal")
     private ImageButton backHome;
     // PieChart to show global BMI distribution
     private PieChart bmiPieChart;
@@ -57,10 +56,13 @@ public class BMIActivity extends AppCompatActivity {
     // EditText where user types calories amount to add/remove
     private EditText caloriesInput;
     // Button to add calories
+    @SuppressWarnings("FieldCanBeLocal")
     private Button addCaloriesButton;
     // Button to subtract calories
+    @SuppressWarnings("FieldCanBeLocal")
     private Button subtractCaloriesButton;
     // Button to reset calories to 0
+    @SuppressWarnings("FieldCanBeLocal")
     private Button resetCaloriesButton;
     // TextView that shows today's calories and status vs target
     private TextView caloriesStatusText;
@@ -76,6 +78,7 @@ public class BMIActivity extends AppCompatActivity {
     // -------------------------------------------------------------------------
     // onCreate - lifecycle method called when Activity is created
     // -------------------------------------------------------------------------
+    @SuppressLint({"SetTextI18n", "DefaultLocale"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Call parent implementation
