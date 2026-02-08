@@ -2,6 +2,7 @@
 package com.example.myfinaltopapplication;
 
 // Import Android base classes for UI and logging
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,17 +10,12 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 // Import AppCompatActivity as base class for Activity
 import androidx.appcompat.app.AppCompatActivity;
-// Import JSON handling for parsing server responses
-import org.json.JSONObject;
 // Import Java utilities for formatting, collections, and concurrency
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 // Import MPAndroidChart library for chart rendering
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -46,11 +42,13 @@ public class WaterChartActivity extends AppCompatActivity {
     private TextView chartTitle;
 
     // Back button for navigation
+    @SuppressWarnings("FieldCanBeLocal")
     private ImageButton backButton;
 
     // ----------------------------------------------------------------
     // onCreate – entry point when activity is created
     // ----------------------------------------------------------------
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Call parent constructor
@@ -87,7 +85,7 @@ public class WaterChartActivity extends AppCompatActivity {
                 }
 
                 // Log received JSON for debugging
-                Log.d("CHART_DATA", "Got JSON: " + obj.toString());
+                Log.d("CHART_DATA", "Got JSON: " + obj);
 
                 // Prepare chart entries (bars) and labels (X-axis)
                 var entries = new ArrayList<BarEntry>();
@@ -101,6 +99,7 @@ public class WaterChartActivity extends AppCompatActivity {
                 while (keys.hasNext()) sortedKeys.add(keys.next());
 
                 // Sort the dates in ascending order
+                //noinspection Java8ListSort
                 Collections.sort(sortedKeys, Comparator.naturalOrder());
 
                 // Convert each JSON value into a BarEntry
@@ -114,7 +113,7 @@ public class WaterChartActivity extends AppCompatActivity {
 
                     // Format date to short (MM-dd) for labels
                     try {
-                        var shortLabel = new SimpleDateFormat("MM-dd", Locale.getDefault())
+                        @SuppressWarnings("DataFlowIssue") var shortLabel = new SimpleDateFormat("MM-dd", Locale.getDefault())
                                 .format(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(date));
                         // Add label to list
                         labels.add(shortLabel);
