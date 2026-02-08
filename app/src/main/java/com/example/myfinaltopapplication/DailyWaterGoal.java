@@ -35,11 +35,13 @@ public class DailyWaterGoal extends AppCompatActivity {
 
     // UI references
     private PieChart donutChart;                 // Donut chart instance
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private TextView titleText;                  // Page title
     private TextView goalText;                   // Shows current goal (ml)
     private TextView todayText;                  // Shows today consumption (ml)
     private EditText goalInput;                  // Input for new goal
     private Button saveGoalBtn;                  // Button to save new goal
+    @SuppressWarnings("FieldCanBeLocal")
     private ImageButton backButton;              // Back navigation
     private ProgressBar loading;                 // Loading spinner
 
