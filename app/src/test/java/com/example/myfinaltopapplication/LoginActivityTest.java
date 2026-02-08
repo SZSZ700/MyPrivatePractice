@@ -234,7 +234,7 @@ public class LoginActivityTest {
             var activity = buildActivity();
 
             // Get SharedPreferences reference before login attempt
-            var prefsBefore = activity.getSharedPreferences(
+            @SuppressWarnings("unused") var prefsBefore = activity.getSharedPreferences(
                     activity.getString(R.string.myprefs),
                     Context.MODE_PRIVATE
             );
