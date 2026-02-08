@@ -1,8 +1,6 @@
 package com.example.myfinaltopapplication;
 import android.content.Intent; // For navigating between activities
 import android.os.Bundle; // For saving/restoring activity state
-import android.util.Log;
-import android.view.View; // For handling view events (like button clicks)
 import android.widget.ImageButton; // For using ImageButton UI component
 import androidx.activity.EdgeToEdge; // For enabling edge-to-edge layout
 import androidx.appcompat.app.AppCompatActivity; // Base class for Android activities
@@ -14,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity; // Base class for Android activ
 public class MainActivity extends AppCompatActivity {
 
     // UI field: the image button that represents "Sign In / Sign Up"
+    @SuppressWarnings("FieldCanBeLocal")
     private ImageButton signupPage;
 
     // -------------------------------------------------------------------------
@@ -29,15 +28,12 @@ public class MainActivity extends AppCompatActivity {
         signupPage = findViewById(R.id.imageButton2);
 
         // Set an onClickListener on the button
-        signupPage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // When clicked, create an Intent to open LoginActivity
-                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        signupPage.setOnClickListener(view -> {
+            // When clicked, create an Intent to open LoginActivity
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
 
-                // Actually start the new activity (screen transition)
-                startActivity(intent);
-            }
+            // Actually start the new activity (screen transition)
+            startActivity(intent);
         });
     }
 }
