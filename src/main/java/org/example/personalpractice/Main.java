@@ -1,4 +1,9 @@
 package org.example.personalpractice;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.awt.*;
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -20,8 +25,12 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+
 public class Main {
 
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
+
+    @SuppressWarnings("unused")
     public static boolean listIsPali(LinkedList<Integer> lst) {
 
         if (lst.size() <= 1) {
@@ -29,17 +38,19 @@ public class Main {
         }
 
         for (int i = 0; i < lst.size(); i++) {
-            if (lst.get(i) != lst.get(lst.size() - i - 1)) {
+            if (!Objects.equals(lst.get(i), lst.get(lst.size() - i - 1))) {
                 return false;
             }
         }
         return true;
     }
 
+    @SuppressWarnings("unused")
     public static LinkedList<Integer> why(LinkedList<Integer> lst) {
         LinkedList<Integer> newey = new LinkedList<>();
 
-        if (lst.get(0) % 2 == 0 && !lst.isEmpty()) {
+        //noinspection SequencedCollectionMethodCanBeUsed
+        if (lst.get(0) % 2 == 0) {
 
             for (int i = 0; i < lst.size(); i++) {
                 if (lst.get(i) % 2 == 0) {
@@ -49,7 +60,7 @@ public class Main {
                     i--;
                 }
             }
-        } else if (lst.get(0) % 2 == 1 && !lst.isEmpty()) {
+        } else if (lst.getFirst() % 2 == 1) {
             for (int i = 0; i < lst.size(); i++) {
                 if (lst.get(i) % 2 == 1) {
                     newey.add(lst.get(i));
@@ -62,6 +73,7 @@ public class Main {
         return newey;
     }
 
+    @SuppressWarnings("unused")
     public static boolean ispaliq(Queue<Integer> q) {
         Queue<Integer> temp = new LinkedList<>();
         int length = q.size();
@@ -73,7 +85,7 @@ public class Main {
 
         while (length > 1) {
             //poll first node
-            int first = q.poll();
+            @SuppressWarnings("DataFlowIssue") int first = q.poll();
             length--;
 
             while (!q.isEmpty() && count < length - 1) {
@@ -82,7 +94,7 @@ public class Main {
             }
 
             //poll last node
-            int last = q.poll();
+            @SuppressWarnings("DataFlowIssue") int last = q.poll();
             length--;
             count = 0;
 
@@ -118,6 +130,7 @@ public class Main {
         return copy;
     }
 
+    @SuppressWarnings("unused")
     public static boolean perfectlyS(Stack<Integer> s4) {
         Stack<Integer> copy = cloneStack(s4);
 
@@ -168,15 +181,16 @@ public class Main {
     }
 
     // פונקציה המחזירה את המרחק הכי קטן במחסנית בין שני מרחקים
+    @SuppressWarnings("unused")
     public static int dis(Stack<Integer> s4) {
         Stack<Integer> c = cloneStack(s4); // שיבוט המחסנית
 
-        int dis1 = 0;
-        int dis2 = 0;
+        int dis1;
+        int dis2;
         int totalDis = 0;
         int minDis = Integer.MAX_VALUE; // מתחילים מהערך הגדול ביותר למינימום
         int length = c.size(); // אורך המחסנית המקורית
-        int x = 0;
+        int x;
 
         // מעבר על שאר האלמנטים במחסנית
         while (!c.empty()) {
@@ -197,6 +211,7 @@ public class Main {
     }
 
     //פונקציה הסורקת עץ מחסניות ומחזירה כמה מחסניות הן מחסניות זוגיות
+    @SuppressWarnings("unused")
     public static int maxStackUsingBFS(BinNode<Stack<Integer>> root) {
         Queue<BinNode<Stack<Integer>>> q = new LinkedList<>();//תור עזר לסריקה לרוחב
         q.offer(root);//הכנסת שורש לתור
@@ -268,6 +283,7 @@ public class Main {
         return false;
     }
 
+    @SuppressWarnings("unused")
     public static boolean specialTree(BinNode<Integer> root) {
         //הצהרה על פוינטרים לצדדי העץ/בני העץ
         BinNode<Integer> leftRoot = null;
@@ -314,17 +330,18 @@ public class Main {
     }
 
     //פונקציה שבודקת אם כל התורים בשרשרת החוליות הן תוריים זוגיים כלומר כל ערכי איבריהן הם זוגיים
+    @SuppressWarnings("unused")
     public static boolean perfectlyList(LinkedList<Queue<Integer>> lst) {
         //תור עזר להסרה ושיחזור
         Queue<Integer> temp = new LinkedList<>();
 
         int count = 0;//מונה חוליות זוגיות
-        for (int i = 0; i < lst.size(); i++) {//מעבר על שרשרת החוליות
+        for (Queue<Integer> integers : lst) {//מעבר על שרשרת החוליות
 
-            int length = lst.get(i).size();//שמירת גודל תור נוכחי
+            int length = integers.size();//שמירת גודל תור נוכחי
 
-            while (lst.get(i).isEmpty()) {//מעבר על התור הנוכחי
-                int x = lst.get(i).poll();//שמירת ערך חוליה בתור נוכחי
+            while (!integers.isEmpty()) {//מעבר על התור הנוכחי
+                int x = integers.poll();//שמירת ערך חוליה בתור נוכחי
                 if (x % 2 == 0) {//בדיקה עם הערך השמור בחוליה זו הינו זוגי
                     count++;//אם ערך זה הוא זוגי מנה אותו
                 }
@@ -333,7 +350,7 @@ public class Main {
 
             //שחזר את כל החוליות מהתור עזר לתור הרגיל
             while (!temp.isEmpty()) {
-                lst.get(i).offer(temp.poll());
+                integers.offer(temp.poll());
             }
 
             //אם מונה הערכים הזוגיים בתור שונה מאורך התור כלומר לא כל חוליותיו הן זוגיות החזר שקר מיד
@@ -345,11 +362,12 @@ public class Main {
         return true;//אם לא חזר שקר, משמע שכל התורים בשרשרת חוליות הן זוגיים ולכן נחזיר אמת
     }
 
+    @SuppressWarnings("unused")
     public static int putInPlace(Queue<Integer> q, int num) {
         Queue<Integer> gdolim = new LinkedList<>();
         Queue<Integer> ktanim = new LinkedList<>();
 
-        int place = 0;
+        int place;
         int count = 0;
 
         while (!q.isEmpty()) {
@@ -377,6 +395,7 @@ public class Main {
         return place;
     }
 
+    @SuppressWarnings("unused")
     public static void moveToFront(Queue<Integer> q, int k) {
         Queue<Integer> temp0 = new LinkedList<>();
         Queue<Integer> temp1 = new LinkedList<>();
@@ -403,6 +422,7 @@ public class Main {
 
     }
 
+    @SuppressWarnings("unused")
     public static void order(BinNode<Integer> chain) {
 
         // ראשי שרשראות עזר לזוגיים ולאי-זוגיים
@@ -455,9 +475,7 @@ public class Main {
             //שינוי ערכי שרשרת מקורית לערכי שרשרת זוגיים(שחוברה כבר לשרשרת האי זוגיים)
             bdika.setValue(help.getValue());
             //התקדם לחוליה הבאה בשרשרת הזוגיים-אי זוגיים
-            if (help != null) {
-                help = help.getRight();
-            }
+            help = help.getRight();
             //התקדם לחוליה הבאה בשרשרת המקוריים
             bdika = bdika.getRight();
         }
@@ -473,6 +491,7 @@ public class Main {
         return count;
     }
 
+    @SuppressWarnings("unused")
     public static void removeAlly(Node<Integer> chain, int num) {
         Node<Integer> newHead = null; // מצביע לחוליה הראשונה בשרשרת החדשה
         Node<Integer> last = null; // מצביע לחוליה האחרונה בשרשרת החדשה
@@ -533,7 +552,7 @@ public class Main {
     private static Node<Integer> l = null;   // Static variable for the end of the new list
 
     //הזנה לתוך השרשרת הסטטית פעולת עזר ב
-    public static boolean found(Node<Integer> lst, int num) {
+    public static boolean found(int num) {
         // If n is null, create the first node
         if (n == null) {
             n = new Node<>(num);
@@ -550,6 +569,7 @@ public class Main {
     }
 
     //הפעולה העיקרית
+    @SuppressWarnings("unused")
     public static void buildFreqList(Node<Integer> chain) {
         //pointer for new temp list
         Node<Integer> newey = null;
@@ -563,7 +583,7 @@ public class Main {
             int x = pos.getValue();// Get current value
 
             Node<Integer> check = pos;
-            if (found(n, x)) {//הכנסת המס למערכת הבקרה כדי לבדוק אם המס כבר היה
+            if (found(x)) {//הכנסת המס למערכת הבקרה כדי לבדוק אם המס כבר היה
                 // Count occurrences of x in the original chain
                 while (check != null) {
                     if (check.getValue() == x) {
@@ -573,6 +593,7 @@ public class Main {
                 }
 
                 // Add to the new list
+                //noinspection IfStatementWithIdenticalBranches
                 if (newey == null) {// New list is empty
                     newey = new Node<>(x);
                     last = newey;
@@ -588,6 +609,7 @@ public class Main {
 
             count = 0;// Reset count for this number
             pos = pos.getNext();// Move to the next node in the original chain
+            //noinspection UnusedAssignment
             check = chain;// Pointer to count occurrences
         }
 
@@ -596,9 +618,7 @@ public class Main {
         Node<Integer> current = chain;// Start from the original chain
         Node<Integer> re = newey;
         while (current != null && re != null) {
-            if (re != null) {
-                current.setValue(re.getValue());//change the original list values to the newes one
-            }
+            current.setValue(re.getValue());//change the original list values to the newes one
             prev = current;
             current = current.getNext();
             re = re.getNext();
@@ -612,9 +632,9 @@ public class Main {
     }
 
     //פתירת תרגיל 5 אך תוך שימוש בספריות מוכנות
-    private static LinkedList<Integer> e = new LinkedList<>();
+    private static final LinkedList<Integer> e = new LinkedList<>();
 
-    public static boolean find(LinkedList<Integer> ls, int num) {
+    public static boolean find(int num) {
         //if the static list e doesnt contain the num, add it and return true
         if (!e.contains(num)) {
             e.add(num);
@@ -623,6 +643,7 @@ public class Main {
         return false;
     }
 
+    @SuppressWarnings("unused")
     public static void buildFreq(LinkedList<Integer> lst) {
         LinkedList<Integer> li = new LinkedList<>();
         int count = 0;
@@ -630,9 +651,9 @@ public class Main {
         for (int i = 0; i < lst.size(); i++) {
             int x = lst.get(i);
 
-            if (find(e, x)) {
-                for (int j = 0; j < lst.size(); j++) {
-                    if (lst.get(j) == x) {
+            if (find(x)) {
+                for (Integer integer : lst) {
+                    if (integer == x) {
                         count++;
                     }
                 }
@@ -653,6 +674,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static int mostpop(LinkedList<Integer> lst) {
         //buildFreq(lst);
         int max = Integer.MIN_VALUE;
@@ -670,6 +692,7 @@ public class Main {
         return numy;
     }
 
+    @SuppressWarnings("unused")
     public static int mostPopularNumber(Node<Integer> chain) {
 
         //buildFreqList(chain);
@@ -693,6 +716,7 @@ public class Main {
         return numy;//return most popular number
     }
 
+    @SuppressWarnings("unused")
     public static void printListBin(BinNode<Integer> head) {
         BinNode<Integer> current = head;
         while (current != null) {
@@ -723,6 +747,7 @@ public class Main {
         return 1 + what(q, x);
     }
 
+    @SuppressWarnings("unused")
     public static int secret(Queue<Integer> q) {
 
         if (q.isEmpty()) {
@@ -753,7 +778,7 @@ public class Main {
         return false;//else if we  found the number return false
     }
 
-    public static boolean fo(Node<Integer> lst, int num) {
+    public static boolean fo(int num) {
         if (e2 == null) {//if the static list is empty
             e2 = new Node<>(num);//add new node and point e2 to it
             f2 = e2;//point the tail f2 to the head e2
@@ -779,7 +804,7 @@ public class Main {
 
             BinNode<Integer> check = chain;//pointer for the check while-loop
 
-            if (fo(e2, x)) {
+            if (fo(x)) {
                 //iterate throgh the chain searching for value that matches the number in x
                 while (check != null) {
                     int k = check.getValue();//get the value of the binnode
@@ -798,35 +823,23 @@ public class Main {
                     t1 = temp;//point the tail to the head
                     t1.setRight(newnode2);
                     t1.getRight().setLeft(temp);//connect between the two nodes
-                    t1 = t1.getRight();//move the pointer to the right side
                 } else {//if its not, add new nodes and connect them
                     t1.setRight(newnode1);//create new binnode and poin the tail pointer tp it
                     t1.getRight().setLeft(newnode1);
                     t1 = t1.getRight();
                     t1.setRight(newnode2);
                     t1.getRight().setLeft(newnode2);
-                    t1 = t1.getRight();
                 }
+                t1 = t1.getRight();//move the pointer to the right side
             }
             count = 0;// initialize count to 0
             pos = pos.getRight();// get to the next binnode
+            //noinspection UnusedAssignment
             check = chain;
         }
 
         //updateing the original doubly list
-        BinNode<Integer> a = chain;//pointer for original list
-        BinNode<Integer> b = temp;//pointer for the assist list
-        BinNode<Integer> prev = null;//pointer for the rightest binnode in the list
-
-        while (a != null && b != null) {
-            if (b != null) {
-                a.setValue(b.getValue());//updating the values of the original list
-            }
-            prev = a;
-            //get to the right sides of both lists
-            a = a.getRight();
-            b = b.getRight();
-        }
+        BinNode<Integer> prev = getIntegerBinNode(chain, temp);
         //if the assist list shorter than the original one
         //it prevent from put nulls in their values
         //so it disconect the unwanted ones
@@ -835,7 +848,24 @@ public class Main {
         }
     }
 
+    @Nullable
+    private static BinNode<Integer> getIntegerBinNode(BinNode<Integer> chain, BinNode<Integer> temp) {
+        BinNode<Integer> a = chain;//pointer for original list
+        BinNode<Integer> b = temp;//pointer for the assist list
+        BinNode<Integer> prev = null;//pointer for the rightest binnode in the list
+
+        while (a != null && b != null) {
+            a.setValue(b.getValue());//updating the values of the original list
+            prev = a;
+            //get to the right sides of both lists
+            a = a.getRight();
+            b = b.getRight();
+        }
+        return prev;
+    }
+
     //  func for finding the most showing number in a list
+    @SuppressWarnings("unused")
     public static int mostp(BinNode<Integer> lst) {
         miyun(lst);// ordet the list to be freqlist
 
@@ -856,6 +886,7 @@ public class Main {
         return numy;// return the highest showing number
     }
 
+    @SuppressWarnings("unused")
     public static Queue<Integer> arrangeData(Queue<Integer> marks) {
         Queue<Integer> testN = new LinkedList<>();//תור מספרי בחינות עבור כל תלמיד
         Queue<Integer> temp = new LinkedList<>();//תור עזר לציונים
@@ -920,49 +951,42 @@ public class Main {
     //פונק' עזר 3- החזרת סכום כל הערכים
     public static int sumy(Node<Integer> chain) {
         int sum = 0;
-        Node<Integer> pos = chain;
 
-        while (pos != null) {
-            int x = pos.getValue();
+        while (chain != null) {
+            int x = chain.getValue();
             sum += x;
+            chain = chain.getNext();
         }
         return sum;
     }
 
+    @SuppressWarnings("unused")
     public static void balance(Node<Integer> chain) {
         int length = countNodes(chain);//size of list
         int d = sumy(chain);//new nodes to add for the total sum be 0
         Node<Integer> end = getLast(chain);//pointer to the last node
 
-        Node<Integer> t1 = new Node<Integer>(d);
-        Node<Integer> t2 = new Node<Integer>(-d);
-        Node<Integer> t3 = new Node<Integer>(0);
+        Node<Integer> t1 = new Node<>(d);
+        Node<Integer> t2 = new Node<>(-d);
+        Node<Integer> t3 = new Node<>(0);
 
         //if the length of the list is odd and total sum != 0
         if (length % 2 != 0 && !allsumzero(chain)) {
             if (d < 0) {
                 end.setNext(t1);
-                end = end.getNext();
             } else {
                 end.setNext(t2);
-                end = end.getNext();
             }
-            return;
         } else if (length % 2 != 0 && allsumzero(chain)) {//אם אורך אי זוגי וסכום כל הספרות שווה ל 0 נוסיף חוליה עם ערך 0 לאיזון אורך
             end.setNext(t3);
-            end = end.getNext();
-            return;
         } else if (length % 2 == 0 && !allsumzero(chain)) {//אם אורך זוגי אך הסכום לא שווה 0 ניצטרך להוסיף שני חוליות כי אם נוסיף אחת הרסנו את הזוגיות של אורך השרשרת
             if (d < 0) {
                 end.setNext(t1);
-                end = end.getNext();
             } else {
                 end.setNext(t2);
-                end = end.getNext();
             }
-            end.setNext(t3);
             end = end.getNext();
-            return;
+            end.setNext(t3);
         }
     }
 
@@ -984,6 +1008,7 @@ public class Main {
         return true;
     }
 
+    @SuppressWarnings("unused")
     public static boolean addToSuper(Node<Integer> n, int num) {
         if (!isSuper(n)) {
             return false;
@@ -1002,7 +1027,7 @@ public class Main {
             }
 
             if (num > current && num < next && current > sum) {
-                Node<Integer> newey = new Node<Integer>(num);
+                Node<Integer> newey = new Node<>(num);
                 newey.setNext(pos.getNext());
                 pos.setNext(newey);
                 return true;
@@ -1018,7 +1043,7 @@ public class Main {
     private static Node<Integer> Alast = null;
 
     //check if num found in list
-    public static boolean foundI(Node<Integer> chain, int num) {
+    public static boolean foundI(int num) {
 
         Node<Integer> pos = Alist;
         while (pos != null) {
@@ -1032,13 +1057,14 @@ public class Main {
     }
 
     //add to static list only if the num is uniqe
+    @SuppressWarnings("unused")
     public static boolean addToStaticLi(Node<Integer> chain, int num) {
         Node<Integer> newey = new Node<>(num);
         if (Alist == null) {//if the static list is empty add new node and return true that num wasnt found in the list
             Alist = newey;
             Alast = Alist;
             return true;
-        } else if (!foundI(Alist, num)) {//if the static list is not empty &  add new node and return true that num wasnt found in the list
+        } else if (!foundI(num)) {//if the static list is not empty &  add new node and return true that num wasnt found in the list
             Alast.setNext(newey);
             Alast = Alast.getNext();
             return true;
@@ -1047,6 +1073,7 @@ public class Main {
     }
 
     //recursion stack
+    @SuppressWarnings("unused")
     public static int secret(Stack<Integer> s1, Stack<Integer> s2) {
         if (s1.empty() || s2.empty()) {
             return 0;
@@ -1082,6 +1109,7 @@ public class Main {
         return newey;
     }
 
+    @SuppressWarnings("unused")
     public static void theSurvives(Node<Integer> chain) {
         int length = countNodes(chain);
         Node<Integer> result = chain;
@@ -1105,6 +1133,7 @@ public class Main {
         return sum;
     }
 
+    @SuppressWarnings("unused")
     public static boolean some(Stack<Integer> stk) {
         //int sum = 0;
         Stack<Integer> copy = cloneStack(stk);
@@ -1146,7 +1175,7 @@ public class Main {
             temp.offer(q.poll());
             count++;
         }
-        int last = q.poll();//save last node value
+        @SuppressWarnings("DataFlowIssue") int last = q.poll();//save last node value
 
         //restore original queue than add the last node for keeping the same order of the queue
         while (!temp.isEmpty()) {
@@ -1157,6 +1186,7 @@ public class Main {
         return last;//return last queue node value
     }
 
+    @SuppressWarnings("unused")
     public static Queue<Integer> ny(Node<Queue<Integer>> chain) {
         Queue<Integer> newey = new LinkedList<>();//create new queue to return at the end of the procces
         Node<Queue<Integer>> pos = chain;//pointer for iteration through the linkedlist
@@ -1179,6 +1209,7 @@ public class Main {
         return newey;//return new queue
     }
 
+    @SuppressWarnings("unused")
     public static Queue<Integer> avgQ(Queue<Integer> tests, Queue<Integer> marks) {
         //clone both recived queues for not harming them
         Queue<Integer> temp0 = cloneQueue(tests);
@@ -1187,16 +1218,14 @@ public class Main {
 
         //variabels for calculate average marks per student
         int count = 0;
-        int sum = 0;
-        int avg = 0;
+        int sum;
+        int avg;
 
         while (!temp0.isEmpty()) {//iterate through tests queue
 
             int x = temp0.poll();//poll current value
             //initialize these variable to zero
-            count = 0;
             sum = 0;
-            avg = 0;
 
             while (!temp1.isEmpty() && count < x) {//iterate through marks queue till reach num of tests per one student
                 int t = temp1.poll();//poll curent grade
@@ -1213,6 +1242,7 @@ public class Main {
     //תור מושלם-תור מחסניות אשר כל מחסנית ממויינת בסדר עולה,התור ממויין לפי אורכיהן של המחסניות בסדר עולה
     //והאיבר האחרון של כל מחסנית הוא האיבר הראשון של המחסנית הבא
     //פונק עזר 1-בדיקה אם מחסנית ממויינת בסדר עולה
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isSort(Stack<Integer> stk) {
         Stack<Integer> copy = cloneStack(stk);//copy the original stack
 
@@ -1239,9 +1269,7 @@ public class Main {
             temp.push(copy.pop());//insert all its values to the assist stack
         }
 
-        int last = temp.peek();//save the first value of the assist stack cause its the last value of the copy-original stack
-
-        return last;//return last value
+        return temp.peek();//return last value
     }
 
     //פונק עזר 3-אורך מחסנית
@@ -1283,14 +1311,14 @@ public class Main {
             q.offer(temp.poll());
         }
 
-        if (flag) {//if flag is true its mean queue not sorted so we return false
-            return false;
-        } else {//else if its false its mean the queue is sorted so we return true
-            return true;
-        }
+        //if flag is true its mean queue not sorted so we return false
+        //else if its false its mean the queue is sorted so we return true
+        return !flag;
     }
 
     //פונק 5-פונק עיקרית לבדיקה אם תור הוא מושלם
+
+    @SuppressWarnings("unused")
     public static boolean isPerfectQueue(Queue<Stack<Integer>> q) {
 
         if (q.isEmpty()) {
@@ -1332,6 +1360,7 @@ public class Main {
         return false;//if the queue didnt pass the first condition
     }
 
+    @SuppressWarnings("unused")
     public static boolean equalSums(Stack<Integer> stk) {
         Stack<Integer> copy = cloneStack(stk);//copy stack
         int length = stk.size();//size of stk for building array
@@ -1368,6 +1397,7 @@ public class Main {
         return count;
     }
 
+    @SuppressWarnings("unused")
     public static boolean isSection(Node<Integer> chain) {
         Node<Integer> pos = chain;
 
@@ -1384,6 +1414,7 @@ public class Main {
         return true;
     }
 
+    @SuppressWarnings("unused")
     public static boolean blueWhiteTree(BinNode<Character> root) {
 
         Queue<BinNode<Character>> q = new LinkedList<>();//תור עזר לסריקה רוחבית
@@ -1436,6 +1467,7 @@ public class Main {
         return true;//נחזיר אמת כלומר העץ הוא עץ "כחול לבן"א לפי התנאים!
     }
 
+    @SuppressWarnings("unused")
     public static Node<Double> arrangeList(Node<Integer> chain) {
         Node<Double> newey = null;
         Node<Double> last = null;
@@ -1448,6 +1480,7 @@ public class Main {
             int x = pos.getValue();
 
             //מעבר על שרשרת הציונים פר החלק של תלמיד ספציפי וכל עוד לא נתקלנו בציון שערכו מינוס 1
+            //noinspection ConstantValue
             while (pos != null && x != -1) {
                 sum += x;//צבור ציון
                 count++;//קידום מונה כמות ציונים לצורך חישוב ממוצע
@@ -1478,10 +1511,11 @@ public class Main {
         return newey;
     }
 
+    @SuppressWarnings("unused")
     public static boolean wa_1(Node<Integer> chain) {
         //variables for calculating average
         int sum = 0;
-        int avg = 0;
+        int avg;
         int count = 0;
         //flag for checking if all values on list are even
         boolean flag = false;
@@ -1536,8 +1570,8 @@ public class Main {
         while (!copy.empty()) {//כל עוד מחסנית ההעתק לא ריקה
             temp.push(copy.pop());//דחוף למחסנית העזר את כל החוליות הנשלפות
         }
-        int last = temp.peek();//שמירת ערך חוליה עליונה במחסנית עזר מכיוון וחוליה עליונה במחסנית עזר היא החולייה התחתונה במחסנית המקור
-        return last;//הדפסת ערכה
+
+        return temp.peek();
     }
 
     //פונקציית עזר 3-אורך מחסנית
@@ -1553,6 +1587,7 @@ public class Main {
     }
 
     //פונקציית עזר 4- אם מחסנית ממויינת בסדר עולה
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isSorted(Stack<Integer> stk) {
         Stack<Integer> copy = cloneStack(stk);//העתק מחסנית עזר
         int prev = copy.pop();//שמירת ערך ראשון
@@ -1593,11 +1628,9 @@ public class Main {
             q.offer(temp.remove());
         }
 
-        if (flag) {//אם משתנה זה ערכו אמת משמע שבתור אין שמירה על מחסניות לפי אורכן בסדר עולה ונחזיר שקר
-            return false;
-        } else {//אחרת נחזיר אמת
-            return true;
-        }
+        //אם משתנה זה ערכו אמת משמע שבתור אין שמירה על מחסניות לפי אורכן בסדר עולה ונחזיר שקר
+        //אחרת נחזיר אמת
+        return !flag;
     }
 
     //פונקצייה עזר 6 לבדיקה אם תור מושלם
@@ -1637,8 +1670,8 @@ public class Main {
 
     //פונק עזר 7 לבדיקה האם שרשרת היא שרשרת תורים מושלמים
     public static boolean howmen(LinkedList<Queue<Stack<Integer>>> chain) {
-        for (int i = 0; i < chain.size(); i++) {//מעבר על שרשרת החוליות של התורים המושלמים
-            if (!isPerfect(chain.get(i))) {//אם התור הנוכחי אינו תור מחסניות מושלם החזר שקר מכיוון והמטרה שכל חוליות השרשרת יפנו לתור מחסניות מושלמים
+        for (Queue<Stack<Integer>> stacks : chain) {//מעבר על שרשרת החוליות של התורים המושלמים
+            if (!isPerfect(stacks)) {//אם התור הנוכחי אינו תור מחסניות מושלם החזר שקר מכיוון והמטרה שכל חוליות השרשרת יפנו לתור מחסניות מושלמים
                 return false;
             }
         }
@@ -1670,12 +1703,12 @@ public class Main {
     }
 
     //פונק עזר 9 לבדיקת מטריצת עצים של שרשראות של תורים של מחסניות מושלם
-    public static boolean matrix_2D_perfect_Trees(BinNode<LinkedList<Queue<Stack<Integer>>>> mat[][]) {
+    public static boolean matrix_2D_perfect_Trees(BinNode<LinkedList<Queue<Stack<Integer>>>>[][] mat) {
         //מעבר על מערך דו מימדי ובדיקה שכל התאים מפנים לעצים מושלמים
-        for (int i = 0; i < mat.length; i++) {//מעבר על השורות
+        for (BinNode<LinkedList<Queue<Stack<Integer>>>>[] binNodes : mat) {//מעבר על השורות
             for (int j = 0; j < mat[j].length; j++) {//מעבר על העמודות
                 //פוינטר לעץ בתא הנוכחי במטריצה
-                BinNode<LinkedList<Queue<Stack<Integer>>>> current = mat[i][j];
+                BinNode<LinkedList<Queue<Stack<Integer>>>> current = binNodes[j];
                 //אם העץ אינו עץ של שרשראות של תורים של מחסניות מושלם, נחזיר שקר
                 if (!perfectTree(current)) {
                     return false;
@@ -1686,6 +1719,7 @@ public class Main {
     }
 
     //פונק עיקרית 10 לבדיקה האם שרשרת דו כיוונית של מערך דו מימדי של עצים של שרשראות חד כיוונית של תורים של מחסניות מושלמת
+    @SuppressWarnings("unused")
     public static boolean Perfect_doubly_Linky(BinNode<BinNode<LinkedList<Queue<Stack<Integer>>>>[][]> double_chain) {
         BinNode<BinNode<LinkedList<Queue<Stack<Integer>>>>[][]> pos = double_chain;
 
@@ -1694,7 +1728,7 @@ public class Main {
         }
 
         while (pos != null) {
-            BinNode<LinkedList<Queue<Stack<Integer>>>> mat[][] = pos.getValue();
+            BinNode<LinkedList<Queue<Stack<Integer>>>>[][] mat = pos.getValue();
             if (!matrix_2D_perfect_Trees(mat)) {
                 return false;
             }
@@ -1707,7 +1741,7 @@ public class Main {
         Queue<Integer> tiN = new LinkedList<>();
 
         for (int i = 1; i <= num; i++) {
-            int currNum = i;
+            @SuppressWarnings("UnnecessaryLocalVariable") int currNum = i;
             int count = 0;
 
             while (count < currNum) {
@@ -1718,6 +1752,7 @@ public class Main {
         return tiN;
     }
 
+    @SuppressWarnings("unused")
     public static boolean DargaNqueue(Queue<Integer> q, int num) {
         Queue<Integer> temp = tillN(num);
         if (q.size() != temp.size()) {
@@ -1725,7 +1760,7 @@ public class Main {
         }
 
         while (!q.isEmpty() && !temp.isEmpty()) {
-            if (q.poll() != temp.poll()) {
+            if (!Objects.equals(q.poll(), temp.poll())) {
                 return false;
             }
         }
@@ -1733,6 +1768,7 @@ public class Main {
     }
 
     //שרשרת סכומים
+    @SuppressWarnings("unused")
     public static boolean chainSumy(Node<Integer> chain) {
         Node<Integer> pos = chain;
         int sum = 0;
@@ -1752,9 +1788,10 @@ public class Main {
     }
 
     //שרשרת סכומים הפוכה
+    @SuppressWarnings("unused")
     public static boolean reverseChainSumy(Node<Integer> chain) {
         Node<Integer> pos = chain;
-        int sum = 0;
+        int sum;
 
         while (pos != null) {
             int curr = pos.getValue();
@@ -1778,6 +1815,7 @@ public class Main {
     }
 
     //function that order even list at the farest left side of doubly linkedlist, and odd numbers at the farest right side
+    @SuppressWarnings("unused")
     public static void LINKY(BinNode<Integer> chain) {
 
         //pointer for even Doubly LinkedList
@@ -1801,6 +1839,7 @@ public class Main {
             //save val in var
             int x = pos.getValue();
             //if the current node value is even create new even list add new binnode to it
+            //noinspection IfStatementWithIdenticalBranches
             if (x % 2 == 0) {
                 BinNode<Integer> toaddz = new BinNode<>(x);//create new binnode
                 //if the new even list is null
@@ -1828,6 +1867,7 @@ public class Main {
         }
 
         //connect the two new seperated lists
+        assert last != null;
         last.setRight(secnewey);//connect the even list tail pointer to the odd list head pointer
         last.getRight().setLeft(last);//crate doubly connection
 
@@ -1845,7 +1885,10 @@ public class Main {
 
         //if the new list is longer than the original list
         if (from_start != null) {
+            //noinspection ConstantValue
             while (from_start != null) {// iterate through the new longer list
+                //noinspection ConstantValue
+                assert pos != null;
                 pos.setRight(new BinNode<>(from_start.getValue()));//create new nodes and add them to the original list
                 pos.getRight().setLeft(pos);//create doubly connection
                 pos = pos.getRight();//get to the next binnode
@@ -1861,18 +1904,17 @@ public class Main {
     }
 
     //same as the func before but using build-in library
+    @SuppressWarnings("unused")
     public static void LINKY_LIST(LinkedList<Integer> chain) {
         LinkedList<Integer> newey = new LinkedList<>();
 
-        for (int i = 0; i < chain.size(); i++) {
-            int curr_num = chain.get(i);
+        for (int curr_num : chain) {
             if (curr_num % 2 == 0) {
                 newey.add(curr_num);
             }
         }
 
-        for (int i = 0; i < chain.size(); i++) {
-            int curr_num = chain.get(i);
+        for (int curr_num : chain) {
             if (curr_num % 2 != 0) {
                 newey.add(curr_num);
             }
@@ -1883,6 +1925,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static Queue<Integer> NEW_QUEUE(Queue<Integer> q) {
         Queue<Integer> temp = new LinkedList<>();
         Queue<Integer> returned_one = new LinkedList<>();
@@ -1914,6 +1957,7 @@ public class Main {
     }
 
     //פונק הממיינת שרשרת חוליות דו כיוונית כך שהחוליות המחזיקות ערך זוגי יהיו בהתחלה והחוליות המחזיקות ערך אי זוגי יהיו לאחריהן
+    @SuppressWarnings("unused")
     public static void change_to_evenOdd_Dlist(BinNode<Integer> chain) {
 
         //if original chain is null return (dont do anything)
@@ -1960,6 +2004,7 @@ public class Main {
                     last2 = last2.getRight();//tail pointer now pointing to the latest added binnode
                 }
             }
+            pos = pos.getRight();
         }
         //connect the two doubly linkedlists into one doubly linkedlist
         if (even_chain != null && odd_chain != null) {
@@ -1984,9 +2029,10 @@ public class Main {
 
         if (pos == null) {//if the new list is longer
             while (NEW_LIST != null) {
-                prev.setRight(new BinNode<Integer>(NEW_LIST.getValue()));//create new binnodes and connect them to the original doubly linkedlist
+                prev.setRight(new BinNode<>(NEW_LIST.getValue()));//create new binnodes and connect them to the original doubly linkedlist
                 prev.getRight().setLeft(prev);
                 prev = prev.getRight();
+                NEW_LIST = NEW_LIST.getRight();
             }
         }
     }
@@ -2005,6 +2051,7 @@ public class Main {
                 int x = curr_chain.getValue();//save the current binnode value
                 if (x % 2 != 0) {//check if it is odd val
                     flag = true;
+                    break;
                 }
                 curr_chain = curr_chain.getRight();//get to the next binnode(left->right)
             }
@@ -2023,6 +2070,7 @@ public class Main {
     }
 
     //כל הצד השמאלי של העץ הוא עץ מחסניות של שרשראות זוגיות, וכל הצד הימני ההיפך
+    @SuppressWarnings("unused")
     public static boolean con(BinNode<Stack<BinNode<Integer>>> root) {
 
         //if tree empty return false
@@ -2108,6 +2156,7 @@ public class Main {
     }
 
     //פונק הממיינת שרשרת חוליות חד כיוונית כך שהחוליות המחזיקות ערך זוגי יהיו בהתחלה והחוליות המחזיקות ערך אי זוגי יהיו לאחריהן
+    @SuppressWarnings("unused")
     public static void orderListy(Node<Integer> chain) {
 
         Node<Integer> even = null;
@@ -2164,6 +2213,8 @@ public class Main {
 
         if (pos == null) {
             while (start != null) {
+                //noinspection ConstantValue
+                assert pos != null;
                 pos.setNext(new Node<>(start.getValue()));
                 pos = pos.getNext();
                 start = start.getNext();
@@ -2172,6 +2223,7 @@ public class Main {
     }
 
     //func that check if all stacks in queue are perfectly even stacks
+    @SuppressWarnings("unused")
     public static boolean queuePer(Queue<Stack<Integer>> q) {
 
         Queue<Stack<Integer>> temp = new LinkedList<>();//create assist queue for restoration
@@ -2208,11 +2260,9 @@ public class Main {
         }
 
         //check the val of the bool var
-        if (flag) {//if -> true, odd num founded
-            return false;
-        } else {//else if -> false, no odd num founded, return true
-            return true;
-        }
+        //if -> true, odd num founded
+        //else if -> false, no odd num founded, return true
+        return !flag;
     }
 
     //מערכת בקרה- אם מס קיים או לא
@@ -2237,6 +2287,7 @@ public class Main {
     }
 
     //אם מס הוסף לרשימה סימן שהוא לא קיים-משמע מס יחודי-> משמע רשימה יחודית
+    @SuppressWarnings("unused")
     public boolean added_to_list(Node<Integer> chain, int num) {
         Node<Integer> pos = listyy;
 
@@ -2310,6 +2361,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static void soQ(Queue<Integer> q) {
         Queue<Integer> returned = new LinkedList<>();//תור מסודר בסדר עולה
         Queue<Integer> temp = new LinkedList<>();//תור עזר לשיחזורים
@@ -2327,6 +2379,7 @@ public class Main {
     }
 
     //ממיינת תור בסדר עולה ללא כפילויות
+    @SuppressWarnings("unused")
     public static void order_queue(Queue<Integer> q) {
         Queue<Integer> temp = new LinkedList<>();
 
@@ -2355,6 +2408,7 @@ public class Main {
     }
 
     //מיון שרשרת בפועל(מיון בועות-החלפה בין תאים עוקבים לא עולים נונ סטופ-עד השגת מיון מלא)
+    @SuppressWarnings("unused")
     public static void sort(Node<Integer> chain) {
 
         while (!sorted(chain)) {//כל עוד השרשרת לא ממויינת מיין אותה
@@ -2376,6 +2430,7 @@ public class Main {
     }
 
     //הסרת כפילויות בשרשרת שמויינה בסדר עולה(העברת ערך תא השונה מערך התא הבא אחריו)
+    @SuppressWarnings("unused")
     public static void remove_doublys(Node<Integer> chain) {
         Node<Integer> pos = chain;//פויינטר לשרשרת מקור
         //פויינטרים לשרשרת חדשה
@@ -2385,7 +2440,7 @@ public class Main {
         while (pos.getNext() != null) {//איטרצית מעבר על השרשרת מקור
 
             //אם הער הנוכחי שונה מהערך של החולייה העוקבת
-            if (pos.getValue() != pos.getNext().getValue()) {
+            if (!Objects.equals(pos.getValue(), pos.getNext().getValue())) {
 
                 //הוסף אותו לשרשרת החדשה
                 //אם השרשרת החדשה ריקה..
@@ -2401,7 +2456,9 @@ public class Main {
         }
 
         //טיפול באיבר אחרון
+        assert last != null;
         last.setNext(new Node<>(pos.getValue()));
+        //noinspection UnusedAssignment
         last = last.getNext();
 
         //עדכון שרשרת מקור
@@ -2431,6 +2488,7 @@ public class Main {
         return true;
     }
 
+    @SuppressWarnings("unused")
     public static void sortlinky(LinkedList<Integer> chain) {
         //Collections.sort(chain);
 
@@ -2448,6 +2506,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static void sort_d_link(BinNode<Integer> chain) {
         //שרשרת זוגיים
         BinNode<Integer> even = null;//פויינטר לראש
@@ -2484,6 +2543,8 @@ public class Main {
                     lo = lo.getRight();
                 }
             }
+
+            pos = pos.getRight();
         }
 
         //אם שני השרשראות לא ריקות נחבר ביניהם(יש לקחת בחשבון עוד שני מקרים)
@@ -2508,16 +2569,17 @@ public class Main {
                 prev.setRight(new BinNode<>(start.getValue()));//נוסיף לשרשרת המקור חוליה חדשה עם הערך הנוכחי עליו מצביע פויינטר השרשרת איחוד
                 prev.getRight().setLeft(prev);//שמירת קשר דו כיווני
                 prev = prev.getRight();//קידום פויינטר הזנב של שרשרת המקור לחוליה האחרונה שנוספה
+                start = start.getRight();
             }
         }
 
-        if (start == null) {//אם שרשרת האיחוד קצרה יותר
-            prev.setRight(null);//ננתק משרשרת המקור את החוליות העודפות
-        }
+        //אם שרשרת האיחוד קצרה יותר
+        prev.setRight(null);//ננתק משרשרת המקור את החוליות העודפות
 
     }
 
     //a
+    @SuppressWarnings("unused")
     public static boolean perfecto(BinNode<Queue<Stack<Integer>>> chain) {
         BinNode<Queue<Stack<Integer>>> pos = chain;//pointer for the list
 
@@ -2541,6 +2603,7 @@ public class Main {
 
                     int x = currentStack.pop();//pop the first value from the stack
                     if (x % 2 != 0) {//if the value is odd num change the odd-flag to true,"odd num founded"
+                        //noinspection DataFlowIssue,UnusedAssignment
                         oddFlag = true;
                     }
                     te.push(x);//push current value to the assist stack
@@ -2562,11 +2625,8 @@ public class Main {
             pos = pos.getRight();//move to the next(right) binnode
         }
 
-        if (oddFlag) {//if odd-flag->true, return false-odd num was found
-            return false;
-        } else {//else if odd-flag->false, return true-odd num wasnt found
-            return true;
-        }
+        //if odd-flag->true, return false-odd num was found
+        return false;
     }
 
     //b
@@ -2586,11 +2646,7 @@ public class Main {
             stk.push(temp.pop());
         }
 
-        if (flag) {
-            return false;
-        } else {
-            return true;
-        }
+        return !flag;
     }
 
     public static boolean zoq(Queue<Stack<Integer>> q) {
@@ -2610,11 +2666,7 @@ public class Main {
             q.offer(temp.poll());
         }
 
-        if (flag) {
-            return false;
-        } else {
-            return true;
-        }
+        return !flag;
     }
 
     public static boolean zol(BinNode<Queue<Stack<Integer>>> chain) {
@@ -2635,6 +2687,7 @@ public class Main {
         return true;
     }
 
+    @SuppressWarnings("unused")
     public static boolean zot(BinNode<BinNode<Queue<Stack<Integer>>>> root) {
         Queue<BinNode<BinNode<Queue<Stack<Integer>>>>> q = new LinkedList<>();
         q.offer(root);
@@ -2656,6 +2709,7 @@ public class Main {
         return true;
     }
 
+    @SuppressWarnings("unused")
     public static int factorial(int num) {
         if (num < 2) {
             return 1;
@@ -2671,11 +2725,13 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static void prinarr(int[] arr) {
         prinarr(arr, 0);
     }
 
     //פונק רקורסיבית המונה כמה ספרות זוגיות יש במספר
+    @SuppressWarnings("unused")
     public static int zugcou(int num) {
         if (num == 0) {
             return 0;
@@ -2688,6 +2744,7 @@ public class Main {
     }
 
     //חישוב סכום ספרות של מספר רקורסיבית
+    @SuppressWarnings("unused")
     public static int recsum(int num) {
         if (num == 0) {//תנאי העצירה אם לא נותרו ספרות לסכום
             return 0;
@@ -2696,11 +2753,13 @@ public class Main {
     }
 
     // פונקציה עוטפת שמתחילה את החישוב מ-0
+    @SuppressWarnings("unused")
     public static int sumtilnum(int num) {
         return sumtilnum(num, 0); // קריאה לפונקציה הפרטית
     }
 
     // פונקציה פרטית שמבצעת את החישוב הרקורסיבי
+    @SuppressWarnings("unused")
     private static int sumtilnum(int num, int start) {
         if (start == num) { // תנאי קצה: אם הגענו לסוף
             return 0; // אין עוד מספרים להוסיף
@@ -2709,6 +2768,7 @@ public class Main {
     }
 
     //פונקצייה להדפסת מחרוזת הפוכה רקורסיבית
+    @SuppressWarnings("unused")
     public static String reverStRec(String str) {
         int end = str.length() - 1; // קובע את האינדקס של התו האחרון
         return reverStRec(str, end); // קריאה לפונקציה הפנימית
@@ -2722,6 +2782,7 @@ public class Main {
         return str.charAt(i) + reverStRec(str, i - 1);
     }
 
+    @SuppressWarnings("unused")
     public static int maxinarRec(int[] arr) {
         // קריאה לפונקציה רקורסיבית עם אינדקס 0 והמספר הקטן ביותר כערך התחלתי
         return maxinarRec(arr, 0, Integer.MIN_VALUE);
@@ -2743,8 +2804,9 @@ public class Main {
     }
 
     // פונקציה עוטפת להדפסת הערכים ברשימה
+    @SuppressWarnings("unused")
     public static void printList(Node<Integer> chain) {
-        Node<Integer> pos = chain;
+        @SuppressWarnings("UnnecessaryLocalVariable") Node<Integer> pos = chain;
         printListRecursively(pos); // קריאה לפונקציה רקורסיבית עם פויינטר עזר לראש הרשימה
     }
 
@@ -2760,6 +2822,7 @@ public class Main {
         printListRecursively(pos.getNext());
     }
 
+    @SuppressWarnings("unused")
     public static void reArrange_Dlist_Even_Odd(BinNode<Integer> chain) {
 
         //if cahin is null return without do anything
@@ -2812,11 +2875,11 @@ public class Main {
             le.getRight().setLeft(le);//create doubly connection
         }
 
-        BinNode<Integer> start = null;//new binnode for the new united* list
+        BinNode<Integer> start;//new binnode for the new united* list
 
         if (even != null) {//if even list created, point the assist pointer to the head of the even list
             start = even;
-        } else if (even == null && odd != null) {//if odd list created, point the assist pointer to the head of the odd list
+        } else {//if odd list created, point the assist pointer to the head of the odd list
             start = odd;
         }
 
@@ -2831,9 +2894,9 @@ public class Main {
         }
 
         //if the united assist pointer point to null, and the original list pointer not pointing to null
-        if (start == null && prev != null) {
+        if (start == null) {
             prev.setRight(null);//disconnect the unnecessarily binnodes
-        } else if (start != null && pos == null) {//if the united assist pointer not point to null, and the original list pointer pointing to null
+        } else {//if the united assist pointer not point to null, and the original list pointer pointing to null
             while (start != null) {//iterate through the united list and added new binnodes to the original list
                 int x = start.getValue();//save the current value into x
                 BinNode<Integer> toadd = new BinNode<>(x);//create new binnode to added
@@ -2846,6 +2909,7 @@ public class Main {
     }
 
     //פונקציה רקורסיבית לבדיקה אם מערך הוא פלינדרום
+    @SuppressWarnings("unused")
     public static boolean palArRec(int[] arr) {//wrapper function
         int start = 0;//index of the first cell in the array
         int end = arr.length - 1;//index of the last cell in the array
@@ -2885,6 +2949,7 @@ public class Main {
     }
 
     //פונק המחזירה מערך זוגיים(הנחה arr not null)
+    @SuppressWarnings("unused")
     public static int[] arzug(int[] arr) {//פונק עוטפת
         int[] evenArray = new int[countyz(arr)];//יצירת מערך זוגיים בגודל המתאים
         return arzug(arr, evenArray, 0, 0);//קריאה לפונק הרקור' להחזרת מערך זוגיים
@@ -2928,6 +2993,7 @@ public class Main {
         return true;
     }
 
+    @SuppressWarnings("unused")
     public static boolean lr_big_rr(BinNode<Integer> root) {
 
         //if the three is empty -> return false
@@ -2986,6 +3052,7 @@ public class Main {
         return true;
     }
 
+    @SuppressWarnings("unused")
     public static void reverse(int n) {
         if (n < 10) {
             System.out.println(n);
@@ -3000,6 +3067,7 @@ public class Main {
     סדרת פיבונאצי היא סידרה שכל איבר בה הוא סכום שני איברים הקודמים לו
     כתוב פונקציה המקבלת K ומחזירה את המס ש K מצביע עליו
      */
+    @SuppressWarnings("unused")
     public static int fibonachi(int k) {
         if (k == 1) {
             return 0;
@@ -3012,6 +3080,7 @@ public class Main {
         return fibonachi(k - 1) + fibonachi(k - 2);
     }
 
+    @SuppressWarnings("unused")
     public static int mysterySum(int n) {
         if (n == 1) {
             return 1;
@@ -3025,6 +3094,7 @@ public class Main {
         return sum;
     }
 
+    @SuppressWarnings("unused")
     public static boolean isPali(String str) {//wrapper function
         int start = 0;//אינדקס לתחילת המחרוזת
         int end = str.length() - 1;//אינדקס לסוף המחרוזת
@@ -3048,7 +3118,7 @@ public class Main {
         return isPali(str, start + 1, end - 1);
     }
 
-
+    @SuppressWarnings("unused")
     public static int mystery5(int num) {
         int num1 = 10;//save copy of num
         int count = 0;//create counter
@@ -3060,26 +3130,27 @@ public class Main {
 
         int n = 0;//create num
         while (num1 > 0) {
-            n += num1 % 10 * Math.pow(10, count - 1);
+            n += (int) (num1 % 10 * Math.pow(10, count - 1));
+            num1 /= 10;
         }
 
         return n;
     }
 
+    @SuppressWarnings("unused")
     public static int revmystery5(int num) {
         String n = Integer.toString(num);
-        String newN = "";
+        StringBuilder newN = new StringBuilder();
 
         for (int i = n.length() - 1; i >= 0; i--) {
-            newN += n.charAt(i);
+            newN.append(n.charAt(i));
         }
 
-        int reNum = Integer.parseInt(newN);
-
-        return reNum;
+        return Integer.parseInt(newN.toString());
     }
 
 
+    @SuppressWarnings("unused")
     public static boolean stkPal(Stack<Integer> stk) {
 
         Stack<Integer> copyStk = cloneStack(stk);//use copy stack
@@ -3150,6 +3221,7 @@ public class Main {
                   --------
      */
 
+    @SuppressWarnings("unused")
     public static int same(int n1, int n2) {//פונקציה עוטפת
         int count = 0;//הגדרת מונה
         String num1 = Integer.toString(n1);//המרת המס הראשון למחרוזת
@@ -3190,15 +3262,16 @@ public class Main {
     }
 
     //פונקציה המחזירה ממוצע
+    @SuppressWarnings("unused")
     public static double avgrec(int num) {
         if (num < 10) {
             return num;
         }
-        double avg = (sumrec(num)) / (lengthRec(num));
-        return avg;
+        return (sumrec(num)) / (lengthRec(num));
     }
 
     //דרך ב
+    @SuppressWarnings("unused")
     public static double avgDigits(int n) {
         if (n < 10) {
             return n;
@@ -3210,6 +3283,7 @@ public class Main {
     n = 251; |1+round(avgDigits(25))/2| |5+round(avgDigits(2))/2| |2| -> |(5+2)/2=3.5| ->|(1+3.5)/2.7
      */
     //פונקצייה הממירה מס עשרוני לבינארי
+    @SuppressWarnings("unused")
     public static void printToBin(int n) {
         if (n != 0) {
             printToBin(n / 2);
@@ -3300,9 +3374,9 @@ public class Main {
 
         Stack<Integer> copyStk = cloneStack(stk);
         int length = stk.size();//size of stack
-        int distance = 0;//var for "distance"-> between [first occurance and last occurance] of number
-        int firsOcuur = -1;//first index
-        int lasOcuur = -1;//last index
+        int distance;//var for "distance"-> between [first occurance and last occurance] of number
+        int firsOcuur;//first index
+        int lasOcuur;//last index
         int minDis = Integer.MAX_VALUE;//put minDis var to the highest integer value
 
         while (!copyStk.isEmpty()) {//while copyStk is not empty
@@ -3346,6 +3420,7 @@ public class Main {
      */
 
     //func that find out the min dis between two occurances of some number in some stack in the three(6)
+    @SuppressWarnings("unused")
     public static int lowMinStkInThree(BinNode<Stack<Integer>> root) {
         Queue<BinNode<Stack<Integer>>> q = new LinkedList<>();//queue for bfs
         q.offer(root);//offer the root of the three to the bfs queue
@@ -3399,6 +3474,7 @@ public class Main {
     }
 
     //פונקצייה עוטפת
+    @SuppressWarnings("unused")
     public static int[] evAr(int[] arr) {
         int i = 0;//אינדקס עבור מערך מקור
         int j = 0;//אינדקס עבור מערך הזוגיים
@@ -3419,6 +3495,7 @@ public class Main {
         return evAr(arr, evenArray, i + 1, j);//קריאה חוזרת לפונקציה עם מערך מקור ומע' זוגיים,אינדקס מע' ראשון ואחרון+1
     }
 
+    @SuppressWarnings("unused")
     public static int my(int num) {
         if (num == 1) {
             return 1;
@@ -3437,6 +3514,7 @@ public class Main {
                          |4| + |my(1)->1| + |2+my(1)=1+2->3| + |3+my(1)+my(2)=3+1+3->7| = 15
      */
 
+    @SuppressWarnings("unused")
     public static int[] whrI(Node<Integer> chain) {
         Node<Integer> temp = chain;//פויינטר עזר לריצה על השרשרת
         int count = 0;//מונה
@@ -3458,26 +3536,25 @@ public class Main {
     }//O(n)
 
     //----------------------------------------------------------------------------------------------------------------//
-    public static int countyr(Node<Integer> chain) {//פונקצייה עוטפת
-        Node<Integer> pos = chain;
-        return countyr(chain, pos);
+    public static int countyr(Node<Integer> pos) {//פונקצייה עוטפת
+        return countyr(pos, pos);
     }
 
-    private static int countyr(Node<Integer> chain, Node<Integer> pos) {//פונקציה רקורסיבית למניית חוליות בשרשרת
+    private static int countyr(@SuppressWarnings("unused") Node<Integer> chain, Node<Integer> pos) {//פונקציה רקורסיבית למניית חוליות בשרשרת
         if (pos == null) {
             return 0;
         }
         return 1 + countyr(chain, pos.getNext());
     }
 
-    public static int[] NodeToarr(Node<Integer> chain) {//פונקציה עוטפת להחזרת מערך המכיל את תוכן השרשרת
-        int[] arr = new int[countyr(chain)];
+    @SuppressWarnings("unused")
+    public static int[] NodeToarr(Node<Integer> pos) {//פונקציה עוטפת להחזרת מערך המכיל את תוכן השרשרת
+        int[] arr = new int[countyr(pos)];
         int i = 0;
-        Node<Integer> pos = chain;
-        return NodeToarr(chain, pos, arr, i);
+        return NodeToarr(pos, pos, arr, i);
     }
 
-    private static int[] NodeToarr(Node<Integer> chain, Node<Integer> pos, int[] arr, int i) {
+    private static int[] NodeToarr(@SuppressWarnings("unused") Node<Integer> chain, Node<Integer> pos, int[] arr, int i) {
         if (pos == null) {
             return arr;
         }
@@ -3488,6 +3565,7 @@ public class Main {
     //-----------------------------------------------------------------------------------------------------------------//
     private static Integer[] arrayDinamic = {1, 2, 3, 4, 5, 6, 7};//מערך סטטי
     //פונקציה להרחבת מערך והוספת ערך
+    @SuppressWarnings("unused")
     public static void toAdd(Integer[] arr, int num) {
         //מעבר על המערך הריק נבדוק קודם אם יש תא ריק ונוסיף את הערך שם
         for (int j = 0; j < arrayDinamic.length; j++) {
@@ -3499,14 +3577,15 @@ public class Main {
         //אחרת אם הגעתי לכאן משמע שאין תא ריק להוסיף אליו את הערך החדש,
         // ולכן אצטרך ליצור מערך עזר בגודל המתאים כמובן היכיל גם את האיבר להוספה והערכים הרגילים שהיו במערך המקור
         Integer[] temp = new Integer[arrayDinamic.length + 1];//מערך עזר
-        for (int i = 0; i < arrayDinamic.length; i++) {//מעבר על המערך מקור
-            temp[i] = arrayDinamic[i];//העתקת תוכן מערך מקור למערך עזר
-        }
+        //מעבר על המערך מקור
+        //העתקת תוכן מערך מקור למערך עזר
+        System.arraycopy(arrayDinamic, 0, temp, 0, arrayDinamic.length);
         temp[temp.length - 1] = num;//הוספת הערך החדש לסוף מערך העזר
         arrayDinamic = temp;//הפניית פוינטר מערך מקור למערך עזר
     }
     //----------------------------------------------------------------------------------------------------------------//
     //4
+    @SuppressWarnings("unused")
     public static Node<Integer> createRandomChain(int numNodes) {
         if (numNodes <= 0) {
             return null;
@@ -3531,6 +3610,7 @@ public class Main {
 
     //5
     //נתונה הפעולה הבאה המקבלת שני שרשראות חוליות
+    @SuppressWarnings("unused")
     public static void change(Node<Integer> chain1, Node<Integer> chain2) {
         Node<Integer> pos = chain1;
         while (pos.getNext() != null) {
@@ -3551,6 +3631,7 @@ public class Main {
 
     //6
     //נתונה הפונקציה הרקורסיבית המקבלת שרשרת חוליות
+    @SuppressWarnings("unused")
     public static boolean secret(Node<Integer> chain) {
         if (chain.getNext() == null) {
             return true;
@@ -3580,6 +3661,7 @@ public class Main {
 
     //9
     //נתונה הפעולה הרקורסיבית הבאה
+    @SuppressWarnings("unused")
     public static String mystery(Node<Character> chain) {
         if (chain.getNext() == null) {
             return chain.getValue().toString();
@@ -3602,26 +3684,27 @@ public class Main {
     מתחילים לבנות את מחרוזת תוכן השרשרת הפוך
      */
     //ג-מימוש הפעולה ללא שימוש ברקורסיה
+    @SuppressWarnings("unused")
     public static String recPrint(Node<Character> chain) {
-        String str = "";//מחרוזת ריקה לקליטת תוכן השרשרת
+        StringBuilder str = new StringBuilder();//מחרוזת ריקה לקליטת תוכן השרשרת
         Node<Character> pos = chain;//פויינטר עזר לשרשרת מקור
         while (pos != null) {//כל עוד פויינטר העזר לא מפנה ל "ריק"
-            str += pos.getValue();//נצבור את התו בחוליה הנוכחית למחרוזת
+            str.append(pos.getValue());//נצבור את התו בחוליה הנוכחית למחרוזת
             pos = pos.getNext();//נתקדם לחוליה הבאה
         }
-        String rec = "";//מחרוזת ריקה שתכיל את מחרוזת התווים בצורה הפוכה
+        StringBuilder rec = new StringBuilder();//מחרוזת ריקה שתכיל את מחרוזת התווים בצורה הפוכה
         for (int i = str.length() - 1; i > 0; i--) {
-            rec += str.charAt(i) + ",";
+            rec.append(str.charAt(i)).append(",");
         }
-        return rec;//נחזיר מחרוזת הפוכה זו
+        return rec.toString();//נחזיר מחרוזת הפוכה זו
     }
 
     //10
     //מהי טענת היציאה של הפונקציה הבאה:
     public static void mys(Node<Integer> chain) {
-        int temp = 0;
+        int temp;
         Node<Integer> pos1 = chain;
-        Node<Integer> pos2 = null;
+        Node<Integer> pos2;
 
         while (pos1.getNext() != null) {
             pos2 = pos1.getNext();
@@ -3642,6 +3725,7 @@ public class Main {
     //הפעולה מקבלת שתי שרשראות של חוליות מס שלמים,ממויינות בסדר עולה.
     //הפעולה מבצעת מיזוג של שני השרשראות, עליכם לממש את הפעולה בשני צורות שונות
     //א-הפעולה תחזיר הפניה לשרשרת חוליות חדשה שהיא מיזוג של שני השרשראות
+    @SuppressWarnings("unused")
     public static Node<Integer> merge1(Node<Integer> chain1, Node<Integer> chain2) {
         if (chain1 == null) return chain2; // אם השרשרת הראשונה ריקה
         if (chain2 == null) return chain1; // אם השרשרת השנייה ריקה
@@ -3665,13 +3749,9 @@ public class Main {
         while (pos2 != null) {//כל עוד פויינטר עזר לשרשרת 2 לא מפנה ל"ריק" נתקדם
             int x = pos2.getValue();//שמירת ערך חולייה נוכחית
             Node<Integer> current = new Node<>(x);//יצירת חולייה חדשה המכילה ערך זה שאותה נירצה להוסיף לשרשרת האיחוד החדשה
-            if (star == null) {//אם השרשרת איחוד ריקה
-                star = current;//נקשר פויינטר ראש אל חוליה חדשה זו
-                tail = star;//נקשר פויינטר זנב אל חולייה זו
-            } else {//אחרת אם השרשרת איחוד לא ריקה
-                tail.setNext(current);//נחבר חוליה חדשה זו לסוף שרשרת האיחוד
-                tail = tail.getNext();//ונקדם את פויינטר הזנב של שרשרת האיחוד אלייה
-            }
+            //אחרת אם השרשרת איחוד לא ריקה
+            tail.setNext(current);//נחבר חוליה חדשה זו לסוף שרשרת האיחוד
+            tail = tail.getNext();//ונקדם את פויינטר הזנב של שרשרת האיחוד אלייה
             pos2 = pos2.getNext();//נתקדם לחולייה הבאה בשרשרת 2 שהתקבלה בפונקציה כפרמטר
         }
         mys(star);//נקרא לפונקציה הממיינת את שרשרת האיחוד בסדר עולה(מסעיף 10)
@@ -3679,13 +3759,14 @@ public class Main {
     }
 
     //ב-הפונק תחזיר הפניה לשרשרת חוליות שהיא מיזוג של שני שרשראות תוך שימוש בחוליות הקיימות של שתי השרשראות ללא יצירת חוליות חדשות
-    public static Node<Integer> merge2(Node<Integer> chain1, Node<Integer> chain2) {
-        Node<Integer> tail1 = chain1;//פויינטר זנב לשרשרת 1
+    @SuppressWarnings("unused")
+    public static Node<Integer> merge2(Node<Integer> start, Node<Integer> chain2) {
+        Node<Integer> tail1 = start;//פויינטר זנב לשרשרת 1
         while (tail1.getNext() != null) {//נחפש זנב שרשרת זו
             tail1 = tail1.getNext();
         }
         tail1.setNext(chain2);//נאחד בין השרשראות
-        Node<Integer> start = chain1;//ניצור הפניה חדשה לשרשרת מקור
+        //ניצור הפניה חדשה לשרשרת מקור
         mys(start);//נקרא לפונקציה הממיינת את שרשרת האיחוד בסדר עולה(מסעיף 10)
         return start;//נחזיר הפניה זו
     }
@@ -3694,6 +3775,7 @@ public class Main {
 
     //להעתיק למחברת
     //8
+    @SuppressWarnings("unused")
     public static void compressSequences(Node<Character> chain) {
         Node<Character> pos = chain;   // מצביע לשרשרת המקורית
         while (pos != null) {
@@ -3710,6 +3792,7 @@ public class Main {
     }
 
     //12
+    @SuppressWarnings("unused")
     public static void disconnect(Node<Integer> chain1, Node<Integer> chain2) {
         Node<Integer> pos1 = chain1;//פויינטר עזר לשרשרת 1
         Node<Integer> pos2 = chain2;//פןיינטר עזר לשרשרת 2
@@ -3733,6 +3816,7 @@ public class Main {
     }
 
     //שאלה מבוחן 1-מיון שלושה שרשראות (גדול-בינוני-קטן)
+    @SuppressWarnings("unused")
     public static Node<Integer> sorty2(Node<Integer> chain1, Node<Integer> chain2, Node<Integer> chain3){
         int len1 = countNodes(chain1);
         int len2 = countNodes(chain2);
@@ -3787,6 +3871,7 @@ public class Main {
         return big;
     }
 
+    @SuppressWarnings("unused")
     public static Node<Integer> sorty1(Node<Integer> chain1, Node<Integer> chain2, Node<Integer> chain3){
         int len1 = countNodes(chain1);
         int len2 = countNodes(chain2);
@@ -3811,12 +3896,12 @@ public class Main {
         arr[0] = len1;
         arr[1] = len2;
         arr[2] = len3;
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i] > max){
-                max = arr[i];
+        for (int j : arr) {
+            if (j > max) {
+                max = j;
             }
-            if (arr[i] < min){
-                min = arr[i];
+            if (j < min) {
+                min = j;
             }
         }
         //אם 1 הכי גדול 2קטן 3 בינוני
@@ -3860,17 +3945,18 @@ public class Main {
 
     //--------------------------------------------------------------------------------------------------------------//
     //פונקצייה עוטפת-מיון רקורסיבי זוגיים-אי זוגיים שרשרת חוליות חד כיוונית
-    public static void reEvenOdd(Node<Integer> chain) {
-        if (chain == null) {return;}//אם הרשימה ריקה החזר
+    @SuppressWarnings("unused")
+    public static void reEvenOdd(Node<Integer> pos) {
+        if (pos == null) {return;}//אם הרשימה ריקה החזר
         Node<Integer> even = null;//פוינטר ראש שרשרת זוגיים
         Node<Integer> le = null;//פויינטר זנב שרשרת אי זוגיים
         Node<Integer> odd = null;//פויינטר ראש שרשרת אי זוגיים
         Node<Integer> lo = null;//פויינטר זנב שרשרת אי זוגיים
-        Node<Integer> pos = chain;//פויינטר עזר למעבר על שרשרת מקור
+        //פויינטר עזר למעבר על שרשרת מקור
         //קריאה לפונקצייה פרטית שתיצור שרשרת איחוד
         // כך שזוגיים תחילה ולאחריהן חוליות אי זוגיות
         //ואז תעדכן שרשרת מקור בתוכן השרשרת איחוד
-        reEvenOdd(chain, pos, even, le, odd, lo);
+        reEvenOdd(pos, pos, null, null, null, null);
     }
     private static void reEvenOdd(Node<Integer> chain, Node<Integer> pos, Node<Integer> even, Node<Integer> le, Node<Integer> odd, Node<Integer> lo) {
         //מיקרה בסיס אם הגענו לסוף שרשרת המקור(ניסרקה כולה)
@@ -3911,6 +3997,7 @@ public class Main {
     }
 
     //מיון בועות זוגיים-אי זוגיים שרשרת חוליות חד כיוונית
+    @SuppressWarnings("unused")
     public static void bSortEvOdd(Node<Integer> chain){
         Node<Integer> pos = chain; // לולאה חיצונית - נועלת על חוליה מסוימת
         while (pos != null) {
@@ -3930,6 +4017,7 @@ public class Main {
     //-----------------------------------------------------------------------------------------------------------//
     //יצירת פלינדרום משרשרת
     //כמה פעמים מס מופיע בשרשרת
+    @SuppressWarnings("unused")
     public static int howMuchFoundInList(Node<Integer> chain, int num){
         Node<Integer> pos = chain;
         int count = 0;
@@ -4075,6 +4163,7 @@ public class Main {
     }
 
     //פונקציה עיקרית לבניית שרשרת פלינדרום
+    @SuppressWarnings("unused")
     public static void buildPal(Node<Integer> chain){
         //שמירת ערך בודד המופיע רק פעם אחת בשרשרת שהתקבלה מהמשתמש
         //והוא יהיה באמצע
@@ -4087,23 +4176,7 @@ public class Main {
             compressList(chain);//הסרת כפילויות משרשרת מקור
             removeValue(chain,who);//הסרת הערך שמופיע פעם אחת
             //פויינטרים עבור שרשרת העתק
-            Node<Integer> temp = null;
-            Node<Integer> t = null;
-            //פויינטר עזר עבור שרשרת מקור
-            Node<Integer> pos = chain;
-
-            while (pos != null){//מעבר על שרשרת מקור
-                int x = pos.getValue();//שמירת ערך נוכחי
-                Node<Integer> newey = new Node<>(x);//יצירת חולייה מערך נוכחי והוספתו לשרשרת עזר
-                    if (temp == null){
-                        temp = newey;
-                        t = temp;
-                    }else{
-                        t.setNext(newey);
-                        t = t.getNext();
-                    }
-                pos = pos.getNext();
-            }
+            Node<Integer> temp = getIntegerNode(chain);
 
             Node<Integer> tail = findTail(chain);
             tail.setNext(new Node<>(who));
@@ -4114,6 +4187,29 @@ public class Main {
             System.out.println("create legal list");//אחרת נדפיס הודעה
         }
     }
+
+    @Nullable
+    private static Node<Integer> getIntegerNode(Node<Integer> chain) {
+        Node<Integer> temp = null;
+        Node<Integer> t = null;
+        //פויינטר עזר עבור שרשרת מקור
+        Node<Integer> pos = chain;
+
+        while (pos != null){//מעבר על שרשרת מקור
+            int x = pos.getValue();//שמירת ערך נוכחי
+            Node<Integer> newey = new Node<>(x);//יצירת חולייה מערך נוכחי והוספתו לשרשרת עזר
+                if (temp == null){
+                    temp = newey;
+                    t = temp;
+                }else{
+                    t.setNext(newey);
+                    t = t.getNext();
+                }
+            pos = pos.getNext();
+        }
+        return temp;
+    }
+
     //----------------------------------------------------------------------------------------------------------------//
     //last value in stack
     private static int lstStk(Stack<Integer> stk) {
@@ -4124,9 +4220,8 @@ public class Main {
             temp.push(copyStk.pop()); // העברת ערכים מהסטאק המועתק לסטאק הזמני
         }
 
-        int last = temp.peek(); // הערך האחרון בסטאק המקורי (ראש הסטאק הזמני)
-
-        return last; // החזרת הערך האחרון
+        // הערך האחרון בסטאק המקורי (ראש הסטאק הזמני)
+        return temp.peek(); // החזרת הערך האחרון
     }
 
     //size of stack
@@ -4143,6 +4238,7 @@ public class Main {
     }
 
     //check if stack ordered (min-high)
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private static boolean stkOrUp(Stack<Integer> stk) {
         Stack<Integer> copyStk = cloneStack(stk); // שכפול הסטאק המקורי
         int prev = copyStk.pop(); // קבלת הערך הראשון (תחתית הסטאק)
@@ -4183,8 +4279,9 @@ public class Main {
     }
 
     //check if queue of stack is perfect
+    @SuppressWarnings("unused")
     public static boolean PerfectQs(Queue<Stack<Integer>> q) {
-        Queue<Stack<Integer>> temp = new LinkedList<>(); // תור זמני לשמירת הסטאקים המקוריים
+        @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") Queue<Stack<Integer>> temp = new LinkedList<>(); // תור זמני לשמירת הסטאקים המקוריים
 
         if (QstkOrUp(q)) { // בדיקה אם כל הסטאקים בתור מסודרים בסדר עולה מבחינת אורכם
 
@@ -4217,17 +4314,18 @@ public class Main {
         }
     }
     //----------------------------------------------------------------------------------------------------------------//
+    @SuppressWarnings("unused")
     public static Node<Integer> bubbleLenS(Node<Integer> chain1, Node<Integer> chain2, Node<Integer> chain3){
         //check for exceptines
         if (chain1 == null || chain2 == null || chain3 == null){
             throw new IllegalArgumentException("chains can't be null.");
         }
         
-        Node<Integer> big = null;//pointer for longest list
-        Node<Integer> mid = null;//poinder for meddium list
-        Node<Integer> sml = null;//pointer for shortest list
+        Node<Integer> big;//pointer for longest list
+        Node<Integer> mid;//poinder for meddium list
+        Node<Integer> sml;//pointer for shortest list
 
-        Node<Integer> [] lrr = new Node[3];//create array of linked lists
+        @SuppressWarnings("unchecked") Node<Integer> [] lrr = new Node[3];//create array of linked lists
         lrr[0] = chain1;//push first chain to it
         lrr[1] = chain2;//push sec chain to it
         lrr[2] = chain3;//push third chain to it
@@ -4290,6 +4388,7 @@ public class Main {
     }
 
     //func to return queue that contains numbers that found twice in original queue
+    @SuppressWarnings("unused")
     public static Queue<Integer> doublevals(Queue<Integer> q){
         Queue<Integer> copyQ = cloneQueue(q);//תור העתק מקור
         Queue<Integer> temp = new LinkedList<>();//תור להחזרה
@@ -4308,6 +4407,7 @@ public class Main {
     }
 
     //func to remove once value from list
+    @SuppressWarnings("unused")
     public static void remo(Node<Integer> chain, int num){
         if (chain.getValue() == num){
             chain.setValue(chain.getNext().getValue());
@@ -4327,6 +4427,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static boolean twoSum(Queue<Integer>q,int x){
         Queue<Integer> temp = new LinkedList<>();//תור עזר לשיחזור מתמשך
 
@@ -4351,6 +4452,7 @@ public class Main {
         return false;
     }
 
+    @SuppressWarnings("unused")
     public static int smlKbig(Queue<Integer>q,int num){
         Queue<Integer> big = new LinkedList<>();//תור גדולים
         Queue<Integer> small = new LinkedList<>();//תור קטנים
@@ -4365,7 +4467,7 @@ public class Main {
                 index = count;
             } else if (x < num) {
                 small.offer(x);
-            } else if (x > num) {
+            } else {
                 big.offer(x);
             }
         }
@@ -4386,6 +4488,7 @@ public class Main {
     }
 
     //תור להזזת קיי איברים מסוף התור קדימה
+    @SuppressWarnings("unused")
     public static void befKaf(Queue<Integer> q, int k){
         int length = q.size()-k;//חישוב כמות החוליות שיש להעביר לסוף התור
 
@@ -4394,6 +4497,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static int High(BinNode<Integer> root){
         int count = -1;
         int max = Integer.MIN_VALUE;
@@ -4427,13 +4531,14 @@ public class Main {
         return temp;
     }
     //1-ב
+    @SuppressWarnings("unused")
     public static boolean istiln(Queue<Integer> q, int n){
         Queue<Integer> temp = tiln(n);
         Queue<Integer> clone = cloneQueue(q);
 
         while (!clone.isEmpty() && !temp.isEmpty()){
             int cloneVal = clone.poll();
-            int tempVal = temp.poll();
+            @SuppressWarnings("DataFlowIssue") int tempVal = temp.poll();
             if (cloneVal != tempVal){
                 return false;
             }
@@ -4441,8 +4546,9 @@ public class Main {
         return true;
     }
     //2-א
+    @SuppressWarnings("unused")
     public static boolean sumli(Node<Integer>chain){
-        int sum = 0;
+        int sum;
         Node<Integer> pos = chain;
         sum = pos.getValue();
         pos = pos.getNext();
@@ -4458,6 +4564,7 @@ public class Main {
         return true;
     }
     //2-ב
+    @SuppressWarnings("unused")
     public static boolean revsumli(Node<Integer> chain){
         Node<Integer> pos = chain;
 
@@ -4479,6 +4586,7 @@ public class Main {
     }
     //2022 אביב
     //1-א
+    @SuppressWarnings("unused")
     public static void first(Node<Integer>chain){
         Node<Integer> pos = chain;
 
@@ -4495,6 +4603,7 @@ public class Main {
         pos.setNext(new Node<>(last));
     }
     //1-ב
+    @SuppressWarnings("unused")
     public static void second(Node<Integer> chain){
         Node<Integer> newey = null;
         Node<Integer> tail = null;
@@ -4514,6 +4623,7 @@ public class Main {
             pos = pos.getNext();
         }
 
+        assert prev != null;
         prev.setNext(newey);
     }
     //2-א
@@ -4521,7 +4631,7 @@ public class Main {
         Stack<Integer>clone = cloneStack(stk);
         int sum = 0;
         int count = 0;
-        int avg = 0;
+        int avg;
 
         while (!clone.isEmpty()){
             count++;
@@ -4532,6 +4642,7 @@ public class Main {
         return avg;
     }
 
+    @SuppressWarnings("unused")
     public static void sortStkAvg(Stack<Integer>stk){
         Stack<Integer> lower = new Stack<>();
         Stack<Integer> bigger = new Stack<>();
@@ -4557,6 +4668,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static Stack<Integer> sumss(Stack<Integer> nums){
         Stack<Integer> sums = new Stack<>();//create new stack to return
         Stack<Integer> cloneNums = cloneStack(nums);//copy original stack
@@ -4576,6 +4688,7 @@ public class Main {
         return sums;//return the new stack
     }
 
+    @SuppressWarnings("unused")
     public static boolean goodDoublyStk(Stack<Integer> nums, Stack<Integer> sums){
         Stack<Integer> cloneNums = cloneStack(nums);//copy original of nums stack
         Stack<Integer> cloneSums = cloneStack(sums);//copy original of sums stack
@@ -4618,7 +4731,6 @@ public class Main {
     }
 
     public static int getLastNval(Node<Integer> chain){
-        int last = 0;
         Node<Integer> pos = chain;
 
         while (pos.getNext() != null){
@@ -4642,6 +4754,7 @@ public class Main {
         return min;
     }
 
+    @SuppressWarnings("unused")
     public static boolean isMirc(Node<Integer> chain){
         int len = lengthN(chain);//size of chain
         int last = getLastNval(chain);//last value in list
@@ -4662,11 +4775,11 @@ public class Main {
         }
 
         //if middle node value isn't the minimmum value in the list, return false
-        if (pos.getValue() != min){return false;}
-
-        return true;//return true this chains follows all rules
+        assert pos != null;
+        return pos.getValue() == min;//return true this chains follows all rules
     }
 
+    @SuppressWarnings("unused")
     public static boolean isFibonachiList(Node<Integer> chain){
         if (lengthN(chain) < 3){return false;}//if length of chain lower than 3 return false
         
@@ -4693,6 +4806,7 @@ public class Main {
         return true;//its folowing fibonachi rules
     }
 
+    @SuppressWarnings("unused")
     public static Node<Integer> buildFibonachiList(int num){
         int [] arr = new int[num];//create array in size of num
         arr[0] = 1;//put 1 in first array index
@@ -4708,13 +4822,13 @@ public class Main {
         Node<Integer> tail = null;//pointer for the new tail of the list
 
         //build the new list
-        for (int i = 0; i < arr.length; i++) {
-            Node<Integer> toAdd = new Node<>(arr[i]);//create new node that contains cuurent array index value
+        for (int j : arr) {
+            Node<Integer> toAdd = new Node<>(j);//create new node that contains cuurent array index value
 
-            if (newey == null){//case 1 if chain is empty
+            if (newey == null) {//case 1 if chain is empty
                 newey = toAdd;//connect the head pointer to the new node
                 tail = newey;//connect tail pointer to it
-            }else {//case 2 if it's not
+            } else {//case 2 if it's not
                 tail.setNext(toAdd);//connect the tail to new node
                 tail = tail.getNext();//mv the tail pointer to the new node that have been added
             }
@@ -4723,6 +4837,7 @@ public class Main {
         return newey;//return fibonachi chain
     }
 
+    @SuppressWarnings("unused")
     public static void removeMiddle(Node<Integer> chain){
         Node<Integer> pos = chain;//pointer fr the list
         int len = lengthN(chain);//length of list
@@ -4742,6 +4857,7 @@ public class Main {
                 count++;
             }
 
+            assert pos != null;
             pos.setNext(pos.getNext().getNext());
 
         }else {//else if length is even remove two middle nodes
@@ -4757,16 +4873,18 @@ public class Main {
                 count++;
             }
 
+            assert pos != null;
             pos.setNext(pos.getNext().getNext().getNext());
         }
     }
 
-
+    @SuppressWarnings("unused")
     public static void change(Queue<Integer>q, int x, int y){
         Random random = new Random();//create new instance of random class
         int size = q.size();//size of queue
         Queue<Integer> temp = new LinkedList<>();//create new queue for restoration
 
+        //noinspection IfStatementWithIdenticalBranches
         if (size % 2 == 1){//if size of queue is odd
             int num = random.nextInt(Math.abs(x-y)+1)+x;//randomize num between x and y
             int count = 0;//counter for polling
@@ -4833,6 +4951,7 @@ public class Main {
     }
 
     //func that recive two numbers, and return new down sorted list
+    @SuppressWarnings("unused")
     public static Node<Integer> buildDownList(int num, int a, int b){
         //two new pointers for the new "down" list
         Node<Integer> newey = null;
@@ -4848,12 +4967,12 @@ public class Main {
         }
 
         //build "down list" from "down array"
-        for (int i = 0; i < arr.length; i++) {
-            Node<Integer> toAdd = new Node<>(arr[i]);
-            if (newey == null){
+        for (int j : arr) {
+            Node<Integer> toAdd = new Node<>(j);
+            if (newey == null) {
                 newey = toAdd;
                 tail = newey;
-            }else{
+            } else {
                 tail.setNext(toAdd);
                 tail = tail.getNext();
             }
@@ -4889,6 +5008,7 @@ public class Main {
     }
 
     //פונק הבונה תור חדש משני תורים משלבת בין ערכי התורים
+    @SuppressWarnings("unused")
     public static Queue<Integer> merge(Queue<Integer> q1, Queue<Integer> q2){
         Queue<Integer> q3 = new LinkedList<>();//תור מוחזר המשלב ערכים משני התורים
         int i = 0;//משתנה "העוזר" למצוא מס במיקום מסויים מהתור השני
@@ -4906,6 +5026,7 @@ public class Main {
     }
 
     //-----everthing to Array-----------//
+    @SuppressWarnings("unused")
     public static <T> Object[] stackToArray(Stack<T> stk){
         Stack<T> temp = new Stack<>();//create new stack assist for restoration
         Object [] arr = new Object[stk.size()];//create new array
@@ -4927,7 +5048,7 @@ public class Main {
     }
 
     public static <T> Object[] queueToArray(Queue<T> q){
-        Queue<T> temp = new LinkedList<>();//create new queue assist for restoration
+        @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") Queue<T> temp = new LinkedList<>();//create new queue assist for restoration
         int len = q.size();//size of queue
         Object [] arr = new Object[len];//create new array
         int index = 0;
@@ -4942,8 +5063,9 @@ public class Main {
         return arr;//return the new array
     }
 
+    @SuppressWarnings("unused")
     public static <T> Object[] nodeToArray(Node<T> chain){
-        int len = countNodes((Node<Integer>) chain);//calculate the length of chain
+        @SuppressWarnings("unchecked") int len = countNodes((Node<Integer>) chain);//calculate the length of chain
         Object [] arr = new Object[len];//create new objects array
         int index = 0;//index for the array
         Node<T> pos = chain;//pointer for the head of the list
@@ -4971,6 +5093,7 @@ public class Main {
         return count;//return the length of the chain
     }
 
+    @SuppressWarnings("unused")
     public static <T> Object[] binnodeToArray(BinNode<T> chain){
         int len = countBinnodes(chain);//size of the chain
         Object [] arr = new Object[len];//create new array that will contains all the values in the chain
@@ -4990,6 +5113,7 @@ public class Main {
         return arr;//return the new array
     }
 
+    @SuppressWarnings("unused")
     private static <T> int countBinNodes(BinNode<T> root) {
         if (root == null) {
             return 0;
@@ -5002,6 +5126,7 @@ public class Main {
         return 1 + leftCount + rightCount; // סופרים את הצומת הנוכחי + הצאצאים
     }
 
+    @SuppressWarnings("unused")
     public static <T> Object[] BfsArray(BinNode<T> root){
         int len = countBinnodes(root);//length of the tree
         Object [] arr = new Object[len];//build new array
@@ -5071,14 +5196,15 @@ public class Main {
     }
 
     //main func to check if stack is "Shivyon"
+    @SuppressWarnings("unused")
     public static boolean isParityStack(Stack<Integer> st){
         if (!allPosS(st)){return false;}
-        if (!countAndSumEquals(st)){return false;}
-        return true;
+        return countAndSumEquals(st);
     }
     //1-b O(n)
 
     //2//
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean inQ(Queue<Integer>q, int x){
         Queue<Integer> temp = new LinkedList<>();//assist queue for restoration
         boolean found = false;//flag if number founded or not
@@ -5099,8 +5225,10 @@ public class Main {
         return found;//return flag -> found or not
     }
 
+    @SuppressWarnings("unused")
     public static int distanceQ(Queue<Integer> q, int x, int y){
         //if x not in queue or y not in queue,-> -1
+        //noinspection SuspiciousNameCombination
         if (!inQ(q, x) || !inQ(q, y)){
             return -1;
         }
@@ -5144,6 +5272,7 @@ public class Main {
     }
 
     //check if all the values in chain found twice
+    @SuppressWarnings("unused")
     public static boolean repeatList(Node<Character> chain){
         Node<Character> pos = chain;//pointer for the chain
 
@@ -5178,6 +5307,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static boolean repeatlist2(Node<Character>chain){
         bsortchain(chain);//sort chain
         Node<Character> pos = chain;//pointer for the chain
@@ -5189,6 +5319,7 @@ public class Main {
             Node<Character> others = pos.getNext();//pointer for next node
 
             //count the occurances of current value(char)
+            //noinspection ConstantValue
             while (others != null && others.getValue().equals(first)){
                 //if current val found,count it
                 count++;
@@ -5203,11 +5334,12 @@ public class Main {
     }
 
     //6-a
+    @SuppressWarnings("unused")
     public static void one(Queue<Integer> q, int k){
         int size = q.size();//size of queue
         int i = 0;//var assist for iteration
         while (i < size){//iterate through the queue
-            int x = q.poll();//poll current value
+            @SuppressWarnings("DataFlowIssue") int x = q.poll();//poll current value
             int j = 0;//var assist for updating the queue
             while (j < k){
                 q.offer(x);
@@ -5225,6 +5357,7 @@ public class Main {
         }
     }
     //6-b-2
+    @SuppressWarnings("unused")
     public static void two(Queue<Integer> q, int k){
         Queue<Integer> clone = cloneQueue(q);
 
@@ -5238,6 +5371,7 @@ public class Main {
     //7 Domino Deck
 
     //8 - perfect tree
+    @SuppressWarnings("unused")
     public static boolean orderdTree(BinNode<Integer> root){
         //queue for bfs
         Queue<BinNode<Integer>> q = new LinkedList<>();
@@ -5280,6 +5414,7 @@ public class Main {
     //9
     //מחסנית "פירמידה n "היא מחסנית של מספרים שלמים וחיוביים שהמספר הראשון (מספר שנימצא בראש
     //המחסנית) הוא 1 וכל מספר נוסף מופיע בו ברצף, מספר פעמים השווה לערכו, עד N
+    @SuppressWarnings("unused")
     public static Stack<Integer> Pyramid(int n){
         Stack<Integer> pyramid1 = new Stack<>();
         Stack<Integer> pyramid2 = new Stack<>();
@@ -5297,6 +5432,7 @@ public class Main {
         return pyramid2;
     }
 
+    @SuppressWarnings("unused")
     public static boolean isPyramid(Stack<Integer> stk){
         if (!stkOrUp(stk)){
             return false;
@@ -5343,14 +5479,13 @@ public class Main {
             int [] buildRows = revColMat(mat,j);//create new row of the current coulmn contents
 
             //fill the row of the new matrix
-            for (int i = 0; i < buildRows.length; i++) {
-                temp[j][i] = buildRows[i];
-            }
+            System.arraycopy(buildRows, 0, temp[j], 0, buildRows.length);
         }
 
         return temp;
     }
 
+    @SuppressWarnings("unused")
     public static int[][] rotate(int[][] mat, int angle){
         //if the given angle is equals to 0 or 360
         if (angle == 0 || angle == 360) {
@@ -5366,11 +5501,12 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static void printM(int[][] mat){
-        for (int i = 0; i < mat.length; i++) {
+        for (int[] ints : mat) {
             System.out.print("[");
             for (int j = 0; j < mat[0].length; j++) {
-                System.out.print(mat[i][j]+",");
+                System.out.print(ints[j] + ",");
             }
             System.out.print("]");
             System.out.println();
@@ -5378,6 +5514,7 @@ public class Main {
     }
 
     //@wrapper function
+    @SuppressWarnings("unused")
     public static void sortListNode(Node<Integer> chain){
         //pointers for the new even chain
         Node<Integer> even = null;
@@ -5388,10 +5525,9 @@ public class Main {
         Node<Integer> lo = null;
 
         //pointers for the original chain
-        Node<Integer> pos = chain;
 
         //call the main function for sorting
-        sortListNode(chain, pos, even, le, odd, lo);
+        sortListNode(chain, chain, null, null, null, null);
     }
 
     //main function for sorting chain even values first, after them will come the odd values
@@ -5402,10 +5538,10 @@ public class Main {
                 le.setNext(odd);
                 chain.setValue(even.getValue());
                 chain.setNext(even.getNext());
-            } else if (even != null && odd == null) {
+            } else if (even != null) {
                 chain.setValue(even.getValue());
                 chain.setNext(even.getNext());
-            } else if (odd != null && even == null) {
+            } else if (odd != null) {
                 chain.setValue(odd.getValue());
                 chain.setNext(odd.getNext());
             }
@@ -5456,6 +5592,7 @@ public class Main {
                  N  P
 
      */
+    @SuppressWarnings("unused")
     public static BinNode<Integer> buildBst(int n){
         Scanner scanner = new Scanner(System.in);
 
@@ -5496,6 +5633,7 @@ public class Main {
     }
 
     //function to add binnodes to the three(left son, right son)
+    @SuppressWarnings("unused")
     private static boolean addBinNodes(BinNode<Integer> root){
         //if binnode have sons return false
         if (root.hasRight() || root.hasLeft()){
@@ -5524,11 +5662,12 @@ public class Main {
         return true;
     }
 
+    @SuppressWarnings("unused")
     public static BinNode<Integer> build2(int n){
         Scanner scanner = new Scanner(System.in);
-        int num = 0;
+        int num;
         BinNode<Integer> f = null;
-        BinNode<Integer> s = null;
+        BinNode<Integer> s;
 
         System.out.print("input the first number in the list");
         num = scanner.nextInt();
@@ -5558,6 +5697,7 @@ public class Main {
         return root;
     }
 
+    @SuppressWarnings("unused")
     private static int sumQ(Queue<Integer>q){
         int sum = 0;
         Queue<Integer> copyQ = cloneQueue(q);
@@ -5570,7 +5710,7 @@ public class Main {
 
     private static int lastInQueue(Queue<Integer>q){
         Queue<Integer> copyQ = cloneQueue(q);
-        int last = 0;
+        int last;
         Stack<Integer> temp = new Stack<>();
 
         while (!copyQ.isEmpty()){
@@ -5582,12 +5722,14 @@ public class Main {
         return last;
     }
 
+    @SuppressWarnings("unused")
     public static Queue<Integer> whyn(Node<Queue<Integer>> chain){
         Queue<Integer> q = new LinkedList<>();
 
         Node<Queue<Integer>> pos = chain;
 
         while (pos != null){
+            //noinspection DataFlowIssue
             if (pos.getValue().peek() % 2  == 1){
                 q.offer(sumQueue(pos.getValue()));
 
@@ -5601,6 +5743,7 @@ public class Main {
     }
 
     //--------------------------------------------------------------------------//
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private static boolean sykuPuP(Stack<Integer> stk){
         Stack<Integer> copyStk = cloneStack(stk);
         int prev = copyStk.pop();
@@ -5642,7 +5785,7 @@ public class Main {
     }
 
     private static <T> boolean Qsorted(Queue<Stack<T>> q){
-        Queue<Stack<T>> temp = new LinkedList<>();
+        @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") Queue<Stack<T>> temp = new LinkedList<>();
         boolean flag = false;
 
         Stack<T> prevStk = q.poll();
@@ -5650,7 +5793,7 @@ public class Main {
         temp.offer(prevStk);
 
         while (!q.isEmpty()){
-            Stack<T> currStk = q.poll();
+            @SuppressWarnings("unused") Stack<T> currStk = q.poll();
             int currLen = sizeStK(prevStk);
             temp.offer(prevStk);
 
@@ -5661,7 +5804,7 @@ public class Main {
             prevLen = currLen;
         }
 
-        return flag ? false : true;
+        return !flag;
     }
 
     private static <T> Stack<T>  copyStack(Stack<T> stk){
@@ -5727,6 +5870,7 @@ public class Main {
             if (!sykuPuP(prevStk)){return false;}
 
             //אם איבר ראש במחסנית נוכחית שונה מאיבר אחרון במחסנית קודמת נחזיר שקר
+            assert currStk != null;
             if (currStk.peek() != prevLast){return false;}
 
             //נעדכן את ערך משתנה איבר אחרון במחסנית קודמת להיות האיבר האחרון במחסנית נוכחית
@@ -5738,6 +5882,7 @@ public class Main {
         return true;
     }
 
+    @SuppressWarnings("unused")
     private static boolean isPerfixQstkTree(BinNode<Queue<Stack<Integer>>> root){
         Queue<BinNode<Queue<Stack<Integer>>>> q = new LinkedList<>();
         q.offer(root);
@@ -5759,8 +5904,7 @@ public class Main {
             }
         }
 
-
-        return flag ? false : true;
+        return !flag;
     }
     //--------------------------------------------------------------------------//
     //שאלה מרעיון עבודה
@@ -5839,6 +5983,7 @@ public class Main {
         return false;
     }
 
+    @SuppressWarnings("unused")
     public static boolean repeat(Node<String> chain){
         Node<String> pos = chain;
         int count = 0;
@@ -5861,6 +6006,7 @@ public class Main {
         return false;
     }
 
+    @SuppressWarnings("unused")
     public static boolean isWBTree(BinNode<Character> root){
         if (root == null){
             return true;
@@ -5900,6 +6046,7 @@ public class Main {
     }
 
     //e.g for good string: aaabccdd
+    @SuppressWarnings("unused")
     public static boolean uniqStr(String str){
         String innotin = "";//new str
 
@@ -5926,17 +6073,17 @@ public class Main {
     }
 
     //פונקצייה עוטפת-מיון רקורסיבי זוגיים-אי זוגיים שרשרת חוליות חד כיוונית
+    @SuppressWarnings("unused")
     public static void reEvenOddn(Node<Integer> chain) {
         if (chain == null) {return;}//אם הרשימה ריקה החזר
         Node<Integer> even = null;//פוינטר ראש שרשרת זוגיים
         Node<Integer> le = null;//פויינטר זנב שרשרת אי זוגיים
         Node<Integer> odd = null;//פויינטר ראש שרשרת אי זוגיים
         Node<Integer> lo = null;//פויינטר זנב שרשרת אי זוגיים
-        Node<Integer> pos = chain;//פויינטר עזר למעבר על שרשרת מקור
         //קריאה לפונקצייה פרטית שתיצור שרשרת איחוד
         // כך שזוגיים תחילה ולאחריהן חוליות אי זוגיות
         //ואז תעדכן שרשרת מקור בתוכן השרשרת איחוד
-        reEvenOddn(chain, pos, even, le, odd, lo);
+        reEvenOddn(chain, chain, null, null, null, null);
     }
 
     private static void reEvenOddn(Node<Integer> chain, Node<Integer> pos, Node<Integer> even, Node<Integer> le, Node<Integer> odd, Node<Integer> lo) {
@@ -5978,7 +6125,7 @@ public class Main {
     }
 
     private static int last(Stack<Integer> stk){
-        int last = 0;
+        int last;
         Stack<Integer> temp = new Stack<>();
 
         while (!stk.isEmpty()){
@@ -5994,6 +6141,7 @@ public class Main {
         return last;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private static boolean isStackSortedUp(Stack<Integer> stk){
         Stack<Integer> temp = new Stack<>();
 
@@ -6016,7 +6164,7 @@ public class Main {
             stk.push(temp.pop());
         }
 
-        return flag? false : true;
+        return !flag;
     }
 
     private static int sizeOfStack(Stack<Integer> stk){
@@ -6040,6 +6188,7 @@ public class Main {
         boolean flag = false;
 
         Stack<Integer> prevStk = q.poll();
+        assert prevStk != null;
         int prevLen = sizeOfStack(prevStk);
         temp.offer(prevStk);
 
@@ -6057,7 +6206,7 @@ public class Main {
             q.offer(temp.poll());
         }
 
-        return flag ? false : true;
+        return !flag;
     }
 
     private static boolean isPerfectQueueOfStacks(Queue<Stack<Integer>> q){
@@ -6070,6 +6219,7 @@ public class Main {
         boolean lastNotEqualsToFirst = false;
 
         Stack<Integer> prevStk = q.poll();
+        assert prevStk != null;
         if (!isStackSortedUp(prevStk)){
             StacknotSortedUp  = true;
         }
@@ -6095,9 +6245,10 @@ public class Main {
             q.offer(temp.poll());
         }
 
-        return StacknotSortedUp || lastNotEqualsToFirst ? false : true;
+        return !StacknotSortedUp && !lastNotEqualsToFirst;
     }
 
+    @SuppressWarnings("unused")
     public static boolean isPerefectTreeOfQueueOfStacks(BinNode<Queue<Stack<Integer>>> root){
         Queue<BinNode<Queue<Stack<Integer>>>> q = new LinkedList<>();
         q.offer(root);
@@ -6122,6 +6273,7 @@ public class Main {
     }
 
     //O(n)
+    @SuppressWarnings("unused")
     public static boolean isParity(Stack<Integer> st){
         //stack for restoration
         Stack<Integer> temp = new Stack<>();
@@ -6153,9 +6305,10 @@ public class Main {
         //restoration
         while (!temp.isEmpty()){st.push(temp.pop());}
 
-        return !flag && even == odd && esum == osum ? true : false;
+        return !flag && even == odd && esum == osum;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private static boolean isinq(Queue<Integer> q, int num){
         Queue<Integer> temp = cloneQueue(q);
 
@@ -6167,6 +6320,7 @@ public class Main {
         return false;
     }
 
+    @SuppressWarnings("unused")
     public static int distance(Queue<Integer>q, int x, int y){
         if (!isinq(q,x) || !isinq(q,y)){return -1;}
 
@@ -6217,6 +6371,7 @@ public class Main {
         return count;
     }
 
+    @SuppressWarnings("unused")
     public static boolean allOccurTwice(Node<Character> chain){
         if (chain == null){return false;}
 
@@ -6226,6 +6381,7 @@ public class Main {
             Character currentChar = pos.getValue();
             int howmany = howManyTimesFoundInList(chain, currentChar);
             if (howmany != 2){return false;}
+            pos = pos.getNext();
         }
         return true;
     }
@@ -6245,11 +6401,14 @@ public class Main {
                     char temp = current.getValue();
                     current.setValue(current.getNext().getValue());
                     current.getNext().setValue(temp);
+                    current = current.getNext();
                 }
             }
+            pos = pos.getNext();
         }
     }
 
+    @SuppressWarnings("unused")
     public static boolean allt(Node<Character> chain){
         bubblesortnode(chain);
 
@@ -6261,10 +6420,12 @@ public class Main {
             Node<Character> con = pos;
             int count = 0;
 
+            //noinspection ConstantValue
             while (con != null){
 
                 if (con.getValue() == current){count++;}
 
+                //noinspection ConstantValue
                 if (count != 2){return false;}
 
                 con = con.getNext();
@@ -6276,6 +6437,7 @@ public class Main {
         return true;
     }
 
+    @SuppressWarnings("unused")
     public static void one1(Queue<Integer>q, int k){
         //תור עזר
         Queue<Integer> temp = new LinkedList<>();
@@ -6296,6 +6458,7 @@ public class Main {
         while (!temp.isEmpty()){q.offer(temp.poll());}
     }
 
+    @SuppressWarnings("unused")
     public static void two2(Queue<Integer>q, int k){
         //תור העתק מקור
         Queue<Integer> copy = copyQueue(q);
@@ -6322,6 +6485,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static boolean MesudarTree(BinNode<Integer> root){
         //תור לסריקה לרוחב
         Queue<BinNode<Integer>> q = new LinkedList<>();
@@ -6369,11 +6533,11 @@ public class Main {
         return true;
     }
 
+    @SuppressWarnings("unused")
     public static Stack<Integer> nst(int n){
         Stack<Integer> stk = new Stack<>();
 
-        for (int i = n; i >= 1; i--) {
-            int num = i;
+        for (int num = n; num >= 1; num--) {
             int j = 0;
 
             while (j < num){
@@ -6385,6 +6549,7 @@ public class Main {
         return stk;
     }
 
+    @SuppressWarnings("unused")
     public static boolean isPyramidN(Stack<Integer> stk) {
         Stack<Integer> copyStk = cloneStack(stk);
 
@@ -6426,6 +6591,7 @@ public class Main {
     }
 
     //סעיף ב'
+    @SuppressWarnings("unused")
     public static boolean isQDN(Queue<Integer> q, int num){
         //בניית תור עזר מדרגה N , לפי המספר שהתקבל בפונקצייה
         Queue<Integer> temp = QDN(num);
@@ -6434,22 +6600,23 @@ public class Main {
         while (!temp.isEmpty() && !q.isEmpty()){
             //השוואה בין ערכים משני התורים מקור, ועזר
             //אם נמצא שוני החזר שקר
-            if (temp.poll() != q.poll()){
+            if (!Objects.equals(temp.poll(), q.poll())){
                 return false;
             }
         }
         //אם אחד התורים נשאר מלא נחזיר שקר, אחרת אמת
-        return !temp.isEmpty() && !q.isEmpty()? false : true;
+        return true;
     }
 
     //שאלה מ"ס 2
     //סעיף א'
+    @SuppressWarnings("unused")
     public static boolean isGlist(Node<Integer> chain){
         //פויינטר לשרשרת
         Node<Integer> pos = chain;
 
         if (pos.getNext() != null) {
-            if (pos.getValue() != pos.getNext().getValue()) {return false;}
+            if (!Objects.equals(pos.getValue(), pos.getNext().getValue())) {return false;}
         }
 
         //הגדרת צובר ואתחולו בערך החולייה הראשונה
@@ -6492,6 +6659,7 @@ public class Main {
     }
 
     //פונקציה עיקרית
+    @SuppressWarnings("unused")
     public static boolean isGlistReverse(Node<Integer> chain){
         //פויינטר לשרשרת
         Node<Integer> pos = chain;
@@ -6516,14 +6684,8 @@ public class Main {
     //א D -> B -> A -> C
     //ב  B -> A -> D -> C
 
-    //wrong
-    public static void changeHeadIntegerNode(Node<Integer> chain){
-        Node<Integer> toAdd = new Node<>(9);
-        toAdd.setNext(chain);
-        chain = toAdd;//לא חוקי
-    }
-
     //O(n)
+    @SuppressWarnings("unused")
     public static int putInPlaceT(Queue<Integer>q, int num){
         //index for num
         int index = 0;
@@ -6541,7 +6703,7 @@ public class Main {
             //if it's small offer it to the small-numbers-queue, else to the big-num-queue
             if (current < num){
                 small.offer(current);
-            }else if (current >= num){
+            }else {
                 big.offer(current);
             }
         }
@@ -6563,6 +6725,7 @@ public class Main {
     }
 
     //O(n)
+    @SuppressWarnings("unused")
     public static void moveToFrontC(Queue<Integer>q, int k){
         //size of queue
         int size = q.size();
@@ -6580,6 +6743,7 @@ public class Main {
 
     //O(n^2)
     //order binnode list using bubble sort algorithm
+    @SuppressWarnings("unused")
     public static void orderBin(BinNode<Integer>chain){
         //pointer for the list
         BinNode<Integer> pos = chain;
@@ -6709,6 +6873,7 @@ public class Main {
         pos.setNext(null);
     }
 
+    @SuppressWarnings("unused")
     public static int mostPopularNumberMax(Node<Integer> chain){
         //call function to build freqlist
         buildFreqList3(chain);
@@ -6738,7 +6903,7 @@ public class Main {
         }
 
         //if number not equals to -1, return the number, else return -1
-        return theNumber != -1 ? theNumber : -1;
+        return theNumber;
     }
 
     //O(n)
@@ -6755,6 +6920,7 @@ public class Main {
     }
 
     //O(n)
+    @SuppressWarnings("unused")
     public static boolean equalSumst(Stack<Integer> stk){
         //מחסנית העתק
         Stack<Integer> copy = cloneStack(stk);
@@ -6802,6 +6968,7 @@ public class Main {
     }
 
     //O(n)
+    @SuppressWarnings("unused")
     public static boolean equalSumst2(Stack<Integer> stk){
         //מערך בגודל המחסנית
         int [] arr = new int[stk.size()];
@@ -6828,6 +6995,7 @@ public class Main {
         return true;
     }
 
+    @SuppressWarnings("unused")
     private static int numNodesFollowing2(Node<Integer> chain){
         int count = 0;
 
@@ -6872,6 +7040,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static MyNode addNumber(MyNode list, int val, int position){
         //create MyNode for adding it later to the list
         MyNode toAdd = new MyNode(val);
@@ -6911,6 +7080,7 @@ public class Main {
         //add it at the end
         if (count == position){
             //add it to the end
+            assert pos != null;
             pos.setNext(toAdd);
             //change the "howManyBig" property of all the nodes in the list
             updateAllMynodes(list);
@@ -6932,7 +7102,7 @@ public class Main {
         //איטרציה
         while (pos != null){
             //משתנה שיחזיק את ההפרש בין שני חוליות צמודות
-            int d = 0;
+            int d;
             //אם האיבר הבא אינו NULL
             if (pos.getNext() != null){
                 //נחשב את ההפרש
@@ -6950,6 +7120,7 @@ public class Main {
 
     }
 
+    @SuppressWarnings("unused")
     public static int lastHefreshList(Node<Integer> chain){
         while (lengthN(chain) > 1){
             HefreshListy(chain);
@@ -6961,6 +7132,7 @@ public class Main {
     }
 
     //2 O(n)
+    @SuppressWarnings("unused")
     public static boolean stkSumUp(Stack<Integer> stk){
         //create copy stack
         Stack<Integer> temp = cloneStack(stk);
@@ -6987,7 +7159,7 @@ public class Main {
     //a
     public static int sumQueue2(Queue<Integer> q){
         //copy queue
-        Queue<Integer> copy = cloneQueue(q);
+        @SuppressWarnings("unused") Queue<Integer> copy = cloneQueue(q);
         //sum
         int sum = 0;
 
@@ -7012,6 +7184,7 @@ public class Main {
         return stk.peek();
     }
 
+    @SuppressWarnings("unused")
     public static Queue<Integer> lsOfQu(Node<Queue<Integer>> chain){
         //create new queue
         Queue<Integer> q = new LinkedList<>();
@@ -7022,7 +7195,7 @@ public class Main {
         //iteration
         while (pos != null){
             //the current value first in the current queue
-            int currentTop = pos.getValue().peek();
+            @SuppressWarnings("DataFlowIssue") int currentTop = pos.getValue().peek();
 
             //if this val is odd
             if (currentTop % 2 == 1){
@@ -7091,6 +7264,7 @@ public class Main {
     }
 
     //פונקציה עוטפת
+    @SuppressWarnings("unused")
     public static void allBigThanAvg(BinNode<Integer> root){
         //קריאה לפונקציה להדפסת ערכים הגדולים מהממוצע
         allBigThanAvg(root,avgt(root));
@@ -7110,6 +7284,7 @@ public class Main {
     }
 
     //שני מחסניות
+    @SuppressWarnings("unused")
     public static boolean isBottom(Stack<Integer> stk1, Stack<Integer> stk2){
         Stack<Integer> temp1 = new Stack<>();
         Stack<Integer> temp2 = new Stack<>();
@@ -7119,7 +7294,7 @@ public class Main {
         while (!stk2.isEmpty()){ temp2.push(stk2.pop()); }
 
         while (!temp2.isEmpty() && !temp1.isEmpty()){
-            if (temp2.pop() != temp1.pop()){
+            if (!Objects.equals(temp2.pop(), temp1.pop())){
                 return false;
             }
         }
@@ -7127,6 +7302,7 @@ public class Main {
         return true;
     }
 
+    @SuppressWarnings("unused")
     public static Stack<Integer> commonButtom(Stack<Integer> stk1, Stack<Integer> stk2){
         Stack<Integer> temp1 = new Stack<>();
         Stack<Integer> temp2 = new Stack<>();
@@ -7136,7 +7312,7 @@ public class Main {
 
         while (!stk2.isEmpty()){ temp2.push(stk2.pop()); }
 
-        while (!temp2.isEmpty() && !temp1.isEmpty() && temp2.peek() == temp1.peek()){
+        while (!temp2.isEmpty() && !temp1.isEmpty() && Objects.equals(temp2.peek(), temp1.peek())){
             finalstk.push(temp1.peek());
             temp2.pop();
             temp1.pop();
@@ -7145,14 +7321,15 @@ public class Main {
         return finalstk;
     }
 
+    @SuppressWarnings("unused")
     public static boolean isFiboxyz(Node<Integer> chain){
         if (chain == null || chain.getNext() == null || chain.getValue() != 1 && chain.getNext().getValue() != 1){
             return false;
         }
 
-        int x = 0;
-        int y = 0;
-        int z = 0;
+        int x;
+        int y;
+        int z;
         Node<Integer> pos = chain;
 
         while (pos.getNext().getNext().getNext() != null){
@@ -7169,11 +7346,10 @@ public class Main {
         y = pos.getNext().getValue();
         z = pos.getNext().getNext().getValue();
 
-        if (x + y != z){ return false; }
-
-        return true;
+        return x + y == z;
     }
 
+    @SuppressWarnings("unused")
     public static Node<Integer> buildFibonachi2(int num){
         //יצירת מערך
         int [] arr = new int[num];
@@ -7190,15 +7366,15 @@ public class Main {
         Node<Integer> tail = null;
 
         //איטרציה על המערך ובניית השרשרת
-        for (int i = 0; i < arr.length; i++) {
+        for (int j : arr) {
             //יצירת החולייה להוספה
-            Node<Integer> toAdd = new Node<>(arr[i]);
+            Node<Integer> toAdd = new Node<>(j);
 
             //מיקרה: השרשרת ריקה
-            if (chain == null){
+            if (chain == null) {
                 chain = toAdd;
                 tail = chain;
-            }else{ //מיקרה: השרשרת לא ריקה
+            } else { //מיקרה: השרשרת לא ריקה
                 tail.setNext(toAdd);
                 tail = tail.getNext();
             }
@@ -7208,6 +7384,7 @@ public class Main {
         return chain;
     }
 
+    @SuppressWarnings("unused")
     public static boolean isGoDown(BinNode<Integer> root){
         //if we reach the end of the tree
         if (root == null){ return true; }
@@ -7229,6 +7406,7 @@ public class Main {
     }
 
     //O(n)
+    @SuppressWarnings("unused")
     public static boolean PerfectList(Node<Integer> chain){
         //create hashmap
         HashMap<Integer, Integer> map = new HashMap<>();
@@ -7250,13 +7428,15 @@ public class Main {
             //if current entry value is positive
             if (entry.getKey() > 0 && entry.getValue() % 2 != 0){ return false;}
             //if current entry value is negative
-            else if (entry.getKey() > 0 && entry.getValue() % 2 != 1){ return false; }
+            else //noinspection ConstantValue
+                if (entry.getKey() > 0 && entry.getValue() % 2 != 1){ return false; }
         }
 
         return true;
     }
 
 
+    @SuppressWarnings("unused")
     public static boolean IsPerfectN(Queue<Integer> q, int n){
         int [] arr = new int[n];//יצירת מערך מונים בגודל N
         Queue<Integer> copyQ = cloneQueue(q);//תור עזר לשחזור
@@ -7269,11 +7449,16 @@ public class Main {
         }
 
         //מעבר על מערך המונים אםם יש תא שמכיל את הערך 0 משמע אחד המס מ 1 עד N לא מופיע
-        for (int i = 0; i < arr.length; i++) { if (arr[i] == 0){ return false; } }
+        for (int j : arr) {
+            if (j == 0) {
+                return false;
+            }
+        }
 
         return true;
     }
 
+    @SuppressWarnings("unused")
     public static void bQperfect(Queue<Integer> q, int n){
         int [] arr = new int[n];//יצירת מערך מונים בגודל N
         Queue<Integer> finalq = new LinkedList<>();
@@ -7298,6 +7483,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static Queue<String> bQfromLenStr(BinNode<String> root){
         //queue for iteration
         Queue<BinNode<String>> q = new LinkedList<>();
@@ -7340,12 +7526,15 @@ public class Main {
         }
 
         //build the sorted queue
-        for (int i = 0; i < arr.length; i++) { finalq.offer(arr[i]); }
+        for (String s : arr) {
+            finalq.offer(s);
+        }
 
         //return the new queue
         return finalq;
     }
 
+    @SuppressWarnings("unused")
     public static boolean where(BinNode<Integer> bt, int num, int count){
         if (bt == null){ return false; }
 
@@ -7366,6 +7555,7 @@ public class Main {
             s.push(temp);
         }
     }
+    @SuppressWarnings("unused")
     public static void Two(Stack<Integer> s){
         if(!s.isEmpty())
         {
@@ -7376,6 +7566,7 @@ public class Main {
     }
 
     //פונק הסוכמת את כל הערכים הראשוניים בעץ
+    @SuppressWarnings("unused")
     public static int atree(BinNode<Integer> root){
         //מקרה בסיס: אם הגענו לסוף נחזיר 0
         if (root == null){ return 0; }
@@ -7392,6 +7583,7 @@ public class Main {
         return root.getValue() + atree(root.getLeft()) + atree(root.getRight());
     }
 
+    @SuppressWarnings("unused")
     public static void bsBin(BinNode<Integer> chain){
         BinNode<Integer> pos = chain;
 
@@ -7416,6 +7608,7 @@ public class Main {
 
     //2025 אביב מועד ב
     //1
+    @SuppressWarnings("unused")
     public static boolean divallstk(Stack<Integer> stk){
         Stack<Integer> temp = new Stack<>();
 
@@ -7441,6 +7634,7 @@ public class Main {
 
     //2
     //א
+    @SuppressWarnings("unused")
     public static boolean allKtsavotSumEquals(Queue<Integer> q){
         Queue<Integer> temp = new LinkedList<>();
         int size = q.size();
@@ -7456,7 +7650,7 @@ public class Main {
                 i++;
             }
 
-            int last = q.poll();
+            @SuppressWarnings("DataFlowIssue") int last = q.poll();
 
             if (sum == 0) { sum = first + last; }
 
@@ -7473,6 +7667,7 @@ public class Main {
 
     //3
     //א
+    @SuppressWarnings("unused")
     public static boolean perfectListK(Node<Integer> chain, int k){
         HashMap<Integer,Integer> map = new HashMap<>();
         Node<Integer> pos = chain;
@@ -7537,6 +7732,7 @@ public class Main {
 
     //ג
     //O(n)^2
+    @SuppressWarnings("unused")
     public static boolean isDistanceK(Queue<Integer> q, int k){
         Queue<Integer> copy = cloneQueue(q);
         int sizeQ = q.size();
@@ -7555,6 +7751,7 @@ public class Main {
     //7
     //א
     //O(n)
+    @SuppressWarnings("unused")
     public static int getSum(Node<Integer> p1, Node<Integer> p2){
         int sum = 0;
 
@@ -7568,6 +7765,7 @@ public class Main {
 
     //ב
     //O(n)^2
+    @SuppressWarnings("unused")
     public static boolean isAmount(Node<Integer> ch, int num){
         int sum = 0;
 
@@ -7612,6 +7810,7 @@ public class Main {
 
     //ג
     //O(n)^2
+    @SuppressWarnings("unused")
     public static Queue<Integer> doIt(Node<Stack<Integer>> chain){
         Node<Stack<Integer>> pos = chain;
         Queue<Integer> rt = new LinkedList<>();
@@ -7649,15 +7848,17 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static void two(Node<Integer> ch) {
         if(ch != null) {
             int x = one(ch, ch.getValue());
-            ch.setNext(new Node<Integer> (x+1, ch.getNext()));
+            ch.setNext(new Node<>(x + 1, ch.getNext()));
             ch = ch.getNext();
             two(ch.getNext());
         }
     }
 
+    @SuppressWarnings("unused")
     public static void changeMidQueue(Queue<Integer> q, int x, int y){
         var rnd = new Random();
 
@@ -7743,7 +7944,6 @@ public class Main {
         }
     }
 
-
     public static void bubbleSortDown(Node<Integer> chain){
         var pos = chain;
 
@@ -7764,6 +7964,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static void buildFreqListn(Node<Integer> chain){
         bubbleSortDown(chain);
 
@@ -7776,7 +7977,7 @@ public class Main {
             var nex = pos;
             int count = 0;
 
-            while (nex != null && nex.getValue() == num){
+            while (nex != null && Objects.equals(nex.getValue(), num)){
                 count++;
                 nex = nex.getNext();
             }
@@ -7794,6 +7995,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static int mostPopularNumber2(Node<Integer> chain){
         var max = Integer.MIN_VALUE;
         var finalNumber = 0;
@@ -7815,6 +8017,7 @@ public class Main {
         return finalNumber;
     }
 
+    @SuppressWarnings("unused")
     public static void buildFreqListn1(Node<Integer> chain){
         //pointer for iteration
         var pos = chain;
@@ -7834,7 +8037,7 @@ public class Main {
                 var nNext = current.getNext().getValue();
 
                 //if next value equals to the current value
-                if (nNext == n){
+                if (Objects.equals(nNext, n)){
                     //count val
                     count++;
                     //set current node to the sec next node
@@ -7856,8 +8059,9 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unused")
     public static void qOfStr(Queue<String> q){
-        var str = ""; //מחרוזת ריקה לבנייה
+        @SuppressWarnings("MismatchedQueryAndUpdateOfStringBuilder") StringBuilder str = new StringBuilder(); //מחרוזת ריקה לבנייה
         var i = 0; //משתנה למיקום תו
 
         //איטרציה על התור
@@ -7865,7 +8069,7 @@ public class Main {
             //אם האינדקס בטווח
             if (i < q.peek().length()){
                 //בניית המחרוזת
-                str += q.peek().charAt(i);
+                str.append(q.peek().charAt(i));
                 //הכנסה מעגלית רק מחרוזות שיש להן תו באינקס I
                 q.offer(q.poll());
             }
@@ -7890,7 +8094,7 @@ public class Main {
             var num = stk.pop();
 
             //כל עוד לא הגענו למס שמחפשים
-            if (num != n){
+            if (!Objects.equals(num, n)){
                 //נמנה איבר זה
                 count++;
                 //נכניס אותו למחסנית שיחזור
@@ -7924,7 +8128,7 @@ public class Main {
     BiFunction<Stack<Integer>, Integer, Integer> fend = (stk, n) -> {
         //for each loop iterarte on stack from the bottom
             for (var number : stk){
-                if (number != n){
+                if (!Objects.equals(number, n)){
                     count++;
                 }else {
                     count++;
@@ -7988,6 +8192,7 @@ public class Main {
     };
 
     //O(n)^4
+    @SuppressWarnings("unused")
     Function<BinNode<Queue<Stack<Integer>>>, Integer> maxdisBstksInTreeOfQu = (root) -> {
         //queue for breadth first search
         var q = new LinkedList<BinNode<Queue<Stack<Integer>>>>();
@@ -8029,6 +8234,7 @@ public class Main {
     }
 
     //O(n)^2
+    @SuppressWarnings("unused")
     Function<Queue<Integer>, Queue<Integer>> sidq = (q) -> {
         //temp queue for restoration
         var temp = new LinkedList<Integer>();
@@ -8113,6 +8319,7 @@ public class Main {
     };
 
     //O(n)^2
+    @SuppressWarnings("unused")
     Function<Stack<Integer>, Integer> maxdisinstk = (stk) -> {
         //יכיל את המרחק הגדול ביותר
         var max = Integer.MIN_VALUE;
@@ -8135,6 +8342,7 @@ public class Main {
     };
 
     //O(n)
+    @SuppressWarnings("unused")
     Function<Node<Integer> ,Boolean>PerfectList = (chain) -> {
         //יצירת טבלת גיבוב
         var map = new HashMap<Integer, Integer>();
@@ -8173,6 +8381,7 @@ public class Main {
         return true;
     };
 
+    @SuppressWarnings("unused")
     BiFunction<Queue<Integer>, Integer ,Boolean> IsPerfectN = (queue, num) -> {
         //counters array
         var monim = new int[num];
@@ -8207,6 +8416,7 @@ public class Main {
         return true;
     };
 
+    @SuppressWarnings("unused")
     BiConsumer<Queue<Integer>, Integer> DoItSuper = (q, n) -> {
         //counters array
         var monim = new int[n];
@@ -8260,6 +8470,7 @@ public class Main {
     };
 
     //O(n)^2
+    @SuppressWarnings("unused")
     BiFunction<Node<Integer>, Integer, Boolean> buildSumSortUpList = (chain, num) -> {
         //הוספה להתחלה
         if (num < chain.getValue()){
@@ -8269,7 +8480,7 @@ public class Main {
             chain.setValue(num); //החולייה הראשונה תקבל את הערך להוספה
 
             //הוספת החולייה החדשה עם הערך של הראשונה, בין הראשונה לשלישית
-            chain.setNext(new Node<Integer>(temp, chain.getNext()));
+            chain.setNext(new Node<>(temp, chain.getNext()));
 
             // אם הרשימה עדיין ממויינת, נחזיר אמת
             if (isSumSortUp.apply(chain)){
@@ -8285,7 +8496,7 @@ public class Main {
 
         //הוספה לאמצע
         while (pos.getNext() != null){
-            pos.setNext(new Node<Integer>(num, pos.getNext())); // חיבור חולייה חדשה באמצע בין שני איברים
+            pos.setNext(new Node<>(num, pos.getNext())); // חיבור חולייה חדשה באמצע בין שני איברים
 
             // אם הרשימה עדיין ממויינת, נחזיר אמת
             if (isSumSortUp.apply(chain)){
@@ -8298,7 +8509,7 @@ public class Main {
             pos = pos.getNext(); // נתקדם לחולייה הבאה
         }
 
-        pos.setNext(new Node<Integer>(num)); //הוספה לסוף
+        pos.setNext(new Node<>(num)); //הוספה לסוף
 
         // אם הרשימה עדיין ממויינת, נחזיר אמת
         if (isSumSortUp.apply(chain)){
@@ -8314,6 +8525,7 @@ public class Main {
     // 1
     //"הוא תור של מספרים שלמים חיוביים שהמספר הראשון בו הוא 1- וכל מספר מופיע בו ברצף,
     //N מספר פעמים השווה לערכו, עד
+    @SuppressWarnings("unused")
     Function<Integer, Queue<Integer>> torNq = (num) -> {
         var q = new LinkedList<Integer>(); // תור לבנייה
 
@@ -8331,6 +8543,7 @@ public class Main {
     };
 
     // האם תור הוא תור מדרגה N
+    @SuppressWarnings("unused")
     BiFunction<Queue<Integer>, Integer, Boolean> istorNq = (q,num) -> {
         // אם הערך N
         //נמצא בפנים
@@ -8343,12 +8556,12 @@ public class Main {
 
             // אם הערך N
             //נמצא בפנים, אזי ערך המשתנה הבוליאני ישתנה לאמת
-            if (number == num) { numInsideQueue = true; }
+            if (Objects.equals(number, num)) { numInsideQueue = true; }
 
             // המשך איטרציה וריקון התור כל עוד הערך הנוכחי שווה ל NUMBER
             while (!q.isEmpty() && j < number){
                 // אם האיבר הנוכחי לא שווה לנאמבר משמע תור זה הוא לא תור מדרגה אן ולכן נחזיר שקר
-                if (q.poll() != number){ return false; }
+                if (!Objects.equals(q.poll(), number)){ return false; }
                 j++;
             }
 
@@ -8362,6 +8575,7 @@ public class Main {
     // 2
     // "שרשרת סכומים" היא שרשרת של מספרים שלמים שכל מספר בה )פרט לראשון( הוא סכום של המספרים אשר
     //מופיעים לפניו.
+    @SuppressWarnings("unused")
     Function<Node<Integer>, Boolean> suml = (chain) -> {
         var sum = 1; // צובר איברים
 
@@ -8384,6 +8598,7 @@ public class Main {
 
     // "שרשרת סכומים הפוכה" היא שרשרת של מספרים שלמים שכל מספר בה )פרט לאחרון( הוא סכום של
     //המספרים אשר מופיעים אחריו
+    @SuppressWarnings("unused")
     Function<Node<Integer>, Boolean> suma = (chain) -> {
         // איטרציה על הרשימה
         while (chain.getNext() != null){
@@ -8408,6 +8623,7 @@ public class Main {
 
     // 2022 spring a
     // 1
+    @SuppressWarnings("unused")
     Consumer<Node<Integer>> setF2 = (chain) -> {
         // שיכפול רשימה באופן הבא
         // [1,2,3] -> [1,1,2,2,3,3]
@@ -8417,6 +8633,7 @@ public class Main {
         }
     };
 
+    @SuppressWarnings("unused")
     Consumer<Node<Integer>> setF2sec = (chain) -> {
         // שיכפול רשימה באופן הבא
         // [1,2,3] -> [1,2,3,1,2,3]
@@ -8441,6 +8658,7 @@ public class Main {
             chain = chain.getNext(); // קידום הפויינטר לחולייה הבאה
         }
 
+        assert prev != null;
         prev.setNext(newey); // חיבור פויינטר זנב השרשרת המקורית לראש הרשימה החדשה
     };
 
@@ -8450,13 +8668,12 @@ public class Main {
         // לא ניתן להשתמש במשתנה int בתוך למבדא, ולכן משתמשים במחלקה עוטפת למס שלם
         AtomicInteger sum = new AtomicInteger(); // צובר
 
-        stk.forEach( (num) -> {
-            sum.addAndGet(num);
-        } ); // צבירת ערכים במחסנית
+        stk.forEach(sum::addAndGet); // צבירת ערכים במחסנית
 
         return sum.get() / stk.size(); // החזרת ממוצע הערכים במחסנית
     };
 
+    @SuppressWarnings("unused")
     Consumer<Stack<Integer>> sortByAvgSplitStack  = (stk) -> {
         var bigThanAvg = new Stack<Integer>(); // מחסנית עזר עבור הערכים הגדולים מהממוצע
         var smlThanAvg = new Stack<Integer>(); // מחסנית עזר עבור הערכים הקטנים מהממוצע
@@ -8471,16 +8688,12 @@ public class Main {
         stk.clear(); // ניקוי תוכן מחסנית מקור
 
         //העברת תוכן מחסנית עזר של הערכים הקטנים מהממוצע למחסנית מקור
-        smlThanAvg.forEach((num ) -> {
-            stk.push(num);
-        } );
+        smlThanAvg.forEach(stk::push);
 
         smlThanAvg.clear(); // ניקוי תוכן מחסנית העזר המכילה ערכים קטנים מהממוצע
 
         // ולאחריהם העברת תוכן המחסנית עזר של הערכים הקטנים מהממוצע למחסנית מקור
-        bigThanAvg.forEach((num) -> {
-            stk.push(num);
-        } );
+        bigThanAvg.forEach(stk::push);
 
         bigThanAvg.clear(); // ניקוי תוכן מחסנית העזר המכילה ערכים גדולים מהממוצע
     };
@@ -8512,7 +8725,7 @@ public class Main {
 
                 // else if current node value != -1
                 //create new avg node
-                var toAdd = new Node<Double>(sum / count);
+                var toAdd = new Node<>(sum / count);
 
                 // add it to the list
                 if (avglst == null){
@@ -8565,7 +8778,7 @@ public class Main {
 
                 // else if current node value != -1
                 //create new avg node
-                var toAdd = new Node<Double>(sum / count);
+                var toAdd = new Node<>(sum / count);
 
                 // add it to the list
                 if (newavglst == null){
@@ -8602,6 +8815,7 @@ public class Main {
         }
     };
 
+    @SuppressWarnings("unused")
     Runnable rprintres = () -> {
         // יצירת שרשרת: 80 -> 40 -> 90 -> -1 -> 95 -> -1 -> 85 -> 80 -> -1 -> null
         var lst = new Node<>(80,
@@ -8620,6 +8834,7 @@ public class Main {
 
     //2022 summer a
     //2 O(n)
+    @SuppressWarnings("unused")
     Function<Stack<Integer>, Boolean> bigThanBefore = (stack) -> {
         var clone = copyStack(stack);
         var sum = 0;
@@ -8632,6 +8847,7 @@ public class Main {
         return true;
     };
 
+    @SuppressWarnings("unused")
     public static void addly(Node<Integer> chain, int n, int pos) {
         // case: add at the start of the chain
         if (pos == 1) {
@@ -8661,12 +8877,13 @@ public class Main {
         }
 
         // case: add at the end (if pos is larger than the chain length)
+        assert tail != null;
         tail.setNext(new Node<>(n));
     }
 
     //---------------------------------------------------------------------------------------------------------------//
 
-    public static void main (String[]args)throws Exception{
+    public static void main (String[]args) {
         var scanner = new Scanner(System.in);
 
         System.out.println("do you want run main function? Y/N");
@@ -8690,16 +8907,7 @@ public class Main {
                         //--------------------------------------------------------//
 
                         //colors array
-                        Color[] colors = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.ORANGE, Color.CYAN};
-                        final int[] colorIndex = {0}; // שימוש במערך כדי לאפשר שינוי ערך בתוך ה-Lambda
-                        //--------------------------------------------------------//
-
-                        //create button, listener
-                        JButton button = new JButton("change color");
-                        button.addActionListener(e -> {
-                            frame.getContentPane().setBackground(colors[colorIndex[0]]); // change background color
-                            colorIndex[0] = (colorIndex[0] + 1) % colors.length; // update the index
-                        });
+                        JButton button = getJButton(frame);
                         frame.setLayout(new BorderLayout());
                         frame.add(button, BorderLayout.SOUTH); // הוספת הכפתור בתחתית החלון
                         frame.setVisible(true);
@@ -8713,6 +8921,7 @@ public class Main {
                         frame.add(till);
                         frame.setVisible(true);
                         //create new Time object, put it in the lable
+                        //noinspection unused
                         new Timer(1000, e -> {
                             String time = new SimpleDateFormat("HH:mm:ss").format(new Date());
                             till.setText(time);
@@ -8762,8 +8971,11 @@ public class Main {
                                 System.out.println("⚙️ can be executed? " + file.canExecute() + ";");
                                 Date date = new Date(file.lastModified());
                                 System.out.println("✍️ last modified? " + date + ";");
+                                //noinspection DuplicateExpressions
                                 System.out.println("📍 is file hidden? " + Files.isHidden(Paths.get(file.getAbsolutePath())) + ";");
+                                //noinspection DuplicateExpressions
                                 System.out.println("📏 is this file a regular file? " + Files.isRegularFile(Paths.get(file.getAbsolutePath())) + ";");
+                                //noinspection DuplicateExpressions
                                 System.out.println("📂 is it folder maybe? " + Files.isDirectory(Paths.get(file.getAbsolutePath())) + ";");
                             }
                         } else {
@@ -8798,24 +9010,30 @@ public class Main {
                                 System.out.println("⚠️do you want to disable/enable 'read-file' feature?: ");
                                 String anst1 = scanner.next();
                                 if (anst1.equalsIgnoreCase("e")) {
+                                    //noinspection ResultOfMethodCallIgnored
                                     file.setReadable(true);
                                 } else if (anst1.equalsIgnoreCase("d")) {
+                                    //noinspection ResultOfMethodCallIgnored
                                     file.setReadable(false);
                                 }
 
                                 System.out.println("⚠️do you want to disable/enable 'write-file' feature?: ");
                                 String anst2 = scanner.next();
                                 if (anst2.equalsIgnoreCase("e")) {
+                                    //noinspection ResultOfMethodCallIgnored
                                     file.setWritable(true);
                                 } else if (anst2.equalsIgnoreCase("d")) {
+                                    //noinspection ResultOfMethodCallIgnored
                                     file.setWritable(false);
                                 }
 
                                 System.out.println("⚠️do you want to disable/enable 'execute-file' feature?: ");
                                 String anst3 = scanner.next();
                                 if (anst3.equalsIgnoreCase("e")) {
+                                    //noinspection ResultOfMethodCallIgnored
                                     file.setExecutable(true);
                                 } else if (anst3.equalsIgnoreCase("d")) {
+                                    //noinspection ResultOfMethodCallIgnored
                                     file.setExecutable(false);
                                 }
 
@@ -8858,7 +9076,7 @@ public class Main {
                         String ans4 = scanner.next();
 
                         if (ans4.equalsIgnoreCase("Y")) {
-                            List<String> temp = Files.readAllLines(Paths.get(file.getAbsolutePath()));
+                            @SuppressWarnings("DuplicateExpressions") List<String> temp = Files.readAllLines(Paths.get(file.getAbsolutePath()));
                             if (temp.size() >= 2) {
                                 System.out.println("🕒 Last recorded date: " + temp.get(temp.size() - 2));
                             } else {
@@ -8895,8 +9113,8 @@ public class Main {
                                 int count = 0;
 
                                 // Count occurrences of the current date
-                                for (int j = 0; j < dates.size(); j++) {
-                                    if (dates.get(j).equals(currentDate)) {
+                                for (String date : dates) {
+                                    if (date.equals(currentDate)) {
                                         count++;
                                     }
                                 }
@@ -8927,21 +9145,6 @@ public class Main {
                     } catch (URISyntaxException ex) {
                         throw new RuntimeException(ex);
                     }
-
-                    System.out.println("⚠️Do you want encrypt this logger file? Y/N⚠️");
-                    String ans = scanner.next();
-
-                    if (ans.equalsIgnoreCase("y")) {
-                        // קובץ המקור להצפנה
-                        String userHome = System.getProperty("user.home");
-                        File inputFile = new File(userHome + File.separator + "Desktop" + File.separator + "myfile.txt");
-
-                        // קובץ מוצפן שייווצר
-                        File encryptedFile = new File(userHome + File.separator + "Desktop" + File.separator + "encrypted.dat");
-
-                        //קובץ שיווצר לאחר הפענוח
-                        File decryptedFile = new File(userHome + File.separator + "Desktop" + File.separator + "decrypted.txt");
-                    }
                 }
 
 
@@ -8949,32 +9152,14 @@ public class Main {
                 String ans = scanner.next();
 
                 if (ans.equalsIgnoreCase("Y")) {
-                    File dir = new File("C:/Users/sharb/Desktop/myTestDir");
-                    dir.mkdirs(); // יוצר את התיקייה אם לא קיימת
-
-                    // יצירת 20 קבצי טקסט עם תוכן לדוגמה
-                    for (int i = 1; i <= 20; i++) {
-                        File file = new File(dir, "file" + i + ".txt");
-                        try {
-                            file.createNewFile();
-                            FileWriter w2 = new FileWriter(file, true);
-                            w2.write("hello" + "\n");
-                            w2.close();
-                        } catch (IOException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }
+                    File dir = getFile();
 
                     System.out.println("✅files created in folder: " + dir.getAbsolutePath());
 
                     // רשימת כל קבצי הטקסט מהתיקייה
-                    File[] txtFiles = dir.listFiles(new FileFilter() {
-                        @Override
-                        public boolean accept(File pathname) {
-                            return pathname.isFile() && pathname.getName().endsWith(".txt");
-                        }
-                    });
+                    File[] txtFiles = dir.listFiles(pathname -> pathname.isFile() && pathname.getName().endsWith(".txt"));
 
+                    assert txtFiles != null;
                     for (File f : txtFiles) {
                         System.out.println("• " + f.getName());
                     }
@@ -8986,7 +9171,9 @@ public class Main {
                     if (dele.equalsIgnoreCase("Y")) {
                         File[] txtFls = dir.listFiles(f -> f.isFile() && f.getName().endsWith(".txt"));
 
+                        assert txtFls != null;
                         for (File f : txtFls) {
+                            //noinspection ResultOfMethodCallIgnored
                             f.delete();
                         }
                     }
@@ -9143,42 +9330,7 @@ public class Main {
                     return min;
                 };
 
-                Consumer<Queue<Integer>> bsortQueueByMin = (queue) -> {
-                    var finalq = new LinkedList<Integer>();
-
-                    while (!queue.isEmpty()){
-                        //call function that find the min val in queue remove it and return it
-                        var minNum = minInQueue.apply(queue);
-                        finalq.offer(minNum);
-                    }
-
-                    //restoration
-                    while (!finalq.isEmpty()){ queue.offer(finalq.poll()); }
-                };
-
-                Consumer<Queue<Integer>> bsortQueue = (queue) -> {
-                    var arr = new LinkedList<Integer>(); //copy queue to list
-                    var i = 0; //index for the list
-                    while (!queue.isEmpty()){ arr.add(i++, queue.poll()); } //empty queue fill the list
-
-                    //bubble sort
-                    for (var j = 0; j < arr.size() - 1; j++) {
-                        for (var k = 0; k < arr.size() - j - 1; k++) {
-                            if (arr.get(k) > arr.get(k+1)){
-                                var temp = arr.get(k);
-                                arr.set(k, arr.get(k+1));
-                                arr.set(k+1, temp);
-                            }
-                        }
-                    }
-
-                    arr.forEach( (num) -> { queue.offer(num); } ); //restore qriginal queue
-                };
-
-                Runnable r = () -> {
-                    var temp = new LinkedList<>((List.of(2, 3, 7, 5, 4)));
-                    bsortQueue.accept(temp);
-                };
+                Runnable r = getRunnable(minInQueue);
                 r.run();//run the operation
             });
             //Calculate best root from A to B
@@ -9202,6 +9354,7 @@ public class Main {
                     while (!temp.isEmpty()) { queue.offer(temp.poll()); }
 
                     //מרחק אווירי בין התחלה לסוף
+                    //noinspection DataFlowIssue
                     return Math.abs(end - start);
                 };
 
@@ -9221,6 +9374,7 @@ public class Main {
                         // שמירת קורדינציה נוכחית
                         var next = queue.poll();
                         // סכום המרחק בין זוגות קורדינציות עוקבות
+                        //noinspection DataFlowIssue
                         sum += Math.abs(next - first);
                         //הכנסתה לתור עזר לשיחזור
                         temp.offer(next);
@@ -9290,11 +9444,11 @@ public class Main {
                     // עץ שמכיל תורים עם קורדינטות:
                     var a = new BinNode<>(
                             //[2.0, 10.0] → מרחק אווירי: 8, מרחק אמיתי: 8, סטייה: 0
-                            new BinNode<>(new LinkedList<Double>(List.of(10.0, 2.0))),
+                            new BinNode<>(new LinkedList<>(List.of(10.0, 2.0))),
                             //[2.0, 3.0, 5.0, 6.0] → מרחק אווירי: 4, מרחק אמיתי: 4, סטייה: 0
-                            new LinkedList<Double>(List.of(6.0, 5.0, 3.0, 2.0)),
+                            new LinkedList<>(List.of(6.0, 5.0, 3.0, 2.0)),
                             //[2.0, 4.0, 6.0, 8.0, 10.0] → מרחק אווירי: 8, מרחק אמיתי: 8, סטייה: 0 אבל יותר קפיצות
-                            new BinNode<>(new LinkedList<Double>(List.of(10.0, 8.0, 6.0, 4.0, 2.0)))
+                            new BinNode<>(new LinkedList<>(List.of(10.0, 8.0, 6.0, 4.0, 2.0)))
                     );
 
                     //קבלת המסלול הטוב ביותר
@@ -9311,6 +9465,7 @@ public class Main {
             // test some lambdas function
             q.offer(() -> {
                 // a
+                @SuppressWarnings("unused")
                 BiFunction<Stack<Integer>, Integer, Boolean> ExistSum = (stk, num) -> {
                     var equalsToNum = false;
                     var temp = new Stack<Integer>();
@@ -9332,6 +9487,7 @@ public class Main {
                 };
 
                 // b
+                @SuppressWarnings("unused")
                 Function<Stack<Integer>, Integer> highSumOfTwoVals = (stk) -> {
                     var max = Integer.MIN_VALUE;
                     var temp = new Stack<Integer>();
@@ -9355,6 +9511,7 @@ public class Main {
                 // 1
                 //O(n)
                 // all values in stack should be odd or even
+                @SuppressWarnings("unused")
                 Function<Stack<Integer>, Boolean> isUnifi = (stack) -> {
                     var zougiut = stack.peek() % 2; // if first num is odd or even
                     var temp = new Stack<Integer>(); // restoration stack
@@ -9375,11 +9532,12 @@ public class Main {
 
                     while (!temp.isEmpty()){ stack.push(temp.pop()); } // restoration proccess
 
-                    return flag ? false : true; // return true if it's valid, else return false
+                    return !flag; // return true if it's valid, else return false
                 };
 
                 // 2
                 //O(n)
+                @SuppressWarnings("unused")
                 Function<Queue<Integer>, Integer> lastValueInQueueToRemove = (queue) -> {
                     var size = queue.size(); // size of queue
                     var i = 0; // for keep the last value in the queue
@@ -9395,6 +9553,7 @@ public class Main {
 
                 // 3
                 //O(n)^2 ,  can be O(n) if i used hashmap
+                @SuppressWarnings("unused")
                 Function<Node<Integer>, Boolean> uniqNeg = (chain) -> {
                     var pos = chain; // pointer for itertion on the list
 
@@ -9404,13 +9563,13 @@ public class Main {
 
                         // if its negative number
                         if (num < 0) {
-                            var count = 1; // counter, for number of occurances of value in list
+                            @SuppressWarnings("unused") var count = 1; // counter, for number of occurances of value in list
                             var next = pos.getNext(); // pointer for iteration on the rest of the list
 
                             // iteration, to check if current negative value found somewhere else in the list
                             // if cuurent value find one more time return false
                             while (next != null) {
-                                if (next.getValue() == num){ return false; }
+                                if (Objects.equals(next.getValue(), num)){ return false; }
                                 next = next.getNext();
                             }
                         }
@@ -9423,6 +9582,7 @@ public class Main {
 
                 // 6 a
                 //O(n)
+                @SuppressWarnings("unused")
                 BiFunction<Queue<Integer>, Queue<Integer>, Boolean> startWith = (q1, q2) -> {
                     if (q2.size() < q1.size()) { return false; }
 
@@ -9435,7 +9595,7 @@ public class Main {
                     // iteration
                     while (!q1.isEmpty()){
 
-                        if (q1.peek() != q2.peek()){ flag = true; }
+                        if (!Objects.equals(q1.peek(), q2.peek())){ flag = true; }
 
                         temp1.offer(q1.poll());
                         temp2.offer(q2.poll());
@@ -9448,12 +9608,13 @@ public class Main {
                     while (!temp1.isEmpty()){ q1.offer(temp1.poll()); }
                     while (!temp2.isEmpty()){ q2.offer(temp2.poll()); }
 
-                    return flag ? false : true;
+                    return !flag;
                 };
 
                 // 6 b
                 //O(n)
                 // check if secon queue is duplication of first queue
+                @SuppressWarnings("unused")
                 BiFunction<Queue<Integer>, Queue<Integer>, Boolean> duplication = (q1, q2) -> {
                     var flag = false; // flag to detect not valid stacks
                     var size2 = q2.size(); // size of second queue
@@ -9462,19 +9623,20 @@ public class Main {
                     // iteration on the second queue and first queue
                     while (i <= size2){
                         // if values are diffrent its means thats queues are not valid
-                        if (q2.peek() != q1.peek()){ flag = true; }
+                        if (!Objects.equals(q2.peek(), q1.peek())){ flag = true; }
                         // remove values from the front of both queues and move them to the back
                         q2.offer(q2.remove());
                         q1.offer(q1.remove());
                         i++;
                     }
 
-                    return flag ? false : true;
+                    return !flag;
                 };
 
                 // 7
                 // check if the values in the list goes up then down
                 // O(n)
+                @SuppressWarnings("unused")
                 Function<Node<Integer>, Boolean> isUpDown = (chain) -> {
                     var up = false; // for detect if list went up in some point
                     var down = false; // for detect if list went down in some point
@@ -9482,12 +9644,14 @@ public class Main {
                     // detection if the values sorted from smaller to bigger
                     while (chain.getNext() != null && chain.getValue() < chain.getNext().getValue()){
                         chain = chain.getNext();
-                        if (!up){ up = true; }
+                        //noinspection IfStatementMissingBreakInLoop
+                        if (!up) up = true;
                     }
 
                     // detection if the values sorted from bigger to smaller
                     while (chain.getNext() != null && chain.getValue() > chain.getNext().getValue()){
                         chain = chain.getNext();
+                        //noinspection IfStatementMissingBreakInLoop
                         if (!down){ down = true; }
                     }
 
@@ -9518,7 +9682,7 @@ public class Main {
                 };
 
                 // print values smaller than the avg
-                Consumer<BinNode<Integer>> printSmlcavgTree = (root) -> {
+                @SuppressWarnings("unused") Consumer<BinNode<Integer>> printSmlcavgTree = (root) -> {
                     var queue = new LinkedList<BinNode<Integer>>(); // iteration queue
                     queue.offer(root); // offer the root of the tree to the queue
                     var avg = cavgTree.apply(root); // call the lambda function that cal the avg of a tree
@@ -9560,34 +9724,39 @@ public class Main {
                     var current = -1;
 
                     // מעבר על מערך 1 המייצג את מחסנית 1
-                    for (int i = 0; i < arr1.length; i++) {
+                    for (int num : arr1) {
                         // שמירת ערך נוכחי
-                        var num = arr1[i];
                         // משתנה לבדיקה אם ערך נמצא
                         var found = false;
 
                         // מעבר על מערך 2 המייצג מחסנית 2
                         for (int j = 0; j < arr2.length; j++) {
                             // אם המס נמצא שוב
-                            if (arr2[j] == num){
+                            if (arr2[j] == num) {
                                 // סימון שנמצא
                                 found = true;
                                 //שמירת מיקומו
                                 current = j;
                                 // יתבצע פעם אחת בלבד כדי שלא יחזור שקר ישר על ההתחלה
-                                if (prev == -1){ prev = current; }
+                                if (prev == -1) {
+                                    prev = current;
+                                }
                                 // יציאה מהלולאה השנייה אין צורך להמשיך לחפש
                                 break;
                             }
                         }
 
                         // אם ערך לא נמצא יוחזר שקר
-                        if (!found){ return false; }
+                        if (!found) {
+                            return false;
+                        }
 
                         // אם המיקום של איבר נוכחי קטן ממיקום של האיבר הקודם יחזור שקר
                         // כי בעצם התבקשתי בתרגיל לבדוק שכל האיברים במחסנית 1
                         // נמצאים לפי הסדר (לא חייב ברצף - יכול להיות שיהיו איברים ביניהם וזה תקין) במחסנית 2
-                        if (current < prev){ return false; }
+                        if (current < prev) {
+                            return false;
+                        }
 
                         // משתנה "קודם" יכיל את המיקום של המס שחופש הרגע
                         prev = current;
@@ -9635,7 +9804,7 @@ public class Main {
                         var cnum = stk.pop(); // remove current value from stack
 
                         // if current value not equals to num
-                        if (cnum != num){
+                        if (!Objects.equals(cnum, num)){
                             count++; // add 1 to count
                             temp.push(cnum); // push it to the temporary stack
                         }else {
@@ -9656,7 +9825,7 @@ public class Main {
                     return -1; // not found
                 };
 
-                BiFunction<Stack<Integer>, Stack<Integer>, Boolean> allFinSecStkInOrder = (stk1, stk2) -> {
+                @SuppressWarnings("unused") BiFunction<Stack<Integer>, Stack<Integer>, Boolean> allFinSecStkInOrder = (stk1, stk2) -> {
                     var temp = new Stack<Integer>(); // temporary stack for restoration
                     var notValid = false; // for detect if stack 2 is not valid
                     var prev  = -1; // index of previous value from stack 2
@@ -9678,7 +9847,7 @@ public class Main {
                     while (!temp.isEmpty()){ stk1.push(temp.pop()); } // restoration
 
                     // if it detect that sec stk not valid return false, else return true
-                    return notValid ? false : true;
+                    return !notValid;
                 };
 
                 System.out.println("----------------------------------------------------------");
@@ -9694,7 +9863,7 @@ public class Main {
                     Node<Integer> tail = null;
 
                     while (pos.getNext() != null){
-                        var toAdd = new Node<Integer>(
+                        var toAdd = new Node<>(
                                 Math.abs(
                                         pos.getValue() - pos.getNext().getValue()
                                 )
@@ -9719,7 +9888,7 @@ public class Main {
 
                     while (lengthN(chain) != 1){
                         chain = differenceList.apply(chain);
-                        System.out.println("");
+                        System.out.println();
                         printListNod(chain);
 
                     }
@@ -9740,7 +9909,7 @@ public class Main {
 
                 printmj.run();
 
-                System.out.println("");
+                System.out.println();
                 System.out.println("----------------------------------------------------------");
             });
             //2022 summer b, 2023 spring a, 2023 summer a, 2023 summer b
@@ -9748,7 +9917,7 @@ public class Main {
                 //1 O(n)
                 // מחסנית "שוות סכומים", הי א מחסנית של מספרים שלמים המכילה מספר אי זוגי של איברים.
                 //כך שכל שני איברים קיצוניים )ראשון + אחרון, שני + לפני אחרון וכו'( שווים בסכומם לאיבר האמצעי מחסנית.
-                Function<Stack<Integer>, Boolean> equalSums = (stk)-> {
+                @SuppressWarnings("unused") Function<Stack<Integer>, Boolean> equalSums = (stk)-> {
                     var size = stk.size();
                     if (size % 2 == 0){ return false; }
 
@@ -9769,7 +9938,7 @@ public class Main {
                 //2 O(n)^2
                 // נגדיר: "רשימת מקטעים" כשרשרת חוליות של מספרים שלמים ריקה או כשרשרת חוליות אשר כל אחת
                 //מהחוליות שלה מכילה ערך קטן או שווה למספר החוליות העוקבות לה )נמצאות אחריה בשרשרת(.
-                Function<Node<Integer>, Boolean> numNodesFollowingPLUSisSection = (chain) -> {
+                @SuppressWarnings("unused") Function<Node<Integer>, Boolean> numNodesFollowingPLUSisSection = (chain) -> {
 
                     while (chain != null){
                         var current = chain.getValue();
@@ -9793,11 +9962,12 @@ public class Main {
                 //כל חוליה היא מסוג MyNode. בכל איבר התכונה value מאחסנת מספר שלם, התכונה howManyBig
                 //מאחסנת מספר שלם ששווה למספר האיברים בשרשרת שנמצאים אחרי האיבר הנוכחי, שערך התכונה value
                 //שלהם גדול מערך value של האיבר הנוכחי. התכונה next מחזיקה מצביע על האיבר הבא.
-                BiFunction<MyNode, Integer, Boolean> addNumber = (list, val) -> {
+                @SuppressWarnings("unused") BiFunction<MyNode, Integer, Boolean> addNumber = (list, val) -> {
                     //position
                     var position = 6;
 
                     // add at start
+                    //noinspection ConstantValue
                     if (position == 1){
                         // mini manipulation,
                         // instead of adding new mynode to the start of the list
@@ -9859,13 +10029,14 @@ public class Main {
                     }
 
                     // add in the end
+                    assert prev != null;
                     prev.setNext(new MyNode(val));
                     // new mynode added successfully to the list
                     return true;
                 };
 
                 //11 -> עץ כחול לבן
-                Function<BinNode<Character>, Boolean> bwt = (root) -> {
+                @SuppressWarnings("unused") Function<BinNode<Character>, Boolean> bwt = (root) -> {
                     var searchQueeu = new LinkedList<BinNode<Character>>();
                     searchQueeu.offer(root);
 
@@ -9874,6 +10045,7 @@ public class Main {
                         char temp = current.getValue();
 
                         // כל צומת חייבת להיות או כחולה או לבנה
+                        //noinspection ConstantValue
                         if (temp != 'w' || temp != 'b'){ return false; }
 
                         // עלה חייב להיות בצבע כחול
@@ -9905,7 +10077,7 @@ public class Main {
 
                 //2023 spring a
                 // 1
-                BiFunction<Queue<Integer>, Queue<Integer>, Queue<Double>> avgQueu = (marks, tests) -> {
+                @SuppressWarnings("unused") BiFunction<Queue<Integer>, Queue<Integer>, Queue<Double>> avgQueu = (marks, tests) -> {
                     var newey = new LinkedList<Double>(); // תור ממוצעים
 
                     // מעבר על תור מספרי הבחינות עבור כל תלמיד
@@ -9914,12 +10086,14 @@ public class Main {
                         var sum = 0.0; // צובר
 
                         // מעבר על תור ציוני הבחינות
+                        //noinspection DataFlowIssue
                         while (!marks.isEmpty() && i < tests.peek()){
                             sum += marks.poll(); // צבירת ציון
                             i++; // קידום משתנה עד זקיף
                         }
 
                         // הכנסת ממוצע תלמיד נוכחי לתור הממוצעים
+                        //noinspection DataFlowIssue
                         newey.offer(sum / tests.peek());
                         tests.poll(); // שליפת מס הבחינה מהתור
                     }
@@ -9929,7 +10103,7 @@ public class Main {
 
                 // 2
                 // סעיף א
-                Function<Node<Integer>, Integer> numDigits = (chain) -> {
+                @SuppressWarnings("unused") Function<Node<Integer>, Integer> numDigits = (chain) -> {
                     var c = 0; // מונה
 
                     // איטרציה על שרשרת החוליות
@@ -9942,7 +10116,7 @@ public class Main {
                 };
 
                 // סעיף ב
-                BiFunction<Node<Integer>, Node<Integer>, Integer> compare = (n1, n2) -> {
+                @SuppressWarnings("unused") BiFunction<Node<Integer>, Node<Integer>, Integer> compare = (n1, n2) -> {
                     var first = 0; // מס ראשון לבנייה מהרשימה הראשונה
                     var sec = 0; // מס שני לבנייה מהרשימה השנייה
 
@@ -9997,7 +10171,7 @@ public class Main {
                     var start = 0;
                     while (head != null){
                         // if num found, return the distance from the start
-                        if (head.getValue() == num){ break; }
+                        if (Objects.equals(head.getValue(), num)){ break; }
                         start++; // add 1 to start var
                         head = head.getRight(); // move to the right binnode
                     }
@@ -10006,7 +10180,7 @@ public class Main {
                     var end = 0;
                     while (tail != null){
                         // if num found return the distance from the end
-                        if (tail.getValue() == num){ break; }
+                        if (Objects.equals(tail.getValue(), num)){ break; }
                         end++; // add 1 to end var
                         tail = tail.getLeft(); // move to the left binnode
                     }
@@ -10016,7 +10190,7 @@ public class Main {
                     return start != 0 && end != 0 ? start + end : -1;
                 };
                 // 5 b O(n)^2
-                Function<Node<Integer>, Integer> minDistanceValue = (chain) -> {
+                @SuppressWarnings("unused") Function<Node<Integer>, Integer> minDistanceValue = (chain) -> {
                     var minDistance = Integer.MAX_VALUE; // will contain the minimum distance
 
                     // iteration on original list
@@ -10047,7 +10221,7 @@ public class Main {
 
                 //2023 summer a
                 // 1 a O(n)
-                BiFunction<Queue<Integer>, Integer, Integer> putInPlace = (queue, num) -> {
+                @SuppressWarnings("unused") BiFunction<Queue<Integer>, Integer, Integer> putInPlace = (queue, num) -> {
                     // temporary queue for all numbers that smaller than num
                     var sml = new LinkedList<Integer>();
                     // temporary queue for all numbers that bigger than num
@@ -10087,14 +10261,15 @@ public class Main {
                     var cindex = index.get(); // keep the value of the index var
 
                     // move all content from "biggers queue" to the original queue
-                    big.forEach( (current) -> { queue.offer(big.poll()); } );
+                    //noinspection unused
+                    big.forEach( (current) -> queue.offer(big.poll()));
                     big.clear(); // clear "biggers queue" content
 
                     return cindex; // return the index of the new num
                 };
 
                 // 1 b O(n)
-                BiConsumer<Queue<Integer>, Integer> moveToFront = (queue, k) -> {
+                @SuppressWarnings("unused") BiConsumer<Queue<Integer>, Integer> moveToFront = (queue, k) -> {
                     var size = queue.size(); // size of queue
                     var tillK = 0; // times of iteration
                     // how many numbers from the beggining of the queue, should the function,
@@ -10120,7 +10295,7 @@ public class Main {
                         // iteration - for deleting all occurrences of this current value,
                         // in the list
                         while (rest.getNext() != null){
-                            if (rest.getNext().getValue() == current){
+                            if (Objects.equals(rest.getNext().getValue(), current)){
                                 rest.setNext(rest.getNext().getNext());
                                 // count the num of occurrences of this current value
                                 count++;
@@ -10176,11 +10351,11 @@ public class Main {
                                                                     new Node<>(30)))))));
                     System.out.println("before: ");
                     printListNod(list);
-                    System.out.println("");
+                    System.out.println();
                     buildFreqList.accept(list);
                     System.out.println("after: ");
                     printListNod(list);
-                    System.out.println("");
+                    System.out.println();
                     var n = mostPopularNumber.apply(list);
                     System.out.println("and the most popular num is: " + n);
                 };
@@ -10194,6 +10369,7 @@ public class Main {
                     // iteration on both numbers
                     for (var i = 2; i < num1; i++){
                         // if thery are not become zero yet
+                        //noinspection ConstantValue
                         if (num1 > 0 && num2 > 0){
                             // peek the last digit from both numbers
                             // and divide them by i, and keep the results
@@ -10215,7 +10391,7 @@ public class Main {
                 };
 
                 //1 - b - O(n)^2
-                BiConsumer<Queue<Integer>,Integer> change = (queue, num) ->{
+                @SuppressWarnings("unused") BiConsumer<Queue<Integer>,Integer> change = (queue, num) ->{
                     // before-queue: all the starngers
                     var before = new LinkedList<Integer>();
                     // after-queue: all the strangers
@@ -10233,16 +10409,16 @@ public class Main {
                     queue.clear(); // clear original queue
 
                     //move all "before-queue" content to the original queue
-                    before.forEach( (current) -> { queue.offer(current); } );
+                    before.forEach(queue::offer);
                     before.clear(); // clear "before-queue"
 
                     //move all "after-queue" content to the original queue
-                    after.forEach( (current) -> { queue.offer(current); } );
+                    after.forEach(queue::offer);
                     after.clear(); // clear "after-queue"
                 };
 
                 // 2 - O(n)
-                Function<Node<Integer>, Node<Integer>> split = (chain) -> {
+                @SuppressWarnings("unused") Function<Node<Integer>, Node<Integer>> split = (chain) -> {
                     if (chain == null) return null;
                     //A function that receives a reference to the first node of a linked list
                     // containing integers and splits the list into two
@@ -10320,7 +10496,7 @@ public class Main {
                         var tnum = current.getValue(); // keep current value
 
                         // if current value equals to num, return false
-                        if (tnum == num){ return false; }
+                        if (Objects.equals(tnum, num)){ return false; }
 
                         // offer the childrens to the search queue
                         // offer the left son to the search queue
@@ -10334,7 +10510,7 @@ public class Main {
                 };
 
                 // פונקצייה עיקרית
-                Function<BinNode<Integer>, Boolean> isdfrAll = (root) -> {
+                @SuppressWarnings("unused") Function<BinNode<Integer>, Boolean> isdfrAll = (root) -> {
                     // create search queue for iteration ONLY on the left side of the tree
                     var queue = new LinkedList<BinNode<Integer>>();
                     queue.offer(root.getLeft()); // offer the root to the queue
@@ -10373,12 +10549,13 @@ public class Main {
                 // 1 - a
                 // Write an operation that receives a valid queue of strings and a new string.
                 // The operation inserts the string into the queue so that the queue remains valid.
-                BiConsumer<Queue<String>, String> addToProperQueue = (queue, st) -> {
+                @SuppressWarnings("unused") BiConsumer<Queue<String>, String> addToProperQueue = (queue, st) -> {
                     // Temporary queue for valid strings (those starting with the same first char)
                     var valid = new LinkedList<String>();
                     // Temporary queue for all other strings
                     var notValid = new LinkedList<String>();
                     // Determine the first character of the first string in the queue
+                    assert queue.peek() != null;
                     char first = queue.peek().charAt(0);
 
                     // Iteration: move all valid strings from the original queue to 'valid'
@@ -10403,8 +10580,9 @@ public class Main {
                 // The function checks if the queue is a "valid queue".
                 // A valid queue is defined as: all strings starting with the same letter appear only at the beginning of the queue.
                 // If valid → return true, otherwise → return false.
-                Function<Queue<String>, Boolean> isProperQueue = (queue) -> {
+                @SuppressWarnings("unused") Function<Queue<String>, Boolean> isProperQueue = (queue) -> {
                     // Get the first character of the first string in the queue
+                    assert queue.peek() != null;
                     char first = queue.peek().charAt(0);
 
                     // Temporary queues for restoring the original queue later
@@ -10442,7 +10620,7 @@ public class Main {
                 // If it is valid – the function does nothing.
                 // If it is not valid – the function rearranges the order of the strings
                 // in the queue so that it becomes valid.
-                Consumer<Queue<String>> fixit = (queue) -> {
+                @SuppressWarnings("unused") Consumer<Queue<String>> fixit = (queue) -> {
                     // Define a local function to find the most popular first character in the queue
                     Function<Queue<String>, Character> mostPopularChar = (ququ) -> {
                         // Create a map to count how many times each first character appears
@@ -10533,7 +10711,7 @@ public class Main {
 
                 // 6 - a
                 // Lambda that receives a binary tree of integers and returns the sum of all leaf values
-                Function<BinNode<Integer>, Integer> sumLeaves = (root) -> {
+                @SuppressWarnings("unused") Function<BinNode<Integer>, Integer> sumLeaves = (root) -> {
                     // If the tree is empty → return 0
                     if (root == null) return 0;
 
@@ -10566,7 +10744,7 @@ public class Main {
 
                 // 6 - b
                 // A function that creates a queue of NodeInfo objects from a binary tree
-                Function<BinNode<Integer>, Queue<NodeInfo>> createQueueOfNodesInfo = (root) -> {
+                @SuppressWarnings("unused") Function<BinNode<Integer>, Queue<NodeInfo>> createQueueOfNodesInfo = (root) -> {
                     // Final queue that will contain the NodeInfo objects
                     var finalQueue = new LinkedList<NodeInfo>();
 
@@ -10612,7 +10790,7 @@ public class Main {
 
                 // 6 - c
                 // Lambda that receives a binary tree of integers and returns the maximum leaf value
-                Function<BinNode<Integer>, Integer> maxLeafValue = (root) -> {
+                @SuppressWarnings("unused") Function<BinNode<Integer>, Integer> maxLeafValue = (root) -> {
                     // If the tree is empty → return smallest possible value
                     if (root == null) return Integer.MIN_VALUE;
 
@@ -10680,7 +10858,7 @@ public class Main {
 
                 // 7 - b
                 // Lambda that checks if a binary tree of queues of integers is an "excellent tree"
-                Function<BinNode<Queue<Integer>>, Boolean> isExcellentTree = (root) -> {
+                @SuppressWarnings("unused") Function<BinNode<Queue<Integer>>, Boolean> isExcellentTree = (root) -> {
                     // Empty tree is considered excellent
                     if (root == null) return true;
 
@@ -10747,7 +10925,7 @@ public class Main {
 
                 // b
                 // Lambda that checks if all elements of st1 exist in st2 (ignoring order)
-                BiFunction<Stack<Integer>, Stack<Integer>, Boolean> allElementsExist = (st1, st2) -> {
+                @SuppressWarnings("unused") BiFunction<Stack<Integer>, Stack<Integer>, Boolean> allElementsExist = (st1, st2) -> {
                     // Temporary stacks for restoration
                     var restore1 = new Stack<Integer>();
                     var restore2 = new Stack<Integer>();
@@ -10788,7 +10966,7 @@ public class Main {
 
                 // c
                 // Lambda that checks if all elements of st1 appear in st2 in the same order
-                BiFunction<Stack<Integer>, Stack<Integer>, Boolean> sameOrder = (st1, st2) -> {
+                @SuppressWarnings("unused") BiFunction<Stack<Integer>, Stack<Integer>, Boolean> sameOrder = (st1, st2) -> {
                     // Temporary copies for safe traversal
                     var temp1 = new Stack<Integer>();
                     var temp2 = new Stack<Integer>();
@@ -10824,10 +11002,10 @@ public class Main {
 
                 // d
                 // Lambda that checks if st1 is a subsequence (sub-stack) of st2 in consecutive order
-                BiFunction<Stack<Integer>, Stack<Integer>, Boolean> isSubStack = (st1, st2) -> {
+                @SuppressWarnings("unused") BiFunction<Stack<Integer>, Stack<Integer>, Boolean> isSubStack = (st1, st2) -> {
                     // Convert st1 into list for easier handling
                     var temp1 = new Stack<Integer>();
-                    var restore1 = new Stack<Integer>();
+                    @SuppressWarnings("unused") var restore1 = new Stack<Integer>();
                     var list1 = new LinkedList<Integer>();
 
                     while (!st1.isEmpty()) {
@@ -10842,7 +11020,7 @@ public class Main {
 
                     // Convert st2 into list
                     var temp2 = new Stack<Integer>();
-                    var restore2 = new Stack<Integer>();
+                    @SuppressWarnings("unused") var restore2 = new Stack<Integer>();
                     var list2 = new LinkedList<Integer>();
 
                     while (!st2.isEmpty()) {
@@ -10904,7 +11082,7 @@ public class Main {
                     if (k < 0 || k > 9) { return false; }
 
                     // restoration stack (will help us restore the original stack)
-                    Stack<Integer> tempStk = new Stack<Integer>();
+                    Stack<Integer> tempStk = new Stack<>();
 
                     // size of the stack
                     int size = st.size();
@@ -10928,7 +11106,7 @@ public class Main {
                     }
 
                     // list that will contain indexes of numbers that start with digit k
-                    ArrayList<Integer> arrlst = new ArrayList<Integer>();
+                    ArrayList<Integer> arrlst = new ArrayList<>();
 
                     // iteration on the array to find all indexes where first digit == k
                     for (int i = 0; i < arr.length; i++) {
@@ -10942,7 +11120,7 @@ public class Main {
                     }
 
                     // must have at least one number that starts with k
-                    if (arrlst.size() == 0) {
+                    if (arrlst.isEmpty()) {
                         return false;
                     }
 
@@ -10970,7 +11148,7 @@ public class Main {
                 };
 
                 // 1 - b
-                BiConsumer<Stack<Integer>, Integer> fixit = (stk, k) -> {
+                @SuppressWarnings("unused") BiConsumer<Stack<Integer>, Integer> fixit = (stk, k) -> {
                     // check if the stack is not "proper for k"
                     // (k numbers must appear as one consecutive block)
                     if (!isProperK.apply(stk, k)){
@@ -10986,7 +11164,7 @@ public class Main {
                             var currdigit = firstDigitOfNumber.apply(stk.peek());
                             // if the first digit of the current number equals to k,
                             // push current number to the "solution" stack
-                            if (currdigit == k){ solution.push(stk.pop()); }
+                            if (Objects.equals(currdigit, k)){ solution.push(stk.pop()); }
                             // else if it's not equal, push the current number to the "rest"
                             // stack
                             else { rest.push(stk.pop()); }
@@ -11024,7 +11202,7 @@ public class Main {
                     try {
                         desktop.browse(new URI("https://github.com/openjdk/jdk/blob/master/src/java.base/windows/native/libjava/io_util_md.c"));
                     }
-                    catch (Exception e) { System.out.println(e.getCause()); }
+                    catch (Exception e) { log.error(String.valueOf(e.getCause())); }
                 }
                 System.out.println("🚀💻 bye for now, have a good day!");
                 System.out.println("!----------------------------------------------------------!");
@@ -11041,6 +11219,85 @@ public class Main {
             //--------------------------------------------------------//
         }
         scanner.close();
+    }
+
+    @NotNull
+    private static Runnable getRunnable(Function<Queue<Integer>, Integer> minInQueue) {
+        @SuppressWarnings("unused")
+        Consumer<Queue<Integer>> bsortQueueByMin = (queue) -> {
+            var finalq = new LinkedList<Integer>();
+
+            while (!queue.isEmpty()){
+                //call function that find the min val in queue remove it and return it
+                var minNum = minInQueue.apply(queue);
+                finalq.offer(minNum);
+            }
+
+            //restoration
+            while (!finalq.isEmpty()){ queue.offer(finalq.poll()); }
+        };
+
+        Consumer<Queue<Integer>> bsortQueue = (queue) -> {
+            var arr = new LinkedList<Integer>(); //copy queue to list
+            var i = 0; //index for the list
+            while (!queue.isEmpty()){ arr.add(i++, queue.poll()); } //empty queue fill the list
+
+            //bubble sort
+            for (var j = 0; j < arr.size() - 1; j++) {
+                for (var k = 0; k < arr.size() - j - 1; k++) {
+                    if (arr.get(k) > arr.get(k+1)){
+                        var temp = arr.get(k);
+                        arr.set(k, arr.get(k+1));
+                        arr.set(k+1, temp);
+                    }
+                }
+            }
+
+            arr.forEach(queue::offer); //restore qriginal queue
+        };
+
+        return () -> {
+            var temp = new LinkedList<>((List.of(2, 3, 7, 5, 4)));
+            bsortQueue.accept(temp);
+        };
+    }
+
+    @NotNull
+    private static File getFile() {
+        File dir = new File("C:/Users/sharb/Desktop/myTestDir");
+        //noinspection ResultOfMethodCallIgnored
+        dir.mkdirs(); // יוצר את התיקייה אם לא קיימת
+
+        // יצירת 20 קבצי טקסט עם תוכן לדוגמה
+        for (int i = 1; i <= 20; i++) {
+            File file = new File(dir, "file" + i + ".txt");
+            try {
+                //noinspection ResultOfMethodCallIgnored
+                file.createNewFile();
+                FileWriter w2 = new FileWriter(file, true);
+                w2.write("hello" + "\n");
+                w2.close();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        return dir;
+    }
+
+    @NotNull
+    private static JButton getJButton(JFrame frame) {
+        Color[] colors = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.ORANGE, Color.CYAN};
+        final int[] colorIndex = {0}; // שימוש במערך כדי לאפשר שינוי ערך בתוך ה-Lambda
+        //--------------------------------------------------------//
+
+        //create button, listener
+        JButton button = new JButton("change color");
+        //noinspection unused
+        button.addActionListener(e -> {
+            frame.getContentPane().setBackground(colors[colorIndex[0]]); // change background color
+            colorIndex[0] = (colorIndex[0] + 1) % colors.length; // update the index
+        });
+        return button;
     }
 }
 
