@@ -1,6 +1,7 @@
 // Define package for this Activity
 package com.example.myfinaltopapplication;
 // Import Intent for switching between activities
+import android.annotation.SuppressLint;
 import android.content.Intent;
 // Import SharedPreferences for saving user session locally
 import android.content.SharedPreferences;
@@ -31,13 +32,17 @@ public class LoginActivity extends AppCompatActivity {
     // Declare UI components (input fields + buttons)
     private EditText username;        // Input field for username
     private EditText pass;            // Input field for password
+    @SuppressWarnings("FieldCanBeLocal")
     private Button loginBtn;          // Button that triggers login process
+    @SuppressWarnings("FieldCanBeLocal")
     private Button signUpBtn;         // Button to navigate to signup page
+    @SuppressWarnings("unused")
     private ImageButton backTohome;   // Optional button for returning to home
 
     // -------------------------------------------------------------------------
     // onCreate - lifecycle method called when Activity is first created
     // -------------------------------------------------------------------------
+    @SuppressLint("ApplySharedPref")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);            // Call parent constructor
