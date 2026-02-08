@@ -60,9 +60,11 @@ public class FirebaseServiceIntegrationTest {
     private final String TEST_USERNAME_2 = "integrationUser2";
 
     // Store the main test user object for convenience
+    @SuppressWarnings("FieldCanBeLocal")
     private User testUser1;
 
     // Store the second test user object for convenience
+    @SuppressWarnings("FieldCanBeLocal")
     private User testUser2;
 
     // --------------------------- TEST LIFECYCLE ---------------------------
