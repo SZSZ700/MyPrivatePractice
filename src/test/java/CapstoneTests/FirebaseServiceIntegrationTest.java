@@ -315,7 +315,7 @@ public class FirebaseServiceIntegrationTest {
         // Assert that the service returned false (user not found)
         assertFalse(updated);
 
-        // Optionally verify that getUser still returns null for this username
+        // verify that getUser still returns null for this username
         CompletableFuture<User> getFuture =
                 firebaseService.getUser(missingUsername);
         // Wait for the getUser result with a timeout of 20 seconds
