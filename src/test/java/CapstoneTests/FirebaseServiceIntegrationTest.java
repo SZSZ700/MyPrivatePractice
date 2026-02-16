@@ -461,6 +461,10 @@ public class FirebaseServiceIntegrationTest {
         assertEquals(0, yesterday);
     }
 
+
+    // add test: (add water amount for today and yesterday in the firebase ofc)
+    // and check if we recive the same amounts for each day (yeaterday & tomorow)
+
     // --------------------------- GOAL MODULE TESTS ---------------------------
 
     // Test that updateGoalMl changes the goal and getGoalMl reads the updated value
