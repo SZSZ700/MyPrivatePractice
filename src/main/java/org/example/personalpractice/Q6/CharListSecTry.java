@@ -1,7 +1,5 @@
 package org.example.personalpractice.Q6; // Package declaration
-
 import org.example.personalpractice.Node; // Import Node class
-
 import java.util.function.BiFunction; // Import BiFunction for (Node, Character) -> Node
 import java.util.function.Consumer; // Import Consumer for letter -> void
 import java.util.function.Function; // Import Function for letter -> Node
