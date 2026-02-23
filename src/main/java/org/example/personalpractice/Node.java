@@ -34,6 +34,7 @@ public class Node<T> {
     public String toString() {
         return "Node [value=" + value + ", next=" + next + "]";
     }
+    @SuppressWarnings("unused")
     public boolean hasNext() {
         return this.next != null;
     }

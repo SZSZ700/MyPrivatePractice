@@ -5,6 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 // -------------------------------------------------------------------------
 // Marks this class as a Spring Boot application (enables auto-configuration)
+// This is a convenience annotation that is equivalent to declaring
+// @SpringBootConfiguration, @EnableAutoConfiguration and @ComponentScan.
 // -------------------------------------------------------------------------
 @SpringBootApplication
 public class Application {

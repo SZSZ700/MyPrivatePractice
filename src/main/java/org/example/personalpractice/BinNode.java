@@ -53,6 +53,7 @@ public class BinNode<T> {
     }
 
     // פעולה בוליאנית שבודקת אם החוליה היא עלה (אין שמאלי ואין ימני)
+    @SuppressWarnings("unused")
     public boolean isLeaf() {
         return this.left == null && this.right == null;
     }
