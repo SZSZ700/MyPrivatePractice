@@ -793,6 +793,7 @@ public class RestClient {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 // Log error and complete with null
+                //noinspection SpellCheckingInspection
                 Log.e("HTTP", "❌ getBmiDistribution failed: " + e.getMessage());
                 future.complete(null);
             }
@@ -805,6 +806,7 @@ public class RestClient {
                         // parse body into string
                         var resp = (body != null ? body.string() : "");
                         // Log
+                        //noinspection SpellCheckingInspection
                         Log.w("HTTP", "⚠️ Non-OK getBmiDistribution: " + response.code() + " body=" + resp);
                         // Complete with null
                         future.complete(null);
@@ -816,12 +818,14 @@ public class RestClient {
                     var json = (body != null ? body.string() : "{}");
 
                     // Log response
+                    //noinspection SpellCheckingInspection
                     Log.d("HTTP", "📥 getBmiDistribution response=" + json);
 
                     // Parse into JSONObject and complete future with it
                     future.complete(new JSONObject(json));
                 } catch (Exception ex) {
                     // Log error
+                    //noinspection SpellCheckingInspection
                     Log.e("HTTP", "❌ getBmiDistribution parse error", ex);
                     // Complete with null
                     future.complete(null);
