@@ -273,13 +273,13 @@ public class WaterActivity extends AppCompatActivity {
                     // Extract date for the current day
                     var date = sortedKeys.get(i);
 
-                    // Update best day (max amount)
+                    // Update the best day (max amount)
                     if (amount > bestAmount) {
                         bestAmount = amount;
                         bestDate = date;
                     }
 
-                    // Update lowest non-zero day (min amount > 0)
+                    // Update the lowest non-zero day (min amount > 0)
                     if (amount > 0 && amount < lowestAmount) {
                         lowestAmount = amount;
                         lowestDate = date;
