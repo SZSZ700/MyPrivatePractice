@@ -1,5 +1,5 @@
 // Declare the package this class belongs to.
-package org.example.personalpractice.Q4;
+package org.example.personalpractice.DependencyInjection;
 
 // Import the custom Node type used for the linked list of tables.
 import org.example.personalpractice.Node;

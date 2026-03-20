@@ -1,5 +1,5 @@
 // Declare the package this class belongs to.
-package org.example.personalpractice.Q4;
+package org.example.personalpractice.DependencyInjection;
 
 // Define a simple data class that represents a client/group waiting to be seated.
 public class Client {
