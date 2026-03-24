@@ -69,8 +69,8 @@
         android:text="@string/water_bottle_1000_ml"
         android:textColor="#FFF"
         android:drawableRight="@drawable/bottlemini"
-        android:drawablePadding="8dp"
-        android:padding="2dp"/>
+        android:drawablePadding="9dp"
+        android:padding="6dp"/>
 
     <ImageButton
         android:id="@+id/imageButton4"
