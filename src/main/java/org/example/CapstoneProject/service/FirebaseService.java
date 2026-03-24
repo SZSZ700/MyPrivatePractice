@@ -14,7 +14,8 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-
+// מחלקה זו שולחת שאילתות-בקשות למסד נתונים לצורך עדכון/שליפת נתונים
+// הנתונים מוחזרים למחלקת הבקרים של השרת
 @Service
 public class FirebaseService {
     // NOTE:
