@@ -21,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
  * Provides methods for user registration, login, update, delete,
  * BMI management, and water tracking.
  */
+// מחלקה זו שולחת בקשות לשרת ומקבלת תגובות ממנו
 public class RestClient {
 
     // Base URL of the backend server (10.0.2.2 = localhost for Android emulator)
