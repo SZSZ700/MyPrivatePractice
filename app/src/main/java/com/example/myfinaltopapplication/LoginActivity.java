@@ -26,6 +26,10 @@ import java.util.concurrent.CompletableFuture;
 // LoginActivity
 // Purpose: allows a user to log into the application by checking credentials
 // against backend REST API (Spring Boot + Firebase).
+// מטרה של דף זה לאפשר למשתמש להתחבר לאפליקצייה,
+// כמובן עושה בדיקות ולידצייה שהמשתמש אכן קיים במסד נתונים
+// עמוד ההתחברות מפעיל מתודה ממחלקת ההתקשרות עם השרת ששולחת בקשה לשרת עם פרטי
+// המשתמש, ומחזירה את כל אובייקט המשתמש ששמור במסד נתונים
 // -----------------------------------------------------------------------------
 public class LoginActivity extends AppCompatActivity {
 
