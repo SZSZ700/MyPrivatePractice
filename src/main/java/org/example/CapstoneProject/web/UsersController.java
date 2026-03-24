@@ -30,6 +30,9 @@ import java.util.concurrent.CompletableFuture;   // For async non-blocking calls
 
 // -------------------------------------------------------------------------
 // Marks this class as a REST controller → all methods return JSON by default
+// מחלקה זו היא מחלקת הבקרים של השרת שמכילה נקודות קצה
+// כאשר מגיעה בקשה לשרת ממכשיר האנדרואיד(ממחלקת ההתקשרות עם השרת)
+// המנוע הפנימי של הספרינג בוט מפעיל אחת מנקודות הקצה שנמצאות במחלקה זו בהתאם
 // -------------------------------------------------------------------------
 @RestController
 // Base URL for all endpoints in this controller
