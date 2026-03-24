@@ -43,7 +43,10 @@
         android:layout_marginBottom="10dp"
         android:backgroundTint="#64B5F6"
         android:text="Plastic cup - 150 ml"
-        android:textColor="#FFF" />
+        android:textColor="#FFF"
+        android:drawableRight="@drawable/plasticmini2"
+        android:drawablePadding="8dp"
+        android:padding="6dp" />
 
     <Button
         android:id="@+id/drink200"
@@ -52,7 +55,10 @@
         android:layout_marginBottom="10dp"
         android:backgroundTint="#2196F3"
         android:text="@string/paper_cup_200_ml"
-        android:textColor="#FFF" />
+        android:textColor="#FFF"
+        android:drawableRight="@drawable/cartonmini"
+        android:drawablePadding="8dp"
+        android:padding="0dp" />
 
     <Button
         android:id="@+id/drink1000"
@@ -61,7 +67,10 @@
         android:layout_marginBottom="30dp"
         android:backgroundTint="#1976D2"
         android:text="@string/water_bottle_1000_ml"
-        android:textColor="#FFF" />
+        android:textColor="#FFF"
+        android:drawableRight="@drawable/bottlemini"
+        android:drawablePadding="8dp"
+        android:padding="2dp"/>
 
     <ImageButton
         android:id="@+id/imageButton4"
