@@ -186,6 +186,12 @@ public class WaterChartActivity extends AppCompatActivity {
                     return;
                 }
 
+                // 🐈 LOG 🐈 //
+                for (var entry : weeklyMap.entrySet()) {
+                    Log.d("WEEKLY_MAP", entry.getKey() + " -> " + entry.getValue());
+                }
+                // 🐈 LOG 🐈 //
+
                 // Prepare entries for weekly chart
                 var weeklyEntries = new ArrayList<BarEntry>();
                 var weekLabels = new ArrayList<String>();
