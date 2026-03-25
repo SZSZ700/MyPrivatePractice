@@ -81,6 +81,15 @@ public class WaterActivity extends AppCompatActivity {
     private static final int REMINDER_REQ_CODE = 2001;
     // -- FOR NOTIFICATIONS -- //
 
+
+    // -- FOR CUSTOM WATER -- //
+    @SuppressWarnings("FieldCanBeLocal")
+    private EditText customWaterText;
+
+    @SuppressWarnings("FieldCanBeLocal")
+    private Button customWaterButton;
+    // -- FOR CUSTOM WATER -- //
+
     // -------------------------------------------------------------------------
     // onCreate - called when the Activity is first created
     // -------------------------------------------------------------------------
@@ -125,6 +134,10 @@ public class WaterActivity extends AppCompatActivity {
         goalProgressBar = findViewById(R.id.goalProgressBar);
         bestDayText = findViewById(R.id.bestDayText);
         lowestDayText = findViewById(R.id.lowestDayText);
+        // -- FOR CUSTOM WATER -- //
+        customWaterText = findViewById(R.id.customWater);
+        customWaterButton = findViewById(R.id.button7);
+        // -- FOR CUSTOM WATER -- //
 
 
         // Load locally saved data for today and yesterday from SharedPreferences
@@ -373,6 +386,30 @@ public class WaterActivity extends AppCompatActivity {
                 lowestDayText.setText("Lowest day: error");
             }
         }));
+
+        customWaterButton.setOnClickListener(v -> {
+            // Read user inputs (custom water amount) as strings
+            // Trim to remove leading/trailing spaces
+            var txt = customWaterText.getText().toString().trim();
+
+            // Validate that the field is not empty
+            if (txt.isEmpty()) {
+                // Show error toast if empty input is provided
+                Toast.makeText(this, getString(R.string.fill_all_fields), Toast.LENGTH_SHORT).show();
+                return; // Stop if invalid input
+            }
+
+            try{
+                // Convert amount of water to number
+                var amountOfWater = Integer.parseInt(txt);
+                // Update water consumption
+                // call updateWater(amountOfWater) method
+                this.updateWater(amountOfWater);
+            }catch (NumberFormatException e){
+                // If the input is not a valid number → show error toast
+                Toast.makeText(this, "Invalid input", Toast.LENGTH_SHORT).show();
+            }
+        });
 
     }
 

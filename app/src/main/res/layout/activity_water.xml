@@ -134,4 +134,21 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="allow notfications" />
+
+
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/customWater"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="how much water did you drink now?"
+        android:inputType="numberDecimal" />
+
+    <Button
+        android:id="@+id/button7"
+        android:layout_width="155dp"
+        android:layout_height="50dp"
+        android:backgroundTint="#0D47A1"
+        android:text="submit"
+        android:textColor="#FFF" />
 </LinearLayout>
