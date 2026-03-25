@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     android:padding="24dp"
     android:orientation="vertical"
-    android:gravity="center_horizontal">
+    android:gravity="center_horizontal"
+    android:background="#E3F2FD">
 
     <TextView
         android:layout_width="wrap_content"
@@ -51,7 +52,7 @@
         android:id="@+id/imageButton3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/white"
+        android:background="#E3F2FD"
         app:srcCompat="?attr/homeAsUpIndicator" />
 
     <com.github.mikephil.charting.charts.PieChart

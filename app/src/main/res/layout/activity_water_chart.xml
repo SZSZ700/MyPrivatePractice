@@ -2,13 +2,15 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="#E3F2FD">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        android:background="#E3F2FD">
 
         <TextView
             android:id="@+id/chartTitle"
@@ -56,8 +58,9 @@
             android:id="@+id/imageButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:backgroundTint="#E3F2FD"
             android:layout_marginTop="16dp"
-            android:src="@android:drawable/ic_media_previous"
+            android:src="?attr/homeAsUpIndicator"
             android:contentDescription="Back" />
     </LinearLayout>
 </ScrollView>
