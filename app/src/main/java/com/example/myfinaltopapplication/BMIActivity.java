@@ -326,11 +326,11 @@ public class BMIActivity extends AppCompatActivity {
     // "Today calories: 1500 kcal (Below target, target 2000 kcal)"
     // -------------------------------------------------------------------------
     private void updateCaloriesStatusText() {
-        var msg = "Today calories: " + currentCalories + " kcal.\n" +
-                "BMI < 18.5           -> Underweight\n" +
-                "18.5 <= BMI < 25     -> Normal\n" +
-                "25 <= BMI < 30       -> Overweight\n" +
-                "BMI >= 30            -> Obese";
+        var msg = "Today calories: " + currentCalories + " kcal.\n\n" +
+                "[BMI < 18.5] → Underweight\n" +
+                "[18.5 <= BMI < 25] → Normal\n" +
+                "[25 <= BMI < 30] → Overweight\n" +
+                "[BMI >= 30] → Obese";
         caloriesStatusText.setText(msg);
     }
 
