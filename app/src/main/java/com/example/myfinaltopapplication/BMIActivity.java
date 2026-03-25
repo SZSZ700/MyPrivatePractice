@@ -7,6 +7,7 @@ import android.content.Intent;
 // Import SharedPreferences for local key-value data storage
 import android.content.SharedPreferences;
 // Import Bundle to restore/save Activity state
+import android.graphics.Color;
 import android.os.Bundle;
 // Import Button widget
 import android.widget.Button;
@@ -395,6 +396,7 @@ public class BMIActivity extends AppCompatActivity {
 
                 // Prepare entries for each BMI category
                 var entries = new ArrayList<PieEntry>();
+                var colors = new ArrayList<Integer>();
 
                 // Read counts from JSON (0 if missing)
                 var under = obj.optInt("Underweight", 0);
@@ -405,15 +407,19 @@ public class BMIActivity extends AppCompatActivity {
                 // Add only categories with at least one user
                 if (under > 0) {
                     entries.add(new PieEntry(under, "Underweight"));
+                    colors.add(Color.parseColor("#64B5F6")); // Soft blue
                 }
                 if (normal > 0) {
                     entries.add(new PieEntry(normal, "Normal"));
+                    colors.add(Color.parseColor("#81C784")); // Soft green
                 }
                 if (over > 0) {
                     entries.add(new PieEntry(over, "Overweight"));
+                    colors.add(Color.parseColor("#FFD54F")); // Soft yellow
                 }
                 if (obese > 0) {
                     entries.add(new PieEntry(obese, "Obese"));
+                    colors.add(Color.parseColor("#E57373")); // Soft red
                 }
 
                 // If still empty → no BMI recorded yet
@@ -426,7 +432,7 @@ public class BMIActivity extends AppCompatActivity {
                 // Create data set for PieChart
                 var dataSet = new PieDataSet(entries, "");
                 // Use built-in color template
-                dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
+                dataSet.setColors(colors);
                 // Text size for values on slices
                 dataSet.setValueTextSize(12f);
 

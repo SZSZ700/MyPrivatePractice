@@ -55,8 +55,8 @@
 
     <com.github.mikephil.charting.charts.PieChart
         android:id="@+id/bmiPieChart"
-        android:layout_width="207dp"
-        android:layout_height="163dp"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
         android:layout_marginTop="16dp" />
 
     <TextView
