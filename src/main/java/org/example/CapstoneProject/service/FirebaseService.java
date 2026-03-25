@@ -727,7 +727,7 @@ public class FirebaseService {
 
     // ------------------------------- GET WEEKLY AVERAGES (4 WEEKS) --------------------------
     // Reads slot "0" (daily sum) for the last 28 days, groups by week (7-day chunks),
-    // and returns a LinkedHashMap in this order: Week 1 (newest) .. Week 4 (oldest).
+    // and returns a LinkedHashMap in this order: Week 1 (oldest) .. Week 4 (newest).
     public CompletableFuture<Map<String, Integer>> getWeeklyAverages(String username) {
 
         // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
@@ -796,7 +796,8 @@ public class FirebaseService {
                                 for (int w = 0; w < 4; w++) {
                                     // Calculate average if count > 0, otherwise set to 0
                                     int avg = (counts[w] > 0) ? (int) (sums[w] / counts[w]) : 0;
-                                    out.put("Week " + (w + 1), avg);
+                                    // out.put("Week " + (w + 1), avg);
+                                    out.put("Week " + (4 - w), avg);
                                 }
 
                                 // Debug output for verification
