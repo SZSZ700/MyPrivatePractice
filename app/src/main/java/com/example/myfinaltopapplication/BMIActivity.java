@@ -28,7 +28,6 @@ import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
-import com.github.mikephil.charting.utils.ColorTemplate;
 // Import Java util for list handling
 import java.util.ArrayList;
 
@@ -104,7 +103,7 @@ public class BMIActivity extends AppCompatActivity {
         var prefs = getSharedPreferences(getString(R.string.myprefs), MODE_PRIVATE);
         currentUser = prefs.getString(getString(R.string.currentuser), null);
 
-        // If user is not logged in → force redirect to login
+        // If user is not logged in → force redirect to log in
         if (currentUser == null) {
             // Show error toast
             Toast.makeText(this, "You must log in first", Toast.LENGTH_SHORT).show();
@@ -390,6 +389,7 @@ public class BMIActivity extends AppCompatActivity {
             try {
                 // If null → keep "no data" state
                 if (obj == null) {
+                    //noinspection SpellCheckingInspection
                     Log.w("BMI_CHART", "getBmiDistribution returned null");
                     return;
                 }
