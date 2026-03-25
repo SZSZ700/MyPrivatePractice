@@ -82,8 +82,7 @@ public class BMIActivity extends AppCompatActivity {
 
     // Current daily calories value
     private int currentCalories = 0;
-    // Simple static target for calories (kcal)
-    private static final int TARGET_CALORIES = 2000;
+
 
     // -------------------------------------------------------------------------
     // onCreate - lifecycle method called when Activity is created
@@ -327,17 +326,11 @@ public class BMIActivity extends AppCompatActivity {
     // "Today calories: 1500 kcal (Below target, target 2000 kcal)"
     // -------------------------------------------------------------------------
     private void updateCaloriesStatusText() {
-        String status;
-        if (currentCalories < TARGET_CALORIES) {
-            status = "Below target";
-        } else if (currentCalories == TARGET_CALORIES) {
-            status = "At target";
-        } else {
-            status = "Above target";
-        }
-
-        var msg = "Today calories: " + currentCalories + " kcal (" +
-                status + ", target " + TARGET_CALORIES + " kcal)";
+        var msg = "Today calories: " + currentCalories + " kcal.\n" +
+                "BMI < 18.5           -> Underweight\n" +
+                "18.5 <= BMI < 25     -> Normal\n" +
+                "25 <= BMI < 30       -> Overweight\n" +
+                "BMI >= 30            -> Obese";
         caloriesStatusText.setText(msg);
     }
 
