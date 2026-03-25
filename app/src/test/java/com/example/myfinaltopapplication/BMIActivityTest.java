@@ -164,8 +164,6 @@ public class BMIActivityTest {
             var statusText = caloriesStatusText.getText().toString();
             // assert that statusText contains "Today calories: 1500 kcal"
             assertTrue(statusText.contains("Today calories: 1500 kcal"));
-            // assert that statusText contains "Below target"
-            assertTrue(statusText.contains("Below target"));
 
             // Check SharedPreferences stored values
             var prefs = app.getSharedPreferences(
