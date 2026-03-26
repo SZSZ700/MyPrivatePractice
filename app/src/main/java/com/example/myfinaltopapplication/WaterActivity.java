@@ -402,6 +402,14 @@ public class WaterActivity extends AppCompatActivity {
             try{
                 // Convert amount of water to number
                 var amountOfWater = Integer.parseInt(txt);
+
+                // Validate that the input is a positive number
+                // and that it is not greater than 10000
+                if (amountOfWater <= 0 || amountOfWater >= 10000){
+                    Toast.makeText(this, "Invalid input", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 // Update water consumption
                 // call updateWater(amountOfWater) method
                 this.updateWater(amountOfWater);
