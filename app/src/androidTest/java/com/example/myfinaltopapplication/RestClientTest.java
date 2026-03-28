@@ -34,15 +34,15 @@ import okhttp3.mockwebserver.RecordedRequest;
  */
 
 /*
- In these tests we use OkHttp’s MockWebServer to simulate the backend instead of
+ In these tests I use OkHttp’s MockWebServer to simulate the backend instead of
  calling the real Spring Boot server. The call to mockWebServer.enqueue(new MockResponse(...))
  pre-loads a fake HTTP response into a queue, so when RestClient sends its next HTTP
- request, the mock server will return exactly the status code and JSON body that we
+ request, the mock server will return exactly the status code and JSON body that I
  configured. This lets us control the server’s behavior in a predictable way.
 
- After the client call finishes, we use mockWebServer.takeRequest(...) to read back
+ After the client call finishes, I use mockWebServer.takeRequest(...) to read back
  the HTTP request that RestClient actually sent. The RecordedRequest object contains
- the HTTP method, path, headers, and body, so we can assert that the client built the
+ the HTTP method, path, headers, and body, so I can assert that the client built the
  request correctly (for example: method = PUT, path = /myapp/api/users/john/goal?goalMl=3400).
  In other words, enqueue(...) verifies how the client handles responses, and takeRequest(...)
  verifies that the client sends the correct requests.
