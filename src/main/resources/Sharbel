@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCases>
+
+    <!-- Valid input: values should remain unchanged -->
+    <TestCase>
+        <Len>5.0</Len>
+        <Width>4.0</Width>
+
+        <ExpLen>5.0</ExpLen>
+        <ExpWidth>4.0</ExpWidth>
+        <ExpArea>20.0</ExpArea>
+
+        <Inp>10.0</Inp>
+        <ExpRes>true</ExpRes>
+    </TestCase>
+
+    <!-- Length is invalid (<=0), should be corrected to 1 -->
+    <TestCase>
+        <Len>0.0</Len>
+        <Width>4.0</Width>
+
+        <ExpLen>1.0</ExpLen>
+        <ExpWidth>4.0</ExpWidth>
+        <ExpArea>4.0</ExpArea>
+
+        <Inp>3.0</Inp>
+        <ExpRes>true</ExpRes>
+    </TestCase>
+
+    <!-- Width is invalid (<=0), should be corrected to 1 -->
+    <TestCase>
+        <Len>5.0</Len>
+        <Width>-2.0</Width>
+
+        <ExpLen>5.0</ExpLen>
+        <ExpWidth>1.0</ExpWidth>
+        <ExpArea>5.0</ExpArea>
+
+        <Inp>6.0</Inp>
+        <ExpRes>false</ExpRes>
+    </TestCase>
+
+    <!-- Both values invalid, both should become 1 -->
+    <TestCase>
+        <Len>-3.0</Len>
+        <Width>0.0</Width>
+
+        <ExpLen>1.0</ExpLen>
+        <ExpWidth>1.0</ExpWidth>
+        <ExpArea>1.0</ExpArea>
+
+        <Inp>1.0</Inp>
+        <ExpRes>false</ExpRes>
+    </TestCase>
+
+    <!-- Boundary case: area equals input -> should return false -->
+    <TestCase>
+        <Len>2.0</Len>
+        <Width>3.0</Width>
+
+        <ExpLen>2.0</ExpLen>
+        <ExpWidth>3.0</ExpWidth>
+        <ExpArea>6.0</ExpArea>
+
+        <Inp>6.0</Inp>
+        <ExpRes>false</ExpRes>
+    </TestCase>
+
+    <!-- Area greater than input -> should return true -->
+    <TestCase>
+        <Len>7.0</Len>
+        <Width>2.0</Width>
+
+        <ExpLen>7.0</ExpLen>
+        <ExpWidth>2.0</ExpWidth>
+        <ExpArea>14.0</ExpArea>
+
+        <Inp>13.0</Inp>
+        <ExpRes>true</ExpRes>
+    </TestCase>
+
+    <!-- Area smaller than input -> should return false -->
+    <TestCase>
+        <Len>3.0</Len>
+        <Width>3.0</Width>
+
+        <ExpLen>3.0</ExpLen>
+        <ExpWidth>3.0</ExpWidth>
+        <ExpArea>9.0</ExpArea>
+
+        <Inp>15.0</Inp>
+        <ExpRes>false</ExpRes>
+    </TestCase>
+
+    <!-- Valid decimal values -->
+    <TestCase>
+        <Len>2.5</Len>
+        <Width>4.0</Width>
+
+        <ExpLen>2.5</ExpLen>
+        <ExpWidth>4.0</ExpWidth>
+        <ExpArea>10.0</ExpArea>
+
+        <Inp>9.5</Inp>
+        <ExpRes>true</ExpRes>
+    </TestCase>
+
+    <!-- Invalid decimal length, should become 1 -->
+    <TestCase>
+        <Len>-0.5</Len>
+        <Width>2.5</Width>
+
+        <ExpLen>1.0</ExpLen>
+        <ExpWidth>2.5</ExpWidth>
+        <ExpArea>2.5</ExpArea>
+
+        <Inp>2.5</Inp>
+        <ExpRes>false</ExpRes>
+    </TestCase>
+
+</TestCases>
