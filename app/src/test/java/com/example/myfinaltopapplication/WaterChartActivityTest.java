@@ -33,7 +33,7 @@ import com.github.mikephil.charting.data.BarDataSet;
 // -----------------------------------------------------------------------------
 // WaterChartActivityTest
 // Purpose: Deep tests for WaterChartActivity using Robolectric + Mockito.
-// We test:
+// I test:
 //   1) Behavior when there is no history data at all (history == null)
 //   2) Drawing the 7-days chart with real JSON history data
 //   3) Drawing the weekly averages chart with a real Map<String,Integer>

@@ -25,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
 // -----------------------------------------------------------------------------
 // SignupActivityTest
 // Purpose: deep tests for signup Activity using Robolectric + Mockito.
-// We test: validation, interaction with RestClient, SharedPreferences, navigation,
+// I test: validation, interaction with RestClient, SharedPreferences, navigation,
 // and UI feedback (Toast messages).
 // -----------------------------------------------------------------------------
 @RunWith(RobolectricTestRunner.class)
@@ -77,7 +77,7 @@ public class SignupActivityTest {
             // Run pending UI tasks so Toast will be created
             Shadows.shadowOf(Looper.getMainLooper()).idle();
 
-            // Read latest Toast text
+            // Read the latest Toast text
             CharSequence toastText = ShadowToast.getTextOfLatestToast();
 
             // Assert that Toast was shown

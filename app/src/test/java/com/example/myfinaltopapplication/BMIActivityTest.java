@@ -33,7 +33,7 @@ import com.github.mikephil.charting.data.PieDataSet;
 // -----------------------------------------------------------------------------
 // BMIActivityTest
 // Purpose: Deep tests for BMIActivity using Robolectric + Mockito.
-// We test:
+// I test:
 //   1) Redirect to LoginActivity if no user in SharedPreferences
 //   2) Initial load of BMI + calories from server into UI
 //   3) Successful BMI calculation and update (updateBmi + SharedPreferences)
@@ -194,6 +194,7 @@ public class BMIActivityTest {
     @Test
     public void calcButton_validInput_calculatesAndSavesBmi() {
         // Mock RestClient
+        //noinspection GrazieInspection
         try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Get application instance
@@ -472,6 +473,7 @@ public class BMIActivityTest {
     @Test
     public void loadBmiDistributionChart_withData_populatesPieChart() throws Exception {
         // Mock RestClient
+        //noinspection SpellCheckingInspection
         try (var restClientMock = Mockito.mockStatic(RestClient.class)) {
 
             // Get app

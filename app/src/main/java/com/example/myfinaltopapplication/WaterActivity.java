@@ -1,6 +1,5 @@
 // Define the package this Activity belongs to
 package com.example.myfinaltopapplication;
-
 // Import Android Intent class for navigation between screens
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;

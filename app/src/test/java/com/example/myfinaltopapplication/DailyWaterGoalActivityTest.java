@@ -32,7 +32,7 @@ import com.github.mikephil.charting.data.PieDataSet;
 // -----------------------------------------------------------------------------
 // DailyWaterGoalActivityTest
 // Purpose: Deep tests for DailyWaterGoal using Robolectric + Mockito.
-// We test:
+// I test:
 //   1) Validation errors when saving a goal (empty / non-numeric / out-of-range)
 //   2) Successful goal update flow (calls RestClient, updates labels + chart)
 //   3) Initial fetchAndRender: goal + today from JSON → labels + chart

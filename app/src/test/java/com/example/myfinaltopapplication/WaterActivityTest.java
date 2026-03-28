@@ -38,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
 // -----------------------------------------------------------------------------
 // WaterActivityTest
 // Deep tests for WaterActivity:
-// 1. No current user -> redirect to Login + Toast.
+// 1. No current user -> redirect to Log in + Toast.
 // 2. Logged-in user -> initial server sync updates UI + SharedPreferences.
 // 3. updateWater success -> updates text, prefs, and shows success Toast.
 // 4. updateWater failure -> does NOT update prefs and shows error Toast.

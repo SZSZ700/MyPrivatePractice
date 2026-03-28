@@ -24,7 +24,7 @@ import java.util.Objects;
 // -----------------------------------------------------------------------------
 // HomePageTest
 // Purpose: deep tests for HomePage navigation using Robolectric
-// We test that each button starts the correct Activity:
+// I test that each button starts the correct Activity:
 //  - BMI button  -> BMIActivity
 //  - Water button -> WaterActivity
 //  - Graph button -> WaterChartActivity

@@ -35,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
 // -----------------------------------------------------------------------------
 // LoginActivityTest
 // Purpose: deep tests for LoginActivity using Robolectric + Mockito static mocks
-// We test: validation, interaction with RestClient, SharedPreferences, navigation,
+// I test: validation, interaction with RestClient, SharedPreferences, navigation,
 // and UI feedback (Toast messages).
 // -----------------------------------------------------------------------------
 @RunWith(RobolectricTestRunner.class)

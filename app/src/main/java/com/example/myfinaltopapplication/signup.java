@@ -21,10 +21,6 @@ import java.util.concurrent.CompletableFuture;
 // signup Activity
 // Purpose: allows new users to register in the system
 // Uses RestClient.register() to communicate with Spring Boot backend
-// בעמוד זה המשתמש מזין את פרטיו על מנת להירשם לאפליקצייה,
-// כמובן שפרטי המשתמש מסונכרנים עם השרת
-// עמוד זה מקבל בחזרה (כחלק מתהליך הרישום) מחרוזת המעידה שההרשמה בוצעה בהצלחה
-// המתודה המופעלת ממחלקת ההתקשרות עם השרת היא RestClient.register()
 // -----------------------------------------------------------------------------
 public class signup extends AppCompatActivity {
 
