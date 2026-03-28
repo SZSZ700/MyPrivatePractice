@@ -7428,8 +7428,7 @@ public class Main {
             //if current entry value is positive
             if (entry.getKey() > 0 && entry.getValue() % 2 != 0){ return false;}
             //if current entry value is negative
-            else //noinspection ConstantValue
-                if (entry.getKey() > 0 && entry.getValue() % 2 != 1){ return false; }
+            else if (entry.getKey() > 0 && entry.getValue() % 2 != 1){ return false; }
         }
 
         return true;
