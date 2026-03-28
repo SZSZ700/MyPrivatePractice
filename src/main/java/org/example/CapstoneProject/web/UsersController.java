@@ -13,26 +13,23 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;   // For async non-blocking calls
 
 // NOTE:
-// We use thenApply (not thenApplyAsync) because this continuation is very light:
+// I use thenApply (not thenApplyAsync) because this continuation is very light:
 // it only wraps the service result into a ResponseEntity.
 // thenApply runs on the same thread that completes the Future, which is fine here,
 // and we don't need an extra thread-pool hop.
 
-// If we would do heavy work inside the Firebase callback
-// (or inside thenApply that runs on the same thread), we can block Firebase’s thread(s).
+// If I would do heavy work inside the Firebase callback
+// (or inside thenApply that runs on the same thread), I can block Firebase’s thread(s).
 
 // When Firebase’s thread pool gets busy / blocked
 // (e.g., too many callbacks waiting, or callbacks doing long computations / I/O)
-// we may get: slow responses, delays, sometimes timeouts
+// I may get: slow responses, delays, sometimes timeouts
 // It’s not our own thread that we are blocking
-// — we are blocking a shared Firebase callback thread that serves many callbacks
+// — I are blocking a shared Firebase callback thread that serves many callbacks
 // across the app
 
 // -------------------------------------------------------------------------
 // Marks this class as a REST controller → all methods return JSON by default
-// מחלקה זו היא מחלקת הבקרים של השרת שמכילה נקודות קצה
-// כאשר מגיעה בקשה לשרת ממכשיר האנדרואיד(ממחלקת ההתקשרות עם השרת)
-// המנוע הפנימי של הספרינג בוט מפעיל אחת מנקודות הקצה שנמצאות במחלקה זו בהתאם
 // -------------------------------------------------------------------------
 @RestController
 // Base URL for all endpoints in this controller

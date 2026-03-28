@@ -12,9 +12,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class Application {
     // -------------------------------------------------------------------------
     // Main method - the starting point of the Spring Boot application
-    // נקודת הפתיחה של השרת - מעלה את השרת, ויוצר מופע של כל המחלקות בשרת
-    // גם יוצר את המחלקה שמטפלת בבקשות ובתגובות
-    // וגם את מחלקת השירות שמתקשרת עם המסד נתונים
     // -------------------------------------------------------------------------
     public static void main(String[] args) {
         // Start the Spring Boot application (loads context, beans, etc.)

@@ -1,6 +1,5 @@
 // Define the package for this service class
 package org.example.CapstoneProject.service;
-
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
@@ -14,8 +13,7 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-// מחלקה זו שולחת שאילתות-בקשות למסד נתונים לצורך עדכון/שליפת נתונים
-// הנתונים מוחזרים למחלקת הבקרים של השרת
+
 @Service
 public class FirebaseService {
     // NOTE:
