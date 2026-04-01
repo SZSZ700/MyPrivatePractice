@@ -1,71 +1,50 @@
 #ifndef UNTITLED1_RESTAURANT_H
 #define UNTITLED1_RESTAURANT_H
-// Include the queue header for std::queue
+
+#include <list>
+#include <memory>
 #include <queue>
-// Include the string header for std::string
 #include <string>
-// Include the Node template header for linked list of tables
-#include "..//Node/Node.h"
-// Include the Client class header
 #include "Client.h"
-// Include the Table class header
 #include "Table.h"
 
-// Use std::string by name only to avoid bringing the whole std namespace
-using std::string;
-// Use std::queue by name only to avoid bringing the whole std namespace
-using std::queue;
-
-// Class that represents a restaurant with a client queue and a linked list of tables
 class Restaurant {
-private:
-    // Pointer to a queue of client pointers stored on the heap
-    queue<Client*>* clients;
-    // Pointer to the head node of the linked list of table pointers
-    Node<Table*>* tables;
-    // Pointer to the tail node of the linked list of table pointers
-    Node<Table*>* tablesTail;
+    // Queue that owns all waiting clients
+    std::queue<std::unique_ptr<Client>> clients;
 
-    // Helper method that deletes all table nodes and their table objects
-    void clearTables();
-    // Helper method that deletes all clients in the queue and the queue object itself
-    void clearClients();
-    // Helper method that deep copies the linked list of tables from another list
-    void copyTablesFrom(const Node<Table*>* otherHead);
-    // Helper method that deep copies the client queue from another queue
-    void copyClientsFrom(const queue<Client*>* otherQueue);
+    // List that owns all restaurant tables
+    std::list<std::unique_ptr<Table>> tables;
 
 public:
-    // Constructor that builds the restaurant from numbers of small, medium and large tables
-    Restaurant(const int* smallTables, const int* mediumTables, const int* largeTables);
-    // Destructor that releases all dynamically allocated resources
-    ~Restaurant();
-    // Copy constructor that performs a deep copy from another Restaurant object
-    Restaurant(const Restaurant& other);
-    // Copy assignment operator that performs a deep copy from another Restaurant object
-    Restaurant& operator=(const Restaurant& other);
-    // Move constructor that steals the resources from another Restaurant object
-    Restaurant(Restaurant&& other) noexcept;
-    // Move assignment operator that steals the resources from another Restaurant object
-    Restaurant& operator=(Restaurant&& other) noexcept;
+    // Constructor that creates all restaurant tables
+    Restaurant(int smallTables, int mediumTables, int largeTables);
 
-    // Getter that returns a const pointer to the client queue
-    const queue<Client*>* getClients() const;
-    // Getter that returns a const pointer to the head of the table linked list
-    const Node<Table*>* getTables() const;
+    // Getter that returns a const reference to the client queue
+    const std::queue<std::unique_ptr<Client>>& getClients() const;
 
-    // Setter that replaces the client queue with a deep copy of another client queue
-    void setClients(const queue<Client*>* otherQueue);
-    // Setter that replaces the table linked list with a deep copy of another table list
-    void setTables(const Node<Table*>* otherHead);
+    // Getter that returns a const reference to the table list
+    const std::list<std::unique_ptr<Table>>& getTables() const;
 
-    // Method that converts the restaurant data into a human-readable string
-    string toString() const;
+    // Setter that replaces the client queue by taking ownership
+    void setClients(std::queue<std::unique_ptr<Client>> clients);
 
-    // Method that finds a table number that has enough free places for the given number of diners
+    // Setter that replaces the table list by taking ownership
+    void setTables(std::list<std::unique_ptr<Table>> tables);
+
+    // Adds a new client to the waiting queue
+    void addClient(std::unique_ptr<Client> client);
+
+    // Adds a new table to the restaurant
+    void addTable(std::unique_ptr<Table> table);
+
+    // Returns a readable string that describes the restaurant
+    std::string toString() const;
+
+    // Finds a table number with enough free places for the given number of diners
     int findAvailableTable(int numOfDiners) const;
 
-    // Method that seats the next suitable client from the queue at a table with enough free places
+    // Seats the next suitable client from the queue
     bool seatNextClient();
 };
-#endif //UNTITLED1_RESTAURANT_H
+
+#endif // UNTITLED1_RESTAURANT_H
