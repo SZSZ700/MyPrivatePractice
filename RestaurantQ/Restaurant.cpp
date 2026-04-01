@@ -44,7 +44,7 @@ Restaurant::Restaurant(int smallTables, int mediumTables, int largeTables) {
 }
 
 // Returns the client queue as a const reference
-const std::queue<std::unique_ptr<Client>>& Restaurant::getClients() const {
+const queue<unique_ptr<Client>>& Restaurant::getClients() const {
     return clients;
 }
 
@@ -55,19 +55,19 @@ const std::list<std::unique_ptr<Table>>& Restaurant::getTables() const {
 
 // Replaces the entire client queue (move ownership)
 // ReSharper disable once CppParameterNamesMismatch
-void Restaurant::setClients(std::queue<std::unique_ptr<Client>> clientss) {
+void Restaurant::setClients(queue<unique_ptr<Client>> clientss) {
     // Move the entire queue into this object
     this->clients = std::move(clientss);
 }
 
 // Replaces the entire table list (move ownership)
 // ReSharper disable once CppParameterNamesMismatch
-void Restaurant::setTables(std::list<std::unique_ptr<Table>> tabless) {
+void Restaurant::setTables(list<unique_ptr<Table>> tabless) {
     // Move the entire list into this object
     this->tables = std::move(tabless);
 }
 // Adds a new client to the queue
-void Restaurant::addClient(std::unique_ptr<Client> client) {
+void Restaurant::addClient(unique_ptr<Client> client) {
     // Ignore null clients
     if (!client) { return; }
     this->clients.push(std::move(client));
@@ -112,7 +112,6 @@ int Restaurant::findAvailableTable(const int numOfDiners) const {
 bool Restaurant::seatNextClient() {
     // If there are no waiting clients, nothing can be seated
     if (this->clients.empty()) { return false; }
-
     // Store the original queue size so we do at most one full rotation
     const auto originalSize = clients.size();
 
@@ -121,7 +120,6 @@ bool Restaurant::seatNextClient() {
         // Take ownership of the client at the front of the queue
         auto current = std::move(clients.front());
         this->clients.pop();
-
         // Skip null clients
         if (!current) { continue; }
         // Read the number of diners from the client object
@@ -138,7 +136,6 @@ bool Restaurant::seatNextClient() {
         // Search for the matching table and update its free places
         for (const auto& tbl : this->tables) {
             if (!tbl) { continue; }
-
             if (tbl->getNum() == tableNum) {
                 tbl->setFreePlaces(
                     std::make_unique<int>(tbl->getFreePlaces() - diners)
