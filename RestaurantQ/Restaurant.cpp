@@ -54,12 +54,14 @@ const std::list<std::unique_ptr<Table>>& Restaurant::getTables() const {
 }
 
 // Replaces the entire client queue (move ownership)
+// ReSharper disable once CppParameterNamesMismatch
 void Restaurant::setClients(std::queue<std::unique_ptr<Client>> clientss) {
     // Move the entire queue into this object
     this->clients = std::move(clientss);
 }
 
 // Replaces the entire table list (move ownership)
+// ReSharper disable once CppParameterNamesMismatch
 void Restaurant::setTables(std::list<std::unique_ptr<Table>> tabless) {
     // Move the entire list into this object
     this->tables = std::move(tabless);
@@ -68,35 +70,31 @@ void Restaurant::setTables(std::list<std::unique_ptr<Table>> tabless) {
 void Restaurant::addClient(std::unique_ptr<Client> client) {
     // Ignore null clients
     if (!client) { return; }
-
-    clients.push(std::move(client));
+    this->clients.push(std::move(client));
 }
 
 // Adds a new table to the restaurant
 void Restaurant::addTable(std::unique_ptr<Table> table) {
     // Ignore null tables
     if (!table) { return; }
-
-    tables.push_back(std::move(table));
+    this->tables.push_back(std::move(table));
 }
 
 // Builds a readable string that describes the restaurant
 std::string Restaurant::toString() const {
     std::stringstream ss;
-
     ss << "Restaurant(";
     ss << "tables=" << tables.size();
     ss << ", ";
     ss << "clientsInQueue=" << clients.size();
     ss << ")";
-
     return ss.str();
 }
 
 // Finds the first table that has enough free places
 int Restaurant::findAvailableTable(const int numOfDiners) const {
     // Traverse all tables
-    for (const std::unique_ptr<Table>& tbl : tables) {
+    for (const auto &tbl : this->tables) {
         // Skip null table pointers just in case
         if (!tbl) { continue; }
 
@@ -113,41 +111,38 @@ int Restaurant::findAvailableTable(const int numOfDiners) const {
 // Seats the next client that can fit in one of the available tables
 bool Restaurant::seatNextClient() {
     // If there are no waiting clients, nothing can be seated
-    if (clients.empty()) { return false; }
+    if (this->clients.empty()) { return false; }
 
     // Store the original queue size so we do at most one full rotation
-    const std::size_t originalSize = clients.size();
+    const auto originalSize = clients.size();
 
     // Try each client once
-    for (std::size_t i = 0; i < originalSize; i++) {
+    for (auto i = 0; i < originalSize; i++) {
         // Take ownership of the client at the front of the queue
-        std::unique_ptr<Client> current = std::move(clients.front());
-        clients.pop();
+        auto current = std::move(clients.front());
+        this->clients.pop();
 
         // Skip null clients
         if (!current) { continue; }
-
         // Read the number of diners from the client object
-        const int diners = current->getDiners();
-
+        const auto diners = current->getDiners();
         // Find a suitable table for this client
-        const int tableNum = findAvailableTable(diners);
+        const auto tableNum = findAvailableTable(diners);
 
         // If no table was found, move the client to the end of the queue
         if (tableNum == -1) {
-            clients.push(std::move(current));
+            this->clients.push(std::move(current));
             continue;
         }
 
         // Search for the matching table and update its free places
-        for (const std::unique_ptr<Table>& tbl : tables) {
+        for (const auto& tbl : this->tables) {
             if (!tbl) { continue; }
 
             if (tbl->getNum() == tableNum) {
-                const int newFree = tbl->getFreePlaces() - diners;
-
-                tbl->setFreePlaces(std::make_unique<int>(newFree));
-
+                tbl->setFreePlaces(
+                    std::make_unique<int>(tbl->getFreePlaces() - diners)
+                );
                 // Client was seated successfully, so do not return it to the queue
                 return true;
             }
