@@ -1,55 +1,48 @@
-#ifndef UNTITLED1_TABLE_H
-#define UNTITLED1_TABLE_H
-// Include the string header for std::string
+#ifndef TABLE_H
+#define TABLE_H
+#include <memory>
 #include <string>
 
-// Use the std namespace only for std::string
-using std::string;
-
-// Class that represents a table in the restaurant
 class Table {
-private:
-    // Pointer to the table number stored on the heap
-    int* num;
-    // Pointer to the total number of places at the table (2, 4 or 8) stored on the heap
-    int* places;
-    // Pointer to the number of free places at the table stored on the heap
-    int* freePlaces;
+    // Smart pointer that owns the table number
+    std::unique_ptr<int> num;
+    // Smart pointer that owns the number of seats
+    std::unique_ptr<int> places;
+    // Smart pointer that owns the number of free seats
+    std::unique_ptr<int> freePlaces;
 
-    // Helper method that normalizes the number of places to one of the allowed values (2, 4, 8)
+    // Normalizes places to valid values (2, 4, or 8)
     static int normalizePlaces(int value);
-    // Helper method that normalizes the number of free places to be between 0 and places
+
+    // Ensures freePlaces is within valid range [0, places]
     static int normalizeFree(int freeValue, int placesValue);
 
 public:
-    // Constructor that creates a table from table number, total places and free places
-    Table(const int* num, const int* places, const int* freePlaces);
-    // Destructor that releases all dynamically allocated resources
-    ~Table();
-    // Copy constructor that performs a deep copy from another Table object
-    Table(const Table& other);
-    // Copy assignment operator that performs a deep copy from another Table object
-    Table& operator=(const Table& other);
-    // Move constructor that steals the resources from another Table object
-    Table(Table&& other) noexcept;
-    // Move assignment operator that steals the resources from another Table object
-    Table& operator=(Table&& other) noexcept;
+    // Constructor that takes ownership of all values and normalizes them
+    Table(std::unique_ptr<int> num,
+          std::unique_ptr<int> places,
+          std::unique_ptr<int> freePlaces);
 
-    // Getter that returns a const pointer to the table number
-    const int* getNum() const;
-    // Getter that returns a const pointer to the total number of places
-    const int* getPlaces() const;
-    // Getter that returns a const pointer to the number of free places
-    const int* getFreePlaces() const;
+    // Getter returning const reference to table number
+    const int& getNum() const;
 
-    // Setter that replaces the table number with a deep copy of the given value
-    void setNum(const int* num);
-    // Setter that replaces the total number of places and normalizes it to 2, 4 or 8
-    void setPlaces(const int* places);
-    // Setter that replaces the number of free places and clamps it to a valid range
-    void setFreePlaces(const int* freePlaces);
+    // Getter returning const reference to total places
+    const int& getPlaces() const;
 
-    // Method that converts the table data into a human-readable string
-    string toString() const;
+    // Getter returning const reference to free places
+    const int& getFreePlaces() const;
+
+    // Setter that replaces table number using ownership transfer
+    void setNum(std::unique_ptr<int> num);
+
+    // Setter that replaces places and normalizes it
+    void setPlaces(std::unique_ptr<int> places);
+
+    // Setter that replaces freePlaces and clamps it
+    void setFreePlaces(std::unique_ptr<int> freePlaces);
+
+    // Converts the table data to a readable string
+    std::string toString() const;
 };
-#endif //UNTITLED1_TABLE_H
+
+#endif
