@@ -72,4 +72,12 @@ add_executable(untitled1 Main/main.cpp
         AppartmentsQuestion/Penthouse.h
         AppartmentsQuestion/Luxary.cpp
         AppartmentsQuestion/Luxary.h
+        StarCount/StarCount.cpp
+        StarCount/StarCount.h
+        RestaurantQ/Client.cpp
+        RestaurantQ/Client.h
+        RestaurantQ/Table.cpp
+        RestaurantQ/Table.h
+        RestaurantQ/Restaurant.cpp
+        RestaurantQ/Restaurant.h
 )
