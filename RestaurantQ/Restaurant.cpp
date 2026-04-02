@@ -4,80 +4,102 @@
 
 // Constructor that creates all tables based on the given counts
 Restaurant::Restaurant(int smallTables, int mediumTables, int largeTables) {
-    // Prevent negative table counts
+    // Prevent negative counts
     if (smallTables < 0) { smallTables = 0; }
     if (mediumTables < 0) { mediumTables = 0; }
     if (largeTables < 0) { largeTables = 0; }
 
     // Start numbering tables from 1
-    int tableNumberCounter = 1;
+    auto tableNumberCounter = 1;
 
-    // Create all small tables (2 places)
-    for (int i = 0; i < smallTables; i++) {
-        tables.push_back(std::make_unique<Table>(
-            std::make_unique<int>(tableNumberCounter),
-            std::make_unique<int>(2),
-            std::make_unique<int>(2)
+    // Create small tables (2 places)
+    for (auto i = 0; i < smallTables; i++) {
+        tables.push_back(make_unique<Table>(
+            make_unique<int>(tableNumberCounter),
+            make_unique<int>(2),
+            make_unique<int>(2)
         ));
         tableNumberCounter++;
     }
 
-    // Create all medium tables (4 places)
-    for (int i = 0; i < mediumTables; i++) {
-        tables.push_back(std::make_unique<Table>(
-            std::make_unique<int>(tableNumberCounter),
-            std::make_unique<int>(4),
-            std::make_unique<int>(4)
+    // Create medium tables (4 places)
+    for (auto i = 0; i < mediumTables; i++) {
+        tables.push_back(make_unique<Table>(
+            make_unique<int>(tableNumberCounter),
+            make_unique<int>(4),
+            make_unique<int>(4)
         ));
         tableNumberCounter++;
     }
 
-    // Create all large tables (8 places)
+    // Create large tables (8 places)
     for (int i = 0; i < largeTables; i++) {
-        tables.push_back(std::make_unique<Table>(
-            std::make_unique<int>(tableNumberCounter),
-            std::make_unique<int>(8),
-            std::make_unique<int>(8)
+        tables.push_back(make_unique<Table>(
+            make_unique<int>(tableNumberCounter),
+            make_unique<int>(8),
+            make_unique<int>(8)
         ));
         tableNumberCounter++;
     }
 }
 
-// Returns the client queue as a const reference
-const queue<unique_ptr<Client>>& Restaurant::getClients() const {
-    return clients;
+// Returns the clients deque as a const reference
+const deque<unique_ptr<Client>>& Restaurant::getClients() const {
+    return this->clients;
 }
 
-// Returns the table list as a const reference
-const std::list<std::unique_ptr<Table>>& Restaurant::getTables() const {
-    return tables;
+// Returns the tables list as a const reference
+const list<unique_ptr<Table>>& Restaurant::getTables() const {
+    return this->tables;
 }
 
-// Replaces the entire client queue (move ownership)
-// ReSharper disable once CppParameterNamesMismatch
-void Restaurant::setClients(queue<unique_ptr<Client>> clientss) {
-    // Move the entire queue into this object
-    this->clients = std::move(clientss);
+// Replaces the clients deque with a deep copy
+void Restaurant::setClients(const deque<unique_ptr<Client>>& other) {
+    // Remove current clients
+    clients.clear();
+
+    // Deep copy every client
+    for (auto i = 0; i < other.size(); i++) {
+        if (!other[i]) {
+            clients.push_back(nullptr);
+        } else {
+            clients.push_back(make_unique<Client>(
+                make_unique<string>(other[i]->getName()),
+                make_unique<int>(other[i]->getDiners())
+            ));
+        }
+    }
 }
 
-// Replaces the entire table list (move ownership)
-// ReSharper disable once CppParameterNamesMismatch
-void Restaurant::setTables(list<unique_ptr<Table>> tabless) {
-    // Move the entire list into this object
-    this->tables = std::move(tabless);
+// Replaces the tables list with a deep copy
+void Restaurant::setTables(const std::list<std::unique_ptr<Table>>& other) {
+    // Remove current tables
+    tables.clear();
+
+    // Deep copy every table
+    for (const auto& tbl : other) {
+        if (!tbl) {
+            tables.push_back(nullptr);
+        } else {
+            tables.push_back(make_unique<Table>(
+                make_unique<int>(tbl->getNum()),
+                make_unique<int>(tbl->getPlaces()),
+                make_unique<int>(tbl->getFreePlaces())
+            ));
+        }
+    }
 }
-// Adds a new client to the queue
+
+// Adds a new client to the end of the waiting deque
 void Restaurant::addClient(unique_ptr<Client> client) {
-    // Ignore null clients
     if (!client) { return; }
-    this->clients.push(std::move(client));
+    clients.push_back(std::move(client));
 }
 
 // Adds a new table to the restaurant
-void Restaurant::addTable(std::unique_ptr<Table> table) {
-    // Ignore null tables
+void Restaurant::addTable(unique_ptr<Table> table) {
     if (!table) { return; }
-    this->tables.push_back(std::move(table));
+    tables.push_back(std::move(table));
 }
 
 // Builds a readable string that describes the restaurant
@@ -93,63 +115,56 @@ std::string Restaurant::toString() const {
 
 // Finds the first table that has enough free places
 int Restaurant::findAvailableTable(const int numOfDiners) const {
-    // Traverse all tables
-    for (const auto &tbl : this->tables) {
-        // Skip null table pointers just in case
+    for (const auto& tbl : tables) {
         if (!tbl) { continue; }
-
-        // If this table has enough free places, return its number
-        if (tbl->getFreePlaces() >= numOfDiners) {
-            return tbl->getNum();
-        }
+        if (tbl->getFreePlaces() >= numOfDiners) { return tbl->getNum(); }
     }
-
-    // No suitable table was found
     return -1;
 }
 
 // Seats the next client that can fit in one of the available tables
 bool Restaurant::seatNextClient() {
     // If there are no waiting clients, nothing can be seated
-    if (this->clients.empty()) { return false; }
-    // Store the original queue size so we do at most one full rotation
+    if (clients.empty()) { return false; }
+
+    // Store the original number of clients so each client is checked once
     const auto originalSize = clients.size();
 
     // Try each client once
     for (auto i = 0; i < originalSize; i++) {
-        // Take ownership of the client at the front of the queue
+        // Take ownership of the client at the front
         auto current = std::move(clients.front());
-        this->clients.pop();
+        clients.pop_front();
         // Skip null clients
         if (!current) { continue; }
-        // Read the number of diners from the client object
+        // Read diners count
         const auto diners = current->getDiners();
-        // Find a suitable table for this client
+        // Find a suitable table
         const auto tableNum = findAvailableTable(diners);
 
-        // If no table was found, move the client to the end of the queue
+        // If no table was found, return the client to the end
         if (tableNum == -1) {
-            this->clients.push(std::move(current));
+            clients.push_back(std::move(current));
             continue;
         }
 
-        // Search for the matching table and update its free places
-        for (const auto& tbl : this->tables) {
+        // Update the matching table
+        for (const auto& tbl : tables) {
             if (!tbl) { continue; }
+
             if (tbl->getNum() == tableNum) {
                 tbl->setFreePlaces(
-                    std::make_unique<int>(tbl->getFreePlaces() - diners)
+                    make_unique<int>(tbl->getFreePlaces() - diners)
                 );
-                // Client was seated successfully, so do not return it to the queue
+
+                // Client is seated successfully, so do not return them to the deque
                 return true;
             }
         }
 
-        // Safety fallback:
-        // if a table number was found but not located, return the client to the queue
-        clients.push(std::move(current));
+        // Safety fallback: if table number was not found, return client to the end
+        clients.push_back(std::move(current));
     }
 
-    // No client could be seated
     return false;
 }
