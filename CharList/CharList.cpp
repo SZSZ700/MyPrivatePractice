@@ -192,24 +192,24 @@ CharList& CharList::operator=(CharList&& other) noexcept {
 // k(this->head) → d(beforeFirst) → [a(first)] → b → c → d → [a(last)] → k(afterLast) → n(this->tail) → nullptr
 // k → n → [a] → b → c → d → [a] → k → d
 void CharList::swap(const char letter) {
-    assert(this->head != nullptr);
-    assert(this->tail != nullptr);
+    // validation: head nor tail can't point to nullptr
+    if (!this->head || !this->tail) { return; }
     // validation: letter can't be at the first node nor at the last node
-    if (this->head && this->head->getValue() && *this->head->getValue()== letter
-        || this->tail && this->tail->getValue() && *this->tail->getValue()== letter) { return; }
+    if (this->head->getValue() && *this->head->getValue()== letter
+        || this->tail->getValue() && *this->tail->getValue()== letter) { return; }
 
     // Lambda that returns the first node after a chain that contains a specific letter
-    [[maybe_unused]] auto firstAfterChain = [&](Node<char*>* chain, const char letterr) -> Node<char*>* {
+    [[maybe_unused]] auto firstAfterChain = [&](const Node<char*>* chain, const char letterr) -> Node<char*>* {
         // If chain is null, return null
         if (!chain) { return nullptr; }
         // Start traversal from the given chain
-        auto curr = chain;
+        auto curr = chain->getNext();
 
         // Traverse nodes
         while (curr != nullptr) {
             // If value exists and matches the letter
             if (const char* val = curr->getValue(); val && *val == letterr) {
-                // Return the next node after the match
+                // Return the matching node
                 return curr;
             }
             // Move forward
@@ -243,20 +243,20 @@ void CharList::swap(const char letter) {
 
     // pointer to the first node in the list that contains the letter
     const auto first = firstAfterChain(this->head, letter);
-    assert(first != nullptr);
+    if (!first) { return; }
 
     // pointer to the node before the first node in the list that contains the letter
     auto beforeFirst = this->head;
-    assert(beforeFirst != nullptr);
+    if (!beforeFirst) { return; }
     while (beforeFirst->getNext() != first) { beforeFirst = beforeFirst->getNext(); }
 
     // pointer to the last node in the list that contains the letter
     const auto last = lastLambda(letter);
-    assert(last != nullptr);
+    if (!last) { return; }
 
     // pointer to the node after the last node in the list that contains the letter
     const auto afterLast = last->getNext();
-    assert(afterLast != nullptr);
+    if (!afterLast) { return; }
 
     // reconnect the list
     // old list: k → d → [a] → b → c → d → [a] → k → n → nullptr
