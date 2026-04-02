@@ -197,7 +197,7 @@ void CharList::swap(const char letter) {
         || this->tail && this->tail->getValue() && *this->tail->getValue()== letter) { return; }
 
     // Lambda that returns the first node after a chain that contains a specific letter
-    [[maybe_unused]]auto firstAfterChain = [&](const Node<char*>* chain, const char letterr) -> Node<char*>* {
+    [[maybe_unused]] auto firstAfterChain = [&](const Node<char*>* chain, const char letterr) -> Node<char*>* {
         // If chain is null, return null
         if (!chain) { return nullptr; }
 
@@ -221,7 +221,7 @@ void CharList::swap(const char letter) {
     };
 
     // Lambda that returns pointer to the last node in the list that contains the letter
-    [[maybe_unused]]auto lastLambda = [&](const char letterr) -> Node<char*>* {
+    [[maybe_unused]] auto lastLambda = [&](const char letterr) -> Node<char*>* {
         // Pointer used to iterate over the list
         const Node<char*>* pos = this->head;
 
