@@ -23,12 +23,6 @@ class CharList {
     // move assignment
     CharList& operator=(CharList&& other)noexcept;
 
-    // pointer to the node that contains the letter
-    static Node<char*>* firstAfterChain(const Node<char*>* chain, char letter);
-
-    // pointer to the last node in the list that contains the letter
-    Node<char*>* last (char letter) const;
-
     // make the list valid
     void swap(char letter);
 };
