@@ -192,6 +192,8 @@ CharList& CharList::operator=(CharList&& other) noexcept {
 // k(this->head) → d(beforeFirst) → [a(first)] → b → c → d → [a(last)] → k(afterLast) → n(this->tail) → nullptr
 // k → n → [a] → b → c → d → [a] → k → d
 void CharList::swap(const char letter) {
+    assert(this->head != nullptr);
+    assert(this->tail != nullptr);
     // validation: letter can't be at the first node nor at the last node
     if (this->head && this->head->getValue() && *this->head->getValue()== letter
         || this->tail && this->tail->getValue() && *this->tail->getValue()== letter) { return; }
@@ -231,13 +233,11 @@ void CharList::swap(const char letter) {
         // Traverse the list
         while (pos) {
             // Find the first node after the current one that contains the given letter
-            if (Node<char*>* temp = firstAfterChain(pos, letterr)) {
-                // Save the found node as the current last match
-                last = temp;
-            }
-
-            // Move to the next node
-            pos = pos->getNext();
+            Node<char*>* temp = firstAfterChain(pos, letterr);
+            // Save the found node as the current last match
+            if (temp) { last = temp; }
+            // Move to the found node
+            pos = temp;
         }
 
         // Return the last matching node, or nullptr if none was found
@@ -246,14 +246,20 @@ void CharList::swap(const char letter) {
 
     // pointer to the first node in the list that contains the letter
     const auto first = firstAfterChain(this->head, letter);
+    assert(first != nullptr);
+
     // pointer to the node before the first node in the list that contains the letter
     auto beforeFirst = this->head;
+    assert(beforeFirst != nullptr);
     while (beforeFirst->getNext() != first) { beforeFirst = beforeFirst->getNext(); }
 
     // pointer to the last node in the list that contains the letter
     const auto last = lastLambda(letter);
+    assert(last != nullptr);
+
     // pointer to the node after the last node in the list that contains the letter
     const auto afterLast = last->getNext();
+    assert(afterLast != nullptr);
 
     // reconnect the list
     // old list: k → d → [a] → b → c → d → [a] → k → n → nullptr
