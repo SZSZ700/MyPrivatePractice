@@ -188,8 +188,11 @@ CharList& CharList::operator=(CharList&& other) noexcept {
     return *this;
 }
 
-
-// k(this->head) → d(beforeFirst) → [a(first)] → b → c → d → [a(last)] → k(afterLast) → n(this->tail) → nullptr
+// from ⤵
+// k(this->head) → d(beforeFirst) →
+// [a(first)] → b → c → d → [a(last)]
+// → k(afterLast) → n(this->tail) → nullptr
+// to ⤵
 // k → n → [a] → b → c → d → [a] → k → d
 void CharList::swap(const char letter) {
     // validation: head nor tail can't point to nullptr
