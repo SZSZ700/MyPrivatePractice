@@ -266,7 +266,6 @@ void CharList::swap(const char letter) {
     // new list: k → n → [a] → b → c → d → [a] → k → d → nullptr
     last->setNext(this->head);
     beforeFirst->setNext(nullptr);
-    assert(this->tail != nullptr);
     this->tail->setNext(first);
     this->head = afterLast;
     this->tail = beforeFirst;
