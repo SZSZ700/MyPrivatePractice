@@ -62,55 +62,36 @@ public class FirebaseService {
     // With FULL DEBUG prints
     // =========================================================
     public CompletableFuture<String> signup(User user) {
-        CompletableFuture<String> future = new CompletableFuture<>();
-
-        // Debug log: signup request received
-        System.out.println("DEBUG: Signup called for username = " + user.getUserName());
-
-        // Debug log: Firebase reference details
-        System.out.println("DEBUG: usersRef PATH = " + usersRef.getPath());
-        System.out.println("DEBUG: usersRef URL  = " + usersRef);
+        var future = new CompletableFuture<String>();
 
         // Read all users once
         usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                // Debug log: number of existing users
-                System.out.println("DEBUG: Checking existing users... total children = " + snapshot.getChildrenCount());
-
                 // Iterate through all existing users
-                for (DataSnapshot child : snapshot.getChildren()) {
-                    String existingUser = child.child("userName").getValue(String.class);
-
-                    System.out.println("DEBUG: Found user in DB = " + existingUser);
+                for (var child : snapshot.getChildren()) {
+                    var existingUser = child.child("userName").getValue(String.class);
 
                     // If username already exists → return error
                     if (existingUser != null && existingUser.equals(user.getUserName())) {
-                        System.out.println("DEBUG: Username already exists → " + existingUser);
                         future.complete("Username already exists");
                         return;
                     }
                 }
 
                 // If no duplicate username, create a new record
-                String key = usersRef.push().getKey();
+                var key = usersRef.push().getKey();
                 if (key == null) {
-                    System.err.println("DEBUG: Firebase push() returned null key!");
                     future.complete("Error generating key");
                     return;
                 }
 
-                // Debug log: new key and user object
-                System.out.println("DEBUG: Creating new user with key = " + key);
-                System.out.println("DEBUG: User object to save = " + user);
-
                 // Save new user under the generated key
+                //noinspection unused
                 usersRef.child(key).setValue(user, (error, ref) -> {
                     if (error == null) {
-                        System.out.println("DEBUG: Successfully saved user at " + ref.toString());
                         future.complete("User created successfully");
                     } else {
-                        System.err.println("DEBUG: Failed to save user. Error = " + error.getMessage());
                         future.complete("Error: " + error.getMessage());
                     }
                 });
@@ -119,7 +100,6 @@ public class FirebaseService {
             @Override
             public void onCancelled(DatabaseError error) {
                 // Handle Firebase cancellation error
-                System.err.println("DEBUG: Firebase read cancelled. Error = " + error.getMessage());
                 future.complete("Error: " + error.getMessage());
             }
         });
@@ -140,9 +120,9 @@ public class FirebaseService {
                 User foundUser = null;
 
                 // Iterate through all users
-                for (DataSnapshot child : snapshot.getChildren()) {
-                    String existingUser = child.child("userName").getValue(String.class);
-                    String existingPass = child.child("password").getValue(String.class);
+                for (var child : snapshot.getChildren()) {
+                    var existingUser = child.child("userName").getValue(String.class);
+                    var existingPass = child.child("password").getValue(String.class);
 
                     // Check if both username and password match
                     if (existingUser != null && existingPass != null &&
@@ -172,7 +152,7 @@ public class FirebaseService {
     // Creates a new user in Firebase if the username does not already exist.
     // Returns a CompletableFuture<Boolean> where true = user created, false = user already exists.
     public CompletableFuture<Boolean> createUser(User user) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         // Query by username to check if user already exists
         usersRef.orderByChild("userName").equalTo(user.getUserName())
@@ -202,18 +182,20 @@ public class FirebaseService {
     // ------------------------------ READ ALL ----------------------------
     // Reads all users from Firebase and returns them as a List<User>.
     public CompletableFuture<List<User>> getAllUsers() {
-        CompletableFuture<List<User>> future = new CompletableFuture<>();
+        var future = new CompletableFuture<List<User>>();
 
         // Fetch all user nodes once
         usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 List<User> users = new ArrayList<>();
+
                 // Convert each snapshot to User object and add to list
-                for (DataSnapshot child : snapshot.getChildren()) {
-                    User user = child.getValue(User.class);
+                for (var child : snapshot.getChildren()) {
+                    var user = child.getValue(User.class);
                     if (user != null) users.add(user);
                 }
+
                 // Complete with the list of users
                 future.complete(users);
             }
@@ -232,15 +214,15 @@ public class FirebaseService {
     // Reads a single user by username from Firebase.
     // Returns a CompletableFuture<User> or null if user not found.
     public CompletableFuture<User> getUser(String username) {
-        CompletableFuture<User> future = new CompletableFuture<>();
+        var future = new CompletableFuture<User>();
 
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
                         // Iterate through matching user snapshots
-                        for (DataSnapshot child : snapshot.getChildren()) {
-                            User user = child.getValue(User.class);
+                        for (var child : snapshot.getChildren()) {
+                            var user = child.getValue(User.class);
                             if (user != null) {
                                 future.complete(user);
                                 return;
@@ -264,7 +246,7 @@ public class FirebaseService {
     // Replaces a user record completely with an updated User object.
     // Returns a CompletableFuture<Boolean> indicating success or failure.
     public CompletableFuture<Boolean> updateUser(String username, User updatedUser) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         usersRef.orderByChild("userName").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -275,8 +257,9 @@ public class FirebaseService {
                             future.complete(false);
                             return;
                         }
+
                         // For each matching user (normally one)
-                        for (DataSnapshot child : snapshot.getChildren()) {
+                        for (var child : snapshot.getChildren()) {
                             // Replace existing data with the updated user object
                             child.getRef().setValueAsync(updatedUser)
                                     .addListener(() -> future.complete(true), Runnable::run);
@@ -299,7 +282,7 @@ public class FirebaseService {
     // Returns a CompletableFuture<User> with the updated User object.
     public CompletableFuture<User> patchUser(String username, Map<String, Object> updates) {
         // Future that will eventually hold the updated User object
-        CompletableFuture<User> future = new CompletableFuture<>();
+        var future = new CompletableFuture<User>();
 
         // Query Firebase for the given username
         usersRef.orderByChild("userName").equalTo(username)
@@ -311,9 +294,10 @@ public class FirebaseService {
                             future.complete(null);
                             return;
                         }
+
                         // For each matching user (normally one)
-                        for (DataSnapshot child : snapshot.getChildren()) {
-                            DatabaseReference ref = child.getRef();
+                        for (var child : snapshot.getChildren()) {
+                            var ref = child.getRef();
                             // Apply partial updates asynchronously
                             ref.updateChildrenAsync(updates).addListener(() -> {
                                 // After update, re-read the snapshot to return fresh data
@@ -321,7 +305,7 @@ public class FirebaseService {
                                     @Override
                                     public void onDataChange(DataSnapshot refreshed) {
                                         // Convert refreshed snapshot into User object
-                                        User updated = refreshed.getValue(User.class);
+                                        var updated = refreshed.getValue(User.class);
                                         // Complete the future with updated User
                                         future.complete(updated);
                                     }
@@ -352,7 +336,7 @@ public class FirebaseService {
     // Returns a CompletableFuture<Boolean> indicating success or failure
     public CompletableFuture<Boolean> deleteUser(String username) {
         // Create future to return the result
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         // Query Firebase by username
         usersRef.orderByChild("userName").equalTo(username)
@@ -364,8 +348,9 @@ public class FirebaseService {
                             future.complete(false);
                             return;
                         }
+
                         // For each matching user (usually one)
-                        for (DataSnapshot child : snapshot.getChildren()) {
+                        for (var child : snapshot.getChildren()) {
                             // Remove the user node asynchronously
                             child.getRef().removeValueAsync()
                                     .addListener(() -> future.complete(true), Runnable::run);
@@ -387,7 +372,7 @@ public class FirebaseService {
     // Checks if a user exists in Firebase by username
     // Returns a CompletableFuture<Boolean> indicating whether user exists
     public CompletableFuture<Boolean> exists(String username) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         // Query Firebase by username
         usersRef.orderByChild("userName").equalTo(username)
@@ -412,7 +397,7 @@ public class FirebaseService {
     // Updates the BMI value of a user in Firebase
     // Returns a CompletableFuture<Boolean> indicating success or failure
     public CompletableFuture<Boolean> updateBmi(String username, double bmi) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         // Query Firebase by username
         usersRef.orderByChild("userName").equalTo(username)
@@ -425,7 +410,7 @@ public class FirebaseService {
                             return;
                         }
                         // For each matching user (normally one)
-                        for (DataSnapshot child : snapshot.getChildren()) {
+                        for (var child : snapshot.getChildren()) {
                             // Update the BMI field asynchronously
                             child.getRef().child("bmi").setValueAsync(bmi)
                                     .addListener(() -> future.complete(true), Runnable::run);
@@ -451,11 +436,10 @@ public class FirebaseService {
     // --------------------------------------------------------------
     public CompletableFuture<Boolean> updateWater(String username, int waterAmount) {
         // Future that will be completed once the async work finishes
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Boolean>();
 
         // Optional guard: ignore invalid amounts (<= 0)
         if (waterAmount <= 0) {
-            System.out.println("DEBUG updateWater -> ignored non-positive amount: " + waterAmount);
             future.complete(false);
             return future;
         }
@@ -467,23 +451,20 @@ public class FirebaseService {
                     public void onDataChange(DataSnapshot snapshot) {
                         // If user is not found, finish with false
                         if (!snapshot.exists()) {
-                            System.out.println("DEBUG updateWater -> user not found: " + username);
                             future.complete(false);
                             return;
                         }
 
                         // We expect a single user, but loop just in case
-                        for (DataSnapshot userSnap : snapshot.getChildren()) {
+                        for (var userSnap : snapshot.getChildren()) {
                             // Build today's date key: yyyy-MM-dd
-                            String dayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            var dayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                                     .format(new Date());
 
                             // Reference to the "today" node (Users/<uid>/waterLog/<yyyy-MM-dd>)
-                            DatabaseReference todayRef = userSnap.getRef()
+                            var todayRef = userSnap.getRef()
                                     .child("waterLog")
                                     .child(dayKey);
-
-                            System.out.println("DEBUG updateWater -> todayRef = " + todayRef);
 
                             // Run a transaction to update sum (index 0) and append the new cup atomically
                             todayRef.runTransaction(new Transaction.Handler() {
@@ -508,7 +489,7 @@ public class FirebaseService {
 
                                     // Update the daily sum (index 0)
                                     @SuppressWarnings("SequencedCollectionMethodCanBeUsed") long currentSum = dayList.get(0);
-                                    long newSum = currentSum + waterAmount;
+                                    var newSum = currentSum + waterAmount;
                                     dayList.set(0, newSum);
 
                                     // Append the new drink amount to the end of the list (index 1..N)
@@ -524,22 +505,14 @@ public class FirebaseService {
                                 @Override
                                 public void onComplete(DatabaseError error, boolean committed, DataSnapshot snapshot) {
                                     if (error != null) {
-                                        System.err.println("ERROR updateWater -> transaction failed: " + error.getMessage());
-                                        future.complete(false);
-                                        return;
-                                    }
-                                    if (!committed) {
-                                        System.err.println("WARN updateWater -> transaction not committed");
                                         future.complete(false);
                                         return;
                                     }
 
-                                    // Debug: log the final state after commit
-                                    try {
-                                        List<Long> finalList = snapshot.getValue(new GenericTypeIndicator<>() {
-                                        });
-                                        System.out.println("DEBUG updateWater -> committed, finalList=" + finalList);
-                                    } catch (Exception ignored) { }
+                                    if (!committed) {
+                                        future.complete(false);
+                                        return;
+                                    }
 
                                     future.complete(true);
                                 }
@@ -567,15 +540,15 @@ public class FirebaseService {
     // This format is required to match what the Android client expects.
     public CompletableFuture<JSONObject> getWater(String username) {
         // Create a new future that will hold the resulting JSON object
-        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+        var future = new CompletableFuture<JSONObject>();
 
         // Build date key for today
-        String todayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        var todayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
         // Build date key for yesterday (by subtracting one day from calendar)
-        Calendar cal = Calendar.getInstance();
+        var cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, -1);
-        String yesterdayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
+        var yesterdayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
 
         // Query Firebase for the given username
         usersRef.orderByChild("userName").equalTo(username)
@@ -587,13 +560,14 @@ public class FirebaseService {
                             future.complete(null);
                             return;
                         }
-                        // Loop through matching user snapshots (usually one user)
-                        for (DataSnapshot userSnap : snapshot.getChildren()) {
-                            // Read daily totals for today and yesterday (slot "0")
-                            Long todayAmt = userSnap.child("waterLog").child(todayKey).child("0").getValue(Long.class);
-                            Long yesterdayAmt = userSnap.child("waterLog").child(yesterdayKey).child("0").getValue(Long.class);
 
-                            JSONObject obj = new JSONObject();
+                        // Loop through matching user snapshots (usually one user)
+                        for (var userSnap : snapshot.getChildren()) {
+                            // Read daily totals for today and yesterday (slot "0")
+                            var todayAmt = userSnap.child("waterLog").child(todayKey).child("0").getValue(Long.class);
+                            var yesterdayAmt = userSnap.child("waterLog").child(yesterdayKey).child("0").getValue(Long.class);
+
+                            var obj = new JSONObject();
                             try {
                                 // IMPORTANT: keys must match what Android WaterActivity expects
                                 obj.put("todayWater", todayAmt == null ? 0 : todayAmt);
@@ -623,27 +597,22 @@ public class FirebaseService {
     // ------------------------------- GET WATER HISTORY MAP --------------------------
     // Returns {"2025-09-29": 4600, "2025-09-28": 0, ...} for last N days
     public CompletableFuture<Map<String, Long>> getWaterHistoryMap(String username, int days) {
-
-
         // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
         // Future result container (async) that will eventually hold a Map<String, Long>
-        CompletableFuture<Map<String, Long>> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Map<String, Long>>();
 
         // Prepare a list of the last `days` date-keys (e.g., today, yesterday, etc.)
         List<String> keys = new ArrayList<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        Calendar cal = Calendar.getInstance();
+        var sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        var cal = Calendar.getInstance();
 
         // Generate date strings for the last `days` days
-        for (int i = 0; i < days; i++) {
+        for (var i = 0; i < days; i++) {
             // Format the current calendar date into a key
-            String dateKey = sdf.format(cal.getTime());
+            var dateKey = sdf.format(cal.getTime());
             keys.add(dateKey);                 // Add formatted date to the list
             cal.add(Calendar.DAY_OF_YEAR, -1); // Move one day backwards
         }
-
-        // 🔹 Debug log: which date keys we are about to query
-        System.out.println("DEBUG getWaterHistoryMap -> generated keys: " + keys);
         // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
 
 
@@ -656,7 +625,6 @@ public class FirebaseService {
                     public void onDataChange(DataSnapshot snapshot) {
                         // If the user does not exist, complete future with null and stop
                         if (!snapshot.exists()) {
-                            System.out.println("DEBUG getWaterHistoryMap -> user not found: " + username);
                             future.complete(null);
                             return;
                         }
@@ -665,40 +633,28 @@ public class FirebaseService {
                         Map<String, Long> result = new LinkedHashMap<>();
 
                         // Loop through user snapshots (should normally be one user)
-                        for (DataSnapshot userSnap : snapshot.getChildren()) {
+                        for (var userSnap : snapshot.getChildren()) {
                             try {
                                 // Loop through all prepared date keys
-                                for (String key : keys) {
+                                for (var key : keys) {
                                     // Read slot "0" which contains the daily sum for this date
-                                    Long amt = userSnap.child("waterLog")
+                                    var amt = userSnap.child("waterLog")
                                             .child(key)
                                             .child("0")
                                             .getValue(Long.class);
 
-                                    // Debug log: show raw value and Firebase reference path
-                                    System.out.println("DEBUG getWaterHistoryMap -> date=" + key
-                                            + " raw=" + amt
-                                            + " path=" + userSnap.child("waterLog").child(key).child("0").getRef());
 
                                     // Default to 0 if value is null
                                     long safeAmt = (amt == null ? 0 : amt);
-
-                                    // Debug log: show processed safe amount for this date
-                                    System.out.println("DEBUG getWaterHistoryMap -> key=" + key + " amt=" + safeAmt);
 
                                     // Put the date and amount into the result map
                                     result.put(key, safeAmt);
                                 }
 
-                                // Debug log: final result map before returning
-                                System.out.println("DEBUG getWaterHistoryMap -> final map: " + result);
-
                                 // Complete the future with the final map
                                 future.complete(result);
                                 return; // Important: exit after first userSnap
                             } catch (Exception e) {
-                                // Log error and complete future with null if exception occurs
-                                System.err.println("ERROR getWaterHistoryMap -> exception: " + e.getMessage());
                                 //noinspection CallToPrintStackTrace
                                 e.printStackTrace();
                                 future.complete(null);
@@ -710,7 +666,6 @@ public class FirebaseService {
                     @Override
                     public void onCancelled(DatabaseError error) {
                         // If query is cancelled or fails, complete future with the exception
-                        System.err.println("ERROR getWaterHistoryMap -> cancelled: " + error.getMessage());
                         future.completeExceptionally(error.toException());
                     }
                 });
@@ -727,27 +682,23 @@ public class FirebaseService {
     // Reads slot "0" (daily sum) for the last 28 days, groups by week (7-day chunks),
     // and returns a LinkedHashMap in this order: Week 1 (oldest) .. Week 4 (newest).
     public CompletableFuture<Map<String, Integer>> getWeeklyAverages(String username) {
-
         // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
         // Create a new CompletableFuture instance that will hold a Map<String, Integer> result
-        CompletableFuture<Map<String, Integer>> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Map<String, Integer>>();
 
         // Build the exact 28 date keys (today inclusive, going backwards)
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        Calendar cal = Calendar.getInstance();
+        var sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        var cal = Calendar.getInstance();
 
         // Create a list where each element will hold a string representation of a specific date
         // The list will contain 28 dates -> 28 days -> 4 weeks
         List<String> last28 = new ArrayList<>(28);
-        for (int i = 0; i < 28; i++) {
+        for (var i = 0; i < 28; i++) {
             // Add the current date (formatted as yyyy-MM-dd) to the list
             last28.add(sdf.format(cal.getTime()));
             // Move the calendar one day backwards
             cal.add(Calendar.DAY_OF_YEAR, -1);
         }
-
-        // Print debug message showing the number of generated keys (should be 28)
-        System.out.println("DEBUG getWeeklyAverages(4w) -> keys size=" + last28.size());
         // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
 
 
@@ -758,30 +709,28 @@ public class FirebaseService {
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
-
                         // If no user with this username exists, complete the future with an empty map
                         if (!snapshot.exists()) {
-                            System.out.println("DEBUG getWeeklyAverages(4w) -> user not found: " + username);
                             future.complete(Collections.emptyMap());
                             return;
                         }
 
                         // Iterate over all matching users (should usually be just one)
-                        for (DataSnapshot userSnap : snapshot.getChildren()) {
+                        for (var userSnap : snapshot.getChildren()) {
                             try {
                                 // Arrays for weekly sums and counts
                                 // sums[w] = total water amount for week w
                                 // counts[w] = number of days with logged water intake for week w
-                                long[] sums = new long[4];
-                                int[] counts = new int[4];
+                                var sums = new long[4];
+                                var counts = new int[4];
 
                                 // Loop over the 28 dates (last 4 weeks)
-                                for (int i = 0; i < 28; i++) {
-                                    String dateKey = last28.get(i);
+                                for (var i = 0; i < 28; i++) {
+                                    var dateKey = last28.get(i);
                                     // Determine which week this date belongs to (0=newest week, 3=oldest)
-                                    int weekIdx = i / 7;
+                                    var weekIdx = i / 7;
                                     // Read slot "0" which represents the daily total
-                                    Long amt = userSnap.child("waterLog").child(dateKey).child("0").getValue(Long.class);
+                                    var amt = userSnap.child("waterLog").child(dateKey).child("0").getValue(Long.class);
                                     if (amt != null) {
                                         sums[weekIdx] += amt;   // add amount to this week's sum
                                         counts[weekIdx] += 1;   // increment count of active days in this week
@@ -791,15 +740,12 @@ public class FirebaseService {
                                 // Build output as a LinkedHashMap to preserve order
                                 // Order: Week 1 (newest) -> Week 4 (oldest)
                                 Map<String, Integer> out = new LinkedHashMap<>();
-                                for (int w = 0; w < 4; w++) {
+                                for (var w = 0; w < 4; w++) {
                                     // Calculate average if count > 0, otherwise set to 0
-                                    int avg = (counts[w] > 0) ? (int) (sums[w] / counts[w]) : 0;
+                                    var avg = (counts[w] > 0) ? (int) (sums[w] / counts[w]) : 0;
                                     // out.put("Week " + (w + 1), avg);
                                     out.put("Week " + (4 - w), avg);
                                 }
-
-                                // Debug output for verification
-                                System.out.println("DEBUG getWeeklyAverages(4w) -> result=" + out);
 
                                 // Complete the future with the calculated map
                                 future.complete(out);
@@ -833,12 +779,10 @@ public class FirebaseService {
 
     // get Daily drink goal
     public CompletableFuture<Integer> getGoalMl(String username) {
-
         // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
         // Future that will hold the user's goal (or default if missing)
-        CompletableFuture<Integer> fut = new CompletableFuture<>();
+        var fut = new CompletableFuture<Integer>();
         // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
-
 
 
         // ⚠️⤵️ Executed in a SEPARATE THREAD ⤵️⚠️
@@ -854,9 +798,9 @@ public class FirebaseService {
                         }
 
                         // For each user match (usually just one)
-                        for (DataSnapshot userSnap : snap.getChildren()) {
+                        for (var userSnap : snap.getChildren()) {
                             // Read goalMl as Integer
-                            Integer goal = userSnap.child("goalMl").getValue(Integer.class);
+                            var goal = userSnap.child("goalMl").getValue(Integer.class);
                             // Return value or default if null
                             fut.complete(goal != null ? goal : 3000);
                             return; // Only first match
@@ -880,10 +824,9 @@ public class FirebaseService {
 
     // update Daily drink goal
     public CompletableFuture<Boolean> updateGoalMl(String username, int goalMl) {
-
         // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
         // Future that will hold true/false depending on update result
-        CompletableFuture<Boolean> fut = new CompletableFuture<>();
+        var fut = new CompletableFuture<Boolean>();
 
         // Validate input (example: between 500ml and 10000ml)
         if (goalMl < 500 || goalMl > 10000) {
@@ -891,7 +834,6 @@ public class FirebaseService {
             return fut;
         }
         // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
-
 
 
         // ⚠️⤵️ Executed in a SEPARATE THREAD ⤵️⚠️
@@ -910,15 +852,12 @@ public class FirebaseService {
                         }
 
                         // For each match, update goalMl field
-                        for (DataSnapshot userSnap : snap.getChildren()) {
-
+                        for (var userSnap : snap.getChildren()) {
                             //noinspection unused
                             userSnap.getRef().child("goalMl").setValue(goalMl, (err, ref) -> {
                                 if (err != null) { fut.complete(false); }
-
                                 else { fut.complete(true); }
                             });
-
                             return; // Stop after first update
                         }
                     }
@@ -945,30 +884,25 @@ public class FirebaseService {
     // {"Underweight": 3, "Normal": 12, "Overweight": 5, "Obese": 2}
     public CompletableFuture<Map<String, Integer>> getBmiDistribution() {
         // Future that will hold the final distribution map
-        CompletableFuture<Map<String, Integer>> future = new CompletableFuture<>();
+        var future = new CompletableFuture<Map<String, Integer>>();
 
         // Read all users once from Firebase
         usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-
                 // Counters for each BMI category
-                int underweight = 0; // BMI < 18.5
-                int normal = 0;      // 18.5 <= BMI < 25
-                int overweight = 0;  // 25   <= BMI < 30
-                int obese = 0;       // BMI >= 30
+                var underweight = 0; // BMI < 18.5
+                var normal = 0;      // 18.5 <= BMI < 25
+                var overweight = 0;  // 25   <= BMI < 30
+                var obese = 0;       // BMI >= 30
 
                 // Iterate over all user nodes
-                for (DataSnapshot child : snapshot.getChildren()) {
-
+                for (var child : snapshot.getChildren()) {
                     // Read "bmi" field as Double
-                    Double bmi = child.child("bmi").getValue(Double.class);
-
+                    var bmi = child.child("bmi").getValue(Double.class);
                     // If no BMI recorded for this user → skip (not counted)
                     if (bmi == null) { continue; }
-
-                    @SuppressWarnings("UnnecessaryUnboxing") double value = bmi.doubleValue();
-
+                    @SuppressWarnings("UnnecessaryUnboxing") var value = bmi.doubleValue();
                     // Classify into category
                     if (value < 18.5) { underweight++; }
                     else if (value < 25.0) { normal++; }
@@ -983,9 +917,6 @@ public class FirebaseService {
                 distribution.put("Overweight", overweight);
                 distribution.put("Obese", obese);
 
-                // Debug print
-                System.out.println("DEBUG getBmiDistribution -> " + distribution);
-
                 // Complete future with the calculated map
                 future.complete(distribution);
             }
@@ -993,7 +924,6 @@ public class FirebaseService {
             @Override
             public void onCancelled(DatabaseError error) {
                 // If query fails, complete with exception
-                System.err.println("ERROR getBmiDistribution -> " + error.getMessage());
                 future.completeExceptionally(error.toException());
             }
         });
@@ -1007,7 +937,7 @@ public class FirebaseService {
     // If user not found or field missing → returns 0.
     public CompletableFuture<Integer> getCalories(String username) {
         // Future that will hold the result (calories or default 0)
-        CompletableFuture<Integer> fut = new CompletableFuture<>();
+        var fut = new CompletableFuture<Integer>();
 
         // Query Firebase by username
         usersRef.orderByChild("userName").equalTo(username)
@@ -1016,15 +946,14 @@ public class FirebaseService {
                     public void onDataChange(DataSnapshot snap) {
                         // If user not found → return 0 (default)
                         if (!snap.exists()) {
-                            System.out.println("DEBUG getCalories -> user not found: " + username);
                             fut.complete(0);
                             return;
                         }
 
                         // For each matching user (usually one)
-                        for (DataSnapshot userSnap : snap.getChildren()) {
+                        for (var userSnap : snap.getChildren()) {
                             // Read "calories" as Integer
-                            Integer cals = userSnap.child("calories").getValue(Integer.class);
+                            var cals = userSnap.child("calories").getValue(Integer.class);
                             // Default to 0 if null
                             fut.complete(cals != null ? cals : 0);
                             return; // Only first match
@@ -1034,7 +963,6 @@ public class FirebaseService {
                     @Override
                     public void onCancelled(DatabaseError error) {
                         // Complete exceptionally
-                        System.err.println("ERROR getCalories -> " + error.getMessage());
                         fut.completeExceptionally(error.toException());
                     }
                 });
@@ -1047,11 +975,10 @@ public class FirebaseService {
     // Returns true if updated, false if user not found or invalid input.
     public CompletableFuture<Boolean> updateCalories(String username, int calories) {
         // Future that will hold true/false depending on update result
-        CompletableFuture<Boolean> fut = new CompletableFuture<>();
+        var fut = new CompletableFuture<Boolean>();
 
         // Optional validation: we do not allow negative values
         if (calories < 0 || calories > 20000) {
-            System.out.println("DEBUG updateCalories -> invalid value: " + calories);
             fut.complete(false);
             return fut;
         }
@@ -1063,23 +990,16 @@ public class FirebaseService {
                     public void onDataChange(DataSnapshot snap) {
                         // If no user found, complete with false
                         if (!snap.exists()) {
-                            System.out.println("DEBUG updateCalories -> user not found: " + username);
                             fut.complete(false);
                             return;
                         }
 
                         // For each match, update "calories" field
-                        for (DataSnapshot userSnap : snap.getChildren()) {
+                        for (var userSnap : snap.getChildren()) {
                             //noinspection unused
                             userSnap.getRef().child("calories").setValue(calories, (err, ref) -> {
-                                if (err != null) {
-                                    System.err.println("ERROR updateCalories -> " + err.getMessage());
-                                    fut.complete(false);
-                                } else {
-                                    System.out.println("DEBUG updateCalories -> updated to " + calories +
-                                            " for user " + username);
-                                    fut.complete(true);
-                                }
+                                if (err != null) { fut.complete(false); }
+                                else { fut.complete(true); }
                             });
 
                             return; // Stop after first update
@@ -1089,7 +1009,6 @@ public class FirebaseService {
                     @Override
                     public void onCancelled(DatabaseError error) {
                         // Complete exceptionally if query cancelled
-                        System.err.println("ERROR updateCalories onCancelled -> " + error.getMessage());
                         fut.completeExceptionally(error.toException());
                     }
                 });
