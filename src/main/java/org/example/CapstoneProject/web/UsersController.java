@@ -91,8 +91,8 @@ public class UsersController {
     @PostMapping("/login")
     public CompletableFuture<ResponseEntity<?>> login(@RequestBody User loginRequest) {
         // Extract username & password from request body
-        String username = loginRequest.getUserName();
-        String password = loginRequest.getPassword();
+        var username = loginRequest.getUserName();
+        var password = loginRequest.getPassword();
 
         // Call service.login() which validates credentials
         return firebaseService.login(username, password).thenApply(user -> {
@@ -115,14 +115,8 @@ public class UsersController {
     // ---------------------------------------------------------------------
     @GetMapping
     public CompletableFuture<ResponseEntity<List<User>>> getAllUsers() {
-        // Debug log: controller endpoint triggered
-        System.out.println("DEBUG: getAllUsers called");
-
         // Call Firebase service to fetch all users, wrap result in ResponseEntity
-        return firebaseService.getAllUsers()
-                .thenApply(
-                        ResponseEntity::ok
-                );
+        return firebaseService.getAllUsers().thenApply( ResponseEntity::ok);
     }
 
     // ---------------------------------------------------------------------
@@ -131,9 +125,6 @@ public class UsersController {
     // ---------------------------------------------------------------------
     @GetMapping("/{username}")
     public CompletableFuture<ResponseEntity<?>> getUser(@PathVariable("username") String username) {
-        // Debug log: controller endpoint triggered with parameter
-        System.out.println("DEBUG: getUser called → username=" + username);
-
         // Call Firebase service to fetch a specific user
         return firebaseService.getUser(username).thenApply(user -> {
             // If user not found, return 404 response
@@ -155,9 +146,6 @@ public class UsersController {
     public CompletableFuture<ResponseEntity<?>> updateUser(
             @PathVariable("username") String username,
             @RequestBody User updatedUser) {
-        // Debug log: endpoint triggered with username and request body
-        System.out.println("DEBUG: updateUser called → username=" + username + ", body=" + updatedUser);
-
         // Call Firebase service to update user
         return firebaseService.updateUser(username, updatedUser).thenApply(success -> {
             // If user not found, return 404
@@ -179,9 +167,6 @@ public class UsersController {
     public CompletableFuture<ResponseEntity<?>> patchUser(
             @PathVariable("username") String username,
             @RequestBody Map<String, Object> updates) {
-        // Debug log: endpoint triggered with username and updates map
-        System.out.println("DEBUG: patchUser called → username=" + username + ", updates=" + updates);
-
         // Call Firebase service to patch user fields
         return firebaseService.patchUser(username, updates).thenApply(updatedUser -> {
             // If user not found, return 404
@@ -201,7 +186,6 @@ public class UsersController {
     // ---------------------------------------------------------------------
     @DeleteMapping("/{username}")
     public CompletableFuture<ResponseEntity<?>> deleteUser(@PathVariable("username") String username) {
-        System.out.println("DEBUG: deleteUser called → username=" + username);
         return firebaseService.deleteUser(username).thenApply(success -> {
             if (!success) {
                 return ResponseEntity
@@ -218,9 +202,6 @@ public class UsersController {
     // ---------------------------------------------------------------------
     @RequestMapping(value = "/{username}", method = RequestMethod.HEAD)
     public CompletableFuture<ResponseEntity<Void>> headUser(@PathVariable("username") String username) {
-        // Debug log: endpoint triggered
-        System.out.println("DEBUG: headUser called → username=" + username);
-
         // Call Firebase service to check if user exists
         return firebaseService.exists(username).thenApply(exists -> {
             if (exists) {
@@ -240,10 +221,6 @@ public class UsersController {
     public CompletableFuture<ResponseEntity<?>> updateBmi(
             @PathVariable("username") String username,
             @RequestParam("bmi") double bmi) {
-
-        // Debug log: endpoint triggered with username and bmi
-        System.out.println("DEBUG: updateBmi called → username=" + username + ", bmi=" + bmi);
-
         // Call Firebase service to update BMI
         return firebaseService.updateBmi(username, bmi).thenApply(success -> {
             if (!success) {
@@ -265,16 +242,7 @@ public class UsersController {
     public CompletableFuture<ResponseEntity<?>> updateWater(
             @PathVariable("username") String username,
             @RequestParam("amount") int amount) {
-
         // Call Firebase service to update water log
-
-        // ⚠️⤵️⚠️
-        // thenApply - adds a callback to the internal callback list of the Future.
-        // Once `complete()` is called, the Future executes all registered callbacks.
-        // ⚠️⤴️⚠️
-
-        // What does this callback do?
-        // It unwraps the Future's content (the Boolean) and places it into the response.
         return firebaseService.updateWater(username, amount).thenApply(success -> {
             if (!success) {
                 // If user not found or slots are full, return 404 with error message
@@ -296,15 +264,7 @@ public class UsersController {
             @PathVariable("username") String username) {
 
         // Call Firebase service to get today's and yesterday's water amounts
-        return firebaseService.getWater(username)
-                // ⚠️⤵️⚠️
-                // thenApply - adds a callback to the internal callback list of the Future.
-                // Once `complete()` is called, the Future executes all registered callbacks.
-                // ⚠️⤴️⚠️
-
-                // What does this callback do?
-                // It unwraps the Future's content (the JASONObject) and places it into the response.
-                .thenApply(result -> {
+        return firebaseService.getWater(username).thenApply(result -> {
                     // If user not found, return 404
                     if (result == null) {
                         return ResponseEntity
@@ -318,8 +278,7 @@ public class UsersController {
                     response.put("yesterdayWater", result.optInt("yesterdayWater", 0));
 
                     // Return 200 OK with the response map
-                    return ResponseEntity
-                            .ok(response);
+                    return ResponseEntity.ok(response);
         });
     }
 
@@ -331,35 +290,17 @@ public class UsersController {
     public CompletableFuture<ResponseEntity<?>> getWaterHistoryMap(
             @PathVariable("username") String username,
             @RequestParam(name = "days", defaultValue = "7") int days) {
-
-        // Debug log: endpoint triggered with username and days parameter
-        System.out.println("DEBUG UsersController.getWaterHistoryMap -> username="
-                + username + " days=" + days);
-
         // Call Firebase service to get the water history map
-        return firebaseService.getWaterHistoryMap(username, days)
-                // ⚠️⤵️⚠️
-                // thenApply - adds a callback to the internal callback list of the Future.
-                // Once `complete()` is called, the Future executes all registered callbacks.
-                // ⚠️⤴️⚠️
-
-                // What does this callback do?
-                // It unwraps the Future's content (the Map) and places it into the response.
-                .thenApply(result -> {
+        return firebaseService.getWaterHistoryMap(username, days).thenApply(result -> {
                     // If user not found, return 404 with error message
                     if (result == null) {
-                        System.out.println("DEBUG UsersController.getWaterHistoryMap -> result=null (user not found)");
                         return ResponseEntity
                                 .status(HttpStatus.NOT_FOUND)
                                 .body("User not found");
                     }
 
-                    // Debug log: print the map before sending response
-                    System.out.println("DEBUG UsersController.getWaterHistoryMap -> sending response: " + result);
-
                     // Return 200 OK with the history map
-                    return ResponseEntity
-                            .ok(result);
+                    return ResponseEntity.ok(result);
                 });
     }
 
@@ -372,39 +313,20 @@ public class UsersController {
     @GetMapping("/{username}/weeklyAverages")
     public CompletableFuture<ResponseEntity<Map<String, Integer>>> getWeeklyAverages(
             @PathVariable("username") String username) {
-
-        // Debug log: endpoint triggered with username
-        System.out.println("DEBUG UsersController.getWeeklyAverages -> username=" + username);
-
         // Call Firebase service to get weekly averages
         // Initially returns an empty FUTURE (container for async result)
         return firebaseService.getWeeklyAverages(username)
-
-                // ⚠️⤵️⚠️
-                // thenApply - adds a callback to the internal callback list of the Future.
-                // Once `complete()` is called, the Future executes all registered callbacks.
-                // ⚠️⤴️⚠️
-
-                // What does this callback do?
-                // It unwraps the Future's content (the Map) and places it into the response.
                 .thenApply(result -> {
                     // If result is null or empty, return 404 with an empty map
                     if (result == null || result.isEmpty()) {
-
-                        System.out.println("DEBUG getWeeklyAverages -> no data");
-
                         // ResponseEntity is returned asynchronously once Future is completed
                         return ResponseEntity
                                 .status(HttpStatus.NOT_FOUND)
                                 .body(Collections.emptyMap());
                     }
 
-                    // Debug log: show the result before sending response
-                    System.out.println("DEBUG getWeeklyAverages -> sending result: " + result);
-
                     // Return 200 OK with the result map
-                    return ResponseEntity
-                            .ok(result);
+                    return ResponseEntity.ok(result);
                 });
 
         // Execution is placed into Spring's internal async waiting queue
@@ -415,26 +337,12 @@ public class UsersController {
     // -------------------------------------------
     @GetMapping("/{username}/goal")
     public CompletableFuture<ResponseEntity<Map<String, Integer>>> getGoal(
-            @PathVariable("username") String username) { // Explicit name avoids parameter-name reflection issues
-
-        // Debug log: endpoint triggered
-        System.out.println("DEBUG getGoal -> username=" + username);
-
+            @PathVariable("username") String username) {
         // Call Firebase service to get goal value
         return firebaseService.getGoalMl(username)
-                // ⚠️⤵️⚠️
-                // thenApply - adds a callback to the internal callback list of the Future.
-                // Once `complete()` is called, the Future executes all registered callbacks.
-                // ⚠️⤴️⚠️
-
-                // What does this callback do?
-                // It unwraps the Future's content (the Integer) and places it into the response.
                 .thenApply(goal -> {
                     // Always return 200 OK with a value (default if not found)
-                    return ResponseEntity
-                            .ok(
-                                    Map.of("goalMl", goal)
-                            );
+                    return ResponseEntity.ok(Map.of("goalMl", goal));
                 })
                 .exceptionally(ex -> {
                     // On failure return 500 Internal Server Error
@@ -442,9 +350,7 @@ public class UsersController {
 
                     return ResponseEntity
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(
-                                    Map.of()
-                            );
+                            .body(Map.of());
                 });
     }
 
@@ -455,29 +361,14 @@ public class UsersController {
     public CompletableFuture<ResponseEntity<Map<String, String>>> setGoal(
             @PathVariable("username") String username,
             @RequestParam("goalMl") int goalMl) {
-
-        // Debug log: endpoint triggered
-        System.out.println("DEBUG setGoal -> username=" + username + " goalMl=" + goalMl);
-
         // Call Firebase service to update goal
         return firebaseService.updateGoalMl(username, goalMl)
-                // ⚠️⤵️⚠️
-                // thenApply - adds a callback to the internal callback list of the Future.
-                // Once `complete()` is called, the Future executes all registered callbacks.
-                // ⚠️⤴️⚠️
-
-                // What does this callback do?
-                // It unwraps the Future's content (the Boolean) and places it into the response.
                 .thenApply(ok -> ok
                         // If update succeeds -> 200 OK
-                        ? ResponseEntity
-                        .ok(Map.of("status", "OK"))
+                        ? ResponseEntity.ok(Map.of("status", "OK"))
                         // If invalid value or user not found -> 400 BAD REQUEST
-                        : ResponseEntity
-                        .badRequest()
-                        .body(
-                                Map.of("status", "INVALID_OR_NOT_FOUND")
-                        )
+                        : ResponseEntity.badRequest()
+                        .body(Map.of("status", "INVALID_OR_NOT_FOUND"))
                 )
                 .exceptionally(ex -> {
                     // On exception -> 500 Internal Server Error
@@ -485,9 +376,7 @@ public class UsersController {
 
                     return ResponseEntity
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(
-                                    Map.of("status", "ERROR")
-                            );
+                            .body(Map.of("status", "ERROR"));
                 });
     }
 
@@ -504,17 +393,12 @@ public class UsersController {
     // ---------------------------------------------------------------------
     @GetMapping("/stats/bmiDistribution")
     public CompletableFuture<ResponseEntity<Map<String, Integer>>> getBmiDistribution() {
-
-        // Debug log: endpoint triggered
-        System.out.println("DEBUG UsersController.getBmiDistribution called");
-
         // Call Firebase service to calculate BMI distribution
         return firebaseService.getBmiDistribution()
                 .thenApply(result -> {
                     // Never null – always at least empty map
                     //noinspection Convert2MethodRef
-                    return ResponseEntity
-                            .ok(result);
+                    return ResponseEntity.ok(result);
                 })
                 .exceptionally(ex -> {
                     // On failure -> 500 Internal Server Error
@@ -538,8 +422,7 @@ public class UsersController {
                     Map<String, Integer> body = Collections.singletonMap("calories",
                             (cals != null ? cals : 0));
 
-                    return ResponseEntity
-                            .ok(body);
+                    return ResponseEntity.ok(body);
                 });
     }
 
@@ -555,14 +438,10 @@ public class UsersController {
                 .thenApply(success -> {
                     if (success) {
                         // 204 No Content on success
-                        return ResponseEntity
-                                .noContent()
-                                .build();
+                        return ResponseEntity.noContent().build();
                     } else {
                         // If invalid value or user not found → 400 Bad Request
-                        return ResponseEntity
-                                .badRequest()
-                                .build();
+                        return ResponseEntity.badRequest().build();
                     }
                 });
     }
