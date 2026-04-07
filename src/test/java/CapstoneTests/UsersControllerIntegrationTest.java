@@ -29,8 +29,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpEntity;
 // Import Java TimeUnit for waiting on async FirebaseService operations in helpers
 import java.util.concurrent.TimeUnit;
-// Import CompletableFuture for handling async operations in helpers
-import java.util.concurrent.CompletableFuture;
 // Import Java utilities for maps and collections
 import java.util.*;
 
@@ -84,7 +82,7 @@ public class UsersControllerIntegrationTest {
     // Helper method to build a basic User instance with required fields
     private User buildUser(String username, String password) {
         // Create a new User instance
-        User user = new User();
+        var user = new User();
         // Set the username field for this user
         user.setUserName(username);
         // Set the password field for this user
@@ -102,21 +100,14 @@ public class UsersControllerIntegrationTest {
     @SuppressWarnings("UnusedReturnValue")
     private User createUserInFirebase(String username, String password) throws Exception {
         // Create a new User object with the requested username and password
-        User user = buildUser(username, password);
-
+        var user = buildUser(username, password);
         // Call createUser on FirebaseService to persist this user
-        CompletableFuture<Boolean> future = firebaseService.createUser(user);
+        var future = firebaseService.createUser(user);
         // Wait for the async result with a timeout
-        Boolean created = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        var created = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // If user was created successfully, remember the username for cleanup
-        if (Boolean.TRUE.equals(created)) {
-            createdUsernames.add(username);
-        }
-
-        // Print debug log about the creation
-        System.out.println("DEBUG createUserInFirebase -> username=" + username + " created=" + created);
-
+        if (created) { createdUsernames.add(username); }
         // Return the User object that was attempted to be created
         return user;
     }
@@ -125,13 +116,9 @@ public class UsersControllerIntegrationTest {
     private void deleteUserInFirebase(String username) {
         try {
             // Call deleteUser on FirebaseService
-            CompletableFuture<Boolean> future = firebaseService.deleteUser(username);
+            var future = firebaseService.deleteUser(username);
             // Wait for the async result with a timeout
-            Boolean deleted = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-            // Print debug log about the deletion result
-            System.out.println("DEBUG cleanup deleteUserInFirebase -> username="
-                    + username + " deleted=" + deleted);
+            @SuppressWarnings("unused") var deleted = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (Exception e) {
             // Log a warning but do not fail the whole test suite because of cleanup
             System.out.println("WARN cleanup failed for username=" + username
@@ -145,15 +132,11 @@ public class UsersControllerIntegrationTest {
     @BeforeAll
     void beforeAll() {
         // Print a debug message indicating that UsersControllerIntegrationTest started
-        System.out.println("DEBUG UsersControllerIntegrationTest (TestRestTemplate) -> starting integration tests");
+        System.out.println("DEBUG UsersControllerIntegrationTest");
     }
 
     @AfterAll
     void cleanupAllTestUsers() {
-        // Print debug message before cleanup starts
-        System.out.println("DEBUG cleanupAllTestUsers -> deleting "
-                + this.createdUsernames.size() + " test users");
-
         // Iterate over all created usernames and delete each one
         for (String username : this.createdUsernames) {
             deleteUserInFirebase(username);
@@ -166,8 +149,7 @@ public class UsersControllerIntegrationTest {
     @Test
     void health_returnsOk() {
         // Perform a GET request to /api/users/health and expect a String body
-        ResponseEntity<String> response =
-                this.restTemplate.getForEntity("/api/users/health", String.class);
+        var response = this.restTemplate.getForEntity("/api/users/health", String.class);
 
         // Assert that the HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -181,13 +163,12 @@ public class UsersControllerIntegrationTest {
     @Test
     void signup_createsUserAndRejectsDuplicate() {
         // Build a unique username using current timestamp to avoid collisions
-        String username = "signupController_" + System.currentTimeMillis();
+        var username = "signupController_" + System.currentTimeMillis();
         // Build a User object for signup
-        User user = buildUser(username, "signupPass");
+        var user = buildUser(username, "signupPass");
 
         // Perform the first POST request to /api/users/signup sending the User as JSON
-        ResponseEntity<String> firstResponse =
-                this.restTemplate.postForEntity("/api/users/signup", user, String.class);
+        var firstResponse = this.restTemplate.postForEntity("/api/users/signup", user, String.class);
 
         // Assert that the HTTP status is 201 Created
         assertEquals(HttpStatus.CREATED, firstResponse.getStatusCode());
@@ -198,8 +179,7 @@ public class UsersControllerIntegrationTest {
         this.createdUsernames.add(username);
 
         // Perform the second POST request with the same username to test duplicate handling
-        ResponseEntity<String> secondResponse =
-                this.restTemplate.postForEntity("/api/users/signup", user, String.class);
+        var secondResponse = this.restTemplate.postForEntity("/api/users/signup", user, String.class);
 
         // Assert that the HTTP status is 409 Conflict
         assertEquals(HttpStatus.CONFLICT, secondResponse.getStatusCode());
@@ -213,25 +193,24 @@ public class UsersControllerIntegrationTest {
     @Test
     void login_withCorrectCredentials_returnsUserJson() throws Exception {
         // Build a unique username for this test
-        String username = "loginOk_" + System.currentTimeMillis();
+        var username = "loginOk_" + System.currentTimeMillis();
         // Create the user directly in Firebase with the correct password
         createUserInFirebase(username, "pass1");
 
         // Build a login request body User with same username and password
-        User loginRequestUser = new User();
+        var loginRequestUser = new User();
         // Set the username to the same value
         loginRequestUser.setUserName(username);
         // Set the password to the correct password
         loginRequestUser.setPassword("pass1");
 
         // Perform the POST request to /api/users/login sending User as JSON and expecting a User body
-        ResponseEntity<User> response =
-                this.restTemplate.postForEntity("/api/users/login", loginRequestUser, User.class);
+        var response = this.restTemplate.postForEntity("/api/users/login", loginRequestUser, User.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
         // Extract the User object from the response body
-        User body = response.getBody();
+        var body = response.getBody();
         // Assert that the body is not null
         assertNotNull(body);
         // Assert that the username in the response matches the test username
@@ -244,20 +223,19 @@ public class UsersControllerIntegrationTest {
     @Test
     void login_withWrongPassword_returns401() throws Exception {
         // Build a unique username for this test
-        String username = "loginBad_" + System.currentTimeMillis();
+        var username = "loginBad_" + System.currentTimeMillis();
         // Create the user directly in Firebase with a known password
         createUserInFirebase(username, "realPass");
 
         // Build a login request body with the correct username but wrong password
-        User loginRequestUser = new User();
+        var loginRequestUser = new User();
         // Set the same username
         loginRequestUser.setUserName(username);
         // Set an incorrect password
         loginRequestUser.setPassword("wrongPass");
 
         // Perform the POST request to /api/users/login sending User as JSON and expecting String body
-        ResponseEntity<String> response =
-                this.restTemplate.postForEntity("/api/users/login", loginRequestUser, String.class);
+        var response = this.restTemplate.postForEntity("/api/users/login", loginRequestUser, String.class);
 
         // Assert that HTTP status is 401 Unauthorized
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
@@ -271,18 +249,17 @@ public class UsersControllerIntegrationTest {
     @Test
     void getAllUsers_returnsArrayAndContainsAtLeastOneUser() throws Exception {
         // Create one user to ensure at least one user exists in the system
-        String username = "allUsers_" + System.currentTimeMillis();
+        var username = "allUsers_" + System.currentTimeMillis();
         // Create the user directly in Firebase
         createUserInFirebase(username, "p");
 
         // Perform a GET request to /api/users expecting an array of User
-        ResponseEntity<User[]> response =
-                this.restTemplate.getForEntity("/api/users", User[].class);
+        var response = this.restTemplate.getForEntity("/api/users", User[].class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
         // Extract the array of users from response
-        User[] users = response.getBody();
+        var users = response.getBody();
         // Assert that the array is not null
         assertNotNull(users);
         // Assert that the array contains at least one element
@@ -295,18 +272,17 @@ public class UsersControllerIntegrationTest {
     @Test
     void getUser_existingUser_returnsUserJson() throws Exception {
         // Build a unique username for this test
-        String username = "getUserOk_" + System.currentTimeMillis();
+        var username = "getUserOk_" + System.currentTimeMillis();
         // Create this user in Firebase
         createUserInFirebase(username, "p");
 
         // Perform a GET request to /api/users/{username} expecting a User body
-        ResponseEntity<User> response =
-                this.restTemplate.getForEntity("/api/users/" + username, User.class);
+        var response = this.restTemplate.getForEntity("/api/users/" + username, User.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
         // Extract the User object from the response body
-        User body = response.getBody();
+        var body = response.getBody();
         // Assert that body is not null
         assertNotNull(body);
         // Assert that the username field matches the expected username
@@ -335,32 +311,28 @@ public class UsersControllerIntegrationTest {
     @Test
     void updateUser_existingUser_replacesRecord() throws Exception {
         // Build a unique username for this test
-        String username = "updateUserOk_" + System.currentTimeMillis();
+        var username = "updateUserOk_" + System.currentTimeMillis();
         // Create the initial user in Firebase
         createUserInFirebase(username, "origPass");
 
         // Build a new User object with updated fields
-        User updated = buildUser(username, "newPass");
+        var updated = buildUser(username, "newPass");
         // Change the full name to indicate update
         updated.setFullName("Updated Name");
         // Change the age to a different value
         updated.setAge(30);
 
         // Wrap the updated user into HttpEntity so it can be sent as request body
-        HttpEntity<User> entity = new HttpEntity<>(updated);
+        var entity = new HttpEntity<>(updated);
 
         // Perform a PUT request to /api/users/{username} expecting a User response
-        ResponseEntity<User> response =
-                this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.PUT,
-                        entity,
-                        User.class,
-                        username);
+        var response = this.restTemplate.exchange("/api/users/{username}",
+                        HttpMethod.PUT, entity, User.class, username);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
         // Extract the updated User from the response body
-        User body = response.getBody();
+        var body = response.getBody();
         // Assert that body is not null
         assertNotNull(body);
         // Assert that password field is the new password
@@ -375,16 +347,15 @@ public class UsersControllerIntegrationTest {
     @Test
     void updateUser_nonExistingUser_returns404() {
         // Build a username that does not exist
-        String username = "updateNoSuch_" + System.currentTimeMillis();
+        var username = "updateNoSuch_" + System.currentTimeMillis();
 
         // Build an updated user body for this non-existing username
-        User updated = buildUser(username, "p");
+        var updated = buildUser(username, "p");
         // Wrap the updated user into HttpEntity for the request body
-        HttpEntity<User> entity = new HttpEntity<>(updated);
+        var entity = new HttpEntity<>(updated);
 
         // Perform a PUT request to /api/users/{username} expecting String body
-        ResponseEntity<String> response =
-                this.restTemplate.exchange(
+        var response = this.restTemplate.exchange(
                         // url template
                         "/api/users/{username}",
                         // http method
@@ -410,7 +381,7 @@ public class UsersControllerIntegrationTest {
     @Test
     void patchUser_existingUser_updatesField() throws Exception {
         // Build a unique username for this test
-        String username = "patchUserOk_" + System.currentTimeMillis();
+        var username = "patchUserOk_" + System.currentTimeMillis();
         // Create initial user in Firebase
         createUserInFirebase(username, "p");
 
@@ -419,20 +390,16 @@ public class UsersControllerIntegrationTest {
         // Put new fullName into the updates map
         updates.put("fullName", "Patched Name");
         // Wrap the updates map into HttpEntity so it will be serialized as JSON
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(updates);
+        var entity = new HttpEntity<>(updates);
 
         // Perform a PATCH request to /api/users/{username} expecting User response
-        ResponseEntity<User> response =
-                this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.PATCH,
-                        entity,
-                        User.class,
-                        username);
+        var response = this.restTemplate.exchange("/api/users/{username}",
+                        HttpMethod.PATCH, entity, User.class, username);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
         // Extract updated User from response body
-        User body = response.getBody();
+        var body = response.getBody();
         // Assert that body is not null
         assertNotNull(body);
         // Assert that the returned JSON contains the updated fullName
@@ -445,22 +412,18 @@ public class UsersControllerIntegrationTest {
     @Test
     void patchUser_nonExistingUser_returns404() {
         // Build a username that does not exist
-        String username = "patchNoSuch_" + System.currentTimeMillis();
+        var username = "patchNoSuch_" + System.currentTimeMillis();
 
         // Build an updates map for this non-existing user
         Map<String, Object> updates = new HashMap<>();
         // Put some dummy field into updates
         updates.put("fullName", "Someone");
         // Wrap the updates map into HttpEntity
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(updates);
+        var entity = new HttpEntity<>(updates);
 
         // Perform a PATCH request to /api/users/{username} expecting String body
-        ResponseEntity<String> response =
-                this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.PATCH,
-                        entity,
-                        String.class,
-                        username);
+        var response = this.restTemplate.exchange("/api/users/{username}",
+                        HttpMethod.PATCH, entity, String.class, username);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -474,17 +437,13 @@ public class UsersControllerIntegrationTest {
     @Test
     void deleteUser_existingUser_returnsOk() throws Exception {
         // Build a unique username for this test
-        String username = "deleteUserOk_" + System.currentTimeMillis();
+        var username = "deleteUserOk_" + System.currentTimeMillis();
         // Create the user in Firebase
         createUserInFirebase(username, "p");
 
         // Perform a DELETE request to /api/users/{username} expecting String body
-        ResponseEntity<String> response =
-                this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.DELETE,
-                        null,
-                        String.class,
-                        username);
+        var response = this.restTemplate.exchange("/api/users/{username}",
+                        HttpMethod.DELETE, null, String.class, username);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -496,15 +455,11 @@ public class UsersControllerIntegrationTest {
     @Test
     void deleteUser_nonExistingUser_returns404() {
         // Build a username that does not exist
-        String username = "deleteNoSuch_" + System.currentTimeMillis();
+        var username = "deleteNoSuch_" + System.currentTimeMillis();
 
         // Perform a DELETE request to /api/users/{username} expecting String body
-        ResponseEntity<String> response =
-                this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.DELETE,
-                        null,
-                        String.class,
-                        username);
+        var response = this.restTemplate.exchange("/api/users/{username}",
+                        HttpMethod.DELETE, null, String.class, username);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -518,17 +473,13 @@ public class UsersControllerIntegrationTest {
     @Test
     void headUser_existingUser_returns200() throws Exception {
         // Build a unique username and create user in Firebase
-        String username = "headUserOk_" + System.currentTimeMillis();
+        var username = "headUserOk_" + System.currentTimeMillis();
         // Create this user in Firebase
         createUserInFirebase(username, "p");
 
         // Perform a HEAD request to /api/users/{username} expecting no body
-        ResponseEntity<Void> response =
-                this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.HEAD,
-                        null,
-                        Void.class,
-                        username);
+        var response = this.restTemplate.exchange("/api/users/{username}",
+                        HttpMethod.HEAD, null, Void.class, username);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -540,15 +491,11 @@ public class UsersControllerIntegrationTest {
     @Test
     void headUser_nonExistingUser_returns404() {
         // Build a username that does not exist
-        String username = "headNoSuch_" + System.currentTimeMillis();
+        var username = "headNoSuch_" + System.currentTimeMillis();
 
         // Perform a HEAD request to /api/users/{username}
-        ResponseEntity<Void> response =
-                this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.HEAD,
-                        null,
-                        Void.class,
-                        username);
+        var response = this.restTemplate.exchange("/api/users/{username}",
+                        HttpMethod.HEAD, null, Void.class, username);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -560,19 +507,15 @@ public class UsersControllerIntegrationTest {
     @Test
     void updateBmi_existingUser_returns200() throws Exception {
         // Build a unique username for this test
-        String username = "bmiOk_" + System.currentTimeMillis();
+        var username = "bmiOk_" + System.currentTimeMillis();
         // Create the user in Firebase
         createUserInFirebase(username, "p");
 
         // Build URL with query parameter for bmi
-        String url = "/api/users/" + username + "/bmi?bmi=23.5";
+        var url = "/api/users/" + username + "/bmi?bmi=23.5";
 
         // Perform a PATCH request to /api/users/{username}/bmi expecting String body
-        ResponseEntity<String> response =
-                this.restTemplate.exchange(url,
-                        HttpMethod.PATCH,
-                        null,
-                        String.class);
+        var response = this.restTemplate.exchange(url, HttpMethod.PATCH, null, String.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -584,17 +527,12 @@ public class UsersControllerIntegrationTest {
     @Test
     void updateBmi_nonExistingUser_returns404() {
         // Build a username that does not exist
-        String username = "bmiNoSuch_" + System.currentTimeMillis();
-
+        var username = "bmiNoSuch_" + System.currentTimeMillis();
         // Build URL with query parameter for bmi
-        String url = "/api/users/" + username + "/bmi?bmi=23.5";
+        var url = "/api/users/" + username + "/bmi?bmi=23.5";
 
         // Perform a PATCH request to /api/users/{username}/bmi expecting String body
-        ResponseEntity<String> response =
-                this.restTemplate.exchange(url,
-                        HttpMethod.PATCH,
-                        null,
-                        String.class);
+        var response = this.restTemplate.exchange(url, HttpMethod.PATCH, null, String.class);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -608,13 +546,12 @@ public class UsersControllerIntegrationTest {
     @Test
     void updateWater_and_getWater_flowForExistingUser() throws Exception {
         // Build a unique username for this test
-        String username = "waterOk_" + System.currentTimeMillis();
+        var username = "waterOk_" + System.currentTimeMillis();
         // Create the user in Firebase
         createUserInFirebase(username, "p");
 
         // Perform a GET request to read initial water values
-        @SuppressWarnings("rawtypes") ResponseEntity<Map> beforeResponse =
-                this.restTemplate.getForEntity("/api/users/" + username + "/water", Map.class);
+        var beforeResponse = this.restTemplate.getForEntity("/api/users/" + username + "/water", Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, beforeResponse.getStatusCode());
@@ -623,21 +560,17 @@ public class UsersControllerIntegrationTest {
         // Assert that the map is not null
         assertNotNull(beforeBody);
         // Extract today's water as a Number and convert to long
-        Number todayBeforeNumber = (Number) beforeBody.getOrDefault("todayWater", 0);
-        long todayBefore = todayBeforeNumber.longValue();
+        var todayBeforeNumber = (Number) beforeBody.getOrDefault("todayWater", 0);
+        var todayBefore = todayBeforeNumber.longValue();
 
         // Define an amount of water to add
-        int addedAmount = 400;
+        var addedAmount = 400;
 
         // Build URL for PATCH request with amount parameter
-        String patchUrl = "/api/users/" + username + "/water?amount=" + addedAmount;
+        var patchUrl = "/api/users/" + username + "/water?amount=" + addedAmount;
 
         // Perform PATCH request to update water
-        ResponseEntity<String> patchResponse =
-                this.restTemplate.exchange(patchUrl,
-                        HttpMethod.PATCH,
-                        null,
-                        String.class);
+        var patchResponse = this.restTemplate.exchange(patchUrl, HttpMethod.PATCH, null, String.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, patchResponse.getStatusCode());
@@ -645,8 +578,7 @@ public class UsersControllerIntegrationTest {
         assertEquals("Water updated successfully", patchResponse.getBody());
 
         // Perform another GET request to read updated water totals
-        @SuppressWarnings("rawtypes") ResponseEntity<Map> afterResponse =
-                this.restTemplate.getForEntity("/api/users/" + username + "/water", Map.class);
+        var afterResponse = this.restTemplate.getForEntity("/api/users/" + username + "/water", Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, afterResponse.getStatusCode());
@@ -655,8 +587,8 @@ public class UsersControllerIntegrationTest {
         // Assert that body is not null
         assertNotNull(afterBody);
         // Extract today's water after update
-        Number todayAfterNumber = (Number) afterBody.getOrDefault("todayWater", 0);
-        long todayAfter = todayAfterNumber.longValue();
+        var todayAfterNumber = (Number) afterBody.getOrDefault("todayWater", 0);
+        var todayAfter = todayAfterNumber.longValue();
 
         // Assert that today's water increased exactly by the added amount
         assertEquals(todayBefore + addedAmount, todayAfter);
@@ -666,11 +598,10 @@ public class UsersControllerIntegrationTest {
     @Test
     void getWater_nonExistingUser_returns404() {
         // Build a username that does not exist
-        String username = "waterNoSuch_" + System.currentTimeMillis();
+        var username = "waterNoSuch_" + System.currentTimeMillis();
 
         // Perform a GET request to /api/users/{username}/water expecting String body
-        ResponseEntity<String> response =
-                this.restTemplate.getForEntity("/api/users/" + username + "/water", String.class);
+        var response = this.restTemplate.getForEntity("/api/users/" + username + "/water", String.class);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -684,19 +615,16 @@ public class UsersControllerIntegrationTest {
     @Test
     void getWaterHistoryMap_existingUser_returnsMapWithRequestedDays() throws Exception {
         // Build a unique username for this test
-        String username = "waterHistoryOk_" + System.currentTimeMillis();
+        var username = "waterHistoryOk_" + System.currentTimeMillis();
         // Create the user in Firebase
         createUserInFirebase(username, "p");
-
         // Define how many days we want
-        int days = 5;
-
+        var days = 5;
         // Build URL for GET request with days query parameter
-        String url = "/api/users/" + username + "/waterHistoryMap?days=" + days;
+        var url = "/api/users/" + username + "/waterHistoryMap?days=" + days;
 
         // Perform GET request expecting a Map body
-        @SuppressWarnings("rawtypes") ResponseEntity<Map> response =
-                this.restTemplate.getForEntity(url, Map.class);
+        var response = this.restTemplate.getForEntity(url, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -712,14 +640,12 @@ public class UsersControllerIntegrationTest {
     @Test
     void getWaterHistoryMap_nonExistingUser_returns404() {
         // Build a username that does not exist
-        String username = "waterHistoryNoSuch_" + System.currentTimeMillis();
-
+        var username = "waterHistoryNoSuch_" + System.currentTimeMillis();
         // Build URL with days parameter
-        String url = "/api/users/" + username + "/waterHistoryMap?days=3";
+        var url = "/api/users/" + username + "/waterHistoryMap?days=3";
 
         // Perform GET request expecting String body
-        ResponseEntity<String> response =
-                this.restTemplate.getForEntity(url, String.class);
+        var response = this.restTemplate.getForEntity(url, String.class);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -733,27 +659,23 @@ public class UsersControllerIntegrationTest {
     @Test
     void getWeeklyAverages_existingUser_returnsMap() throws Exception {
         // Build a unique username for this test
-        String username = "weeklyAvgOk_" + System.currentTimeMillis();
+        var username = "weeklyAvgOk_" + System.currentTimeMillis();
         // Create the user in Firebase
         createUserInFirebase(username, "p");
-
         // add some water so at least one week has non-zero average
-        String waterUrl = "/api/users/" + username + "/water?amount=300";
+        var waterUrl = "/api/users/" + username + "/water?amount=300";
+
         // Perform PATCH request to add water
-        ResponseEntity<String> waterResponse =
-                this.restTemplate.exchange(waterUrl,
-                        HttpMethod.PATCH,
-                        null,
-                        String.class);
+        var waterResponse = this.restTemplate.exchange(waterUrl, HttpMethod.PATCH, null, String.class);
+
         // Assert that water update succeeded with status 200 OK
         assertEquals(HttpStatus.OK, waterResponse.getStatusCode());
 
         // Build URL for GET request to weekly averages endpoint
-        String url = "/api/users/" + username + "/weeklyAverages";
+        var url = "/api/users/" + username + "/weeklyAverages";
 
         // Perform GET request expecting Map<String,Integer> body (as raw Map)
-        @SuppressWarnings("rawtypes") ResponseEntity<Map> response =
-                this.restTemplate.getForEntity(url, Map.class);
+        var response = this.restTemplate.getForEntity(url, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -769,14 +691,12 @@ public class UsersControllerIntegrationTest {
     @Test
     void getWeeklyAverages_nonExistingUser_returns404() {
         // Build a username that does not exist
-        String username = "weeklyAvgNoSuch_" + System.currentTimeMillis();
-
+        var username = "weeklyAvgNoSuch_" + System.currentTimeMillis();
         // Build URL for GET request
-        String url = "/api/users/" + username + "/weeklyAverages";
+        var url = "/api/users/" + username + "/weeklyAverages";
 
         // Perform GET request expecting String body
-        ResponseEntity<String> response =
-                this.restTemplate.getForEntity(url, String.class);
+        var response = this.restTemplate.getForEntity(url, String.class);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -790,22 +710,16 @@ public class UsersControllerIntegrationTest {
     @Test
     void goal_setAndGet_flowForExistingUser() throws Exception {
         // Build a unique username for this test
-        String username = "goalOk_" + System.currentTimeMillis();
+        var username = "goalOk_" + System.currentTimeMillis();
         // Create the user in Firebase
         createUserInFirebase(username, "p");
-
         // Define a valid goalMl value
-        int newGoal = 3400;
-
+        var newGoal = 3400;
         // Build URL for PUT request with goalMl parameter
-        String setUrl = "/api/users/" + username + "/goal?goalMl=" + newGoal;
+        var setUrl = "/api/users/" + username + "/goal?goalMl=" + newGoal;
 
         // Perform PUT request expecting Map body
-        @SuppressWarnings("rawtypes") ResponseEntity<Map> setResponse =
-                this.restTemplate.exchange(setUrl,
-                        HttpMethod.PUT,
-                        null,
-                        Map.class);
+        var setResponse = this.restTemplate.exchange(setUrl, HttpMethod.PUT, null, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, setResponse.getStatusCode());
@@ -817,11 +731,9 @@ public class UsersControllerIntegrationTest {
         assertEquals("OK", setBody.get("status"));
 
         // Build URL for GET request to read the goal
-        String getUrl = "/api/users/" + username + "/goal";
-
+        var getUrl = "/api/users/" + username + "/goal";
         // Perform GET request expecting Map body
-        @SuppressWarnings("rawtypes") ResponseEntity<Map> getResponse =
-                this.restTemplate.getForEntity(getUrl, Map.class);
+        var getResponse = this.restTemplate.getForEntity(getUrl, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, getResponse.getStatusCode());
@@ -830,7 +742,7 @@ public class UsersControllerIntegrationTest {
         // Assert that body is not null
         assertNotNull(getBody);
         // Extract goalMl as Number and compare with newGoal
-        Number goalNumber = (Number) getBody.get("goalMl");
+        var goalNumber = (Number) getBody.get("goalMl");
         // Assert that goalMl equals the newGoal value
         assertEquals(newGoal, goalNumber.intValue());
     }
@@ -839,19 +751,14 @@ public class UsersControllerIntegrationTest {
     @Test
     void setGoal_invalidValue_returnsBadRequest() throws Exception {
         // Build a unique username for this test
-        String username = "goalInvalid_" + System.currentTimeMillis();
+        var username = "goalInvalid_" + System.currentTimeMillis();
         // Create the user in Firebase
         createUserInFirebase(username, "p");
 
         // Build URL for PUT request with invalid goalMl value (too low)
-        String url = "/api/users/" + username + "/goal?goalMl=100";
-
+        var url = "/api/users/" + username + "/goal?goalMl=100";
         // Perform PUT request expecting Map body
-        @SuppressWarnings("rawtypes") ResponseEntity<Map> response =
-                this.restTemplate.exchange(url,
-                        HttpMethod.PUT,
-                        null,
-                        Map.class);
+        var response = this.restTemplate.exchange(url, HttpMethod.PUT, null, Map.class);
 
         // Assert that HTTP status is 400 Bad Request
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -869,11 +776,10 @@ public class UsersControllerIntegrationTest {
     @Test
     void getBmiDistribution_returnsOkWithMap() {
         // Build URL for GET request to BMI distribution endpoint
-        String url = "/api/users/stats/bmiDistribution";
+        var url = "/api/users/stats/bmiDistribution";
 
         // Perform GET request expecting Map body
-        @SuppressWarnings("rawtypes") ResponseEntity<Map> response =
-                this.restTemplate.getForEntity(url, Map.class);
+        var response = this.restTemplate.getForEntity(url, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -889,16 +795,14 @@ public class UsersControllerIntegrationTest {
     @Test
     void calories_updateAndGet_flowWithValidAndInvalidValues() throws Exception {
         // Build a unique username for this test
-        String username = "caloriesOk_" + System.currentTimeMillis();
+        var username = "caloriesOk_" + System.currentTimeMillis();
         // Create the user in Firebase
         createUserInFirebase(username, "p");
 
         // Build URL for initial GET request to calories endpoint
-        String getInitialUrl = "/api/users/" + username + "/calories";
-
+        var getInitialUrl = "/api/users/" + username + "/calories";
         // Perform initial GET request expecting Map body
-        @SuppressWarnings("rawtypes") ResponseEntity<Map> initialResponse =
-                this.restTemplate.getForEntity(getInitialUrl, Map.class);
+        var initialResponse = this.restTemplate.getForEntity(getInitialUrl, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, initialResponse.getStatusCode());
@@ -907,26 +811,21 @@ public class UsersControllerIntegrationTest {
         // Assert that body is not null
         assertNotNull(initialBody);
         // Extract "calories" field as Number
-        Number initialCalories = (Number) initialBody.getOrDefault("calories", 0);
+        var initialCalories = (Number) initialBody.getOrDefault("calories", 0);
         // Assert that initial calories are 0
         assertEquals(0, initialCalories.intValue());
 
         // Build URL for valid PUT request to update calories to 1500
-        String putValidUrl = "/api/users/" + username + "/calories?calories=1500";
+        var putValidUrl = "/api/users/" + username + "/calories?calories=1500";
 
         // Perform PUT request with valid value expecting no content
-        ResponseEntity<Void> validResponse =
-                this.restTemplate.exchange(putValidUrl,
-                        HttpMethod.PUT,
-                        null,
-                        Void.class);
+        var validResponse = this.restTemplate.exchange(putValidUrl, HttpMethod.PUT, null, Void.class);
 
         // Assert that HTTP status is 204 No Content
         assertEquals(HttpStatus.NO_CONTENT, validResponse.getStatusCode());
 
         // Perform GET request again to verify updated calories
-        @SuppressWarnings("rawtypes") ResponseEntity<Map> afterValidResponse =
-                this.restTemplate.getForEntity(getInitialUrl, Map.class);
+        var afterValidResponse = this.restTemplate.getForEntity(getInitialUrl, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, afterValidResponse.getStatusCode());
@@ -935,39 +834,30 @@ public class UsersControllerIntegrationTest {
         // Assert that body is not null
         assertNotNull(afterValidBody);
         // Extract "calories" after valid update
-        Number afterValidCalories = (Number) afterValidBody.getOrDefault("calories", 0);
+        var afterValidCalories = (Number) afterValidBody.getOrDefault("calories", 0);
         // Assert that calories are now 1500
         assertEquals(1500, afterValidCalories.intValue());
 
         // Build URL for PUT request with invalid negative calories
-        String putInvalidLowUrl = "/api/users/" + username + "/calories?calories=-10";
+        var putInvalidLowUrl = "/api/users/" + username + "/calories?calories=-10";
 
         // Perform PUT request expecting bad request
-        ResponseEntity<Void> invalidLowResponse =
-                this.restTemplate.exchange(putInvalidLowUrl,
-                        HttpMethod.PUT,
-                        null,
-                        Void.class);
+        var invalidLowResponse = this.restTemplate.exchange(putInvalidLowUrl, HttpMethod.PUT, null, Void.class);
 
         // Assert that HTTP status is 400 Bad Request
         assertEquals(HttpStatus.BAD_REQUEST, invalidLowResponse.getStatusCode());
 
         // Build URL for PUT request with excessively high invalid calories
-        String putInvalidHighUrl = "/api/users/" + username + "/calories?calories=50000";
+        var putInvalidHighUrl = "/api/users/" + username + "/calories?calories=50000";
 
         // Perform PUT request expecting bad request again
-        ResponseEntity<Void> invalidHighResponse =
-                this.restTemplate.exchange(putInvalidHighUrl,
-                        HttpMethod.PUT,
-                        null,
-                        Void.class);
+        var invalidHighResponse = this.restTemplate.exchange(putInvalidHighUrl, HttpMethod.PUT, null, Void.class);
 
         // Assert that HTTP status is 400 Bad Request
         assertEquals(HttpStatus.BAD_REQUEST, invalidHighResponse.getStatusCode());
 
         // Perform GET request again to verify calories did not change after invalid updates
-        @SuppressWarnings("rawtypes") ResponseEntity<Map> afterInvalidResponse =
-                this.restTemplate.getForEntity(getInitialUrl, Map.class);
+        var afterInvalidResponse = this.restTemplate.getForEntity(getInitialUrl, Map.class);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, afterInvalidResponse.getStatusCode());
@@ -976,7 +866,7 @@ public class UsersControllerIntegrationTest {
         // Assert that body is not null
         assertNotNull(afterInvalidBody);
         // Extract "calories" after invalid updates
-        Number afterInvalidCalories = (Number) afterInvalidBody.getOrDefault("calories", 0);
+        var afterInvalidCalories = (Number) afterInvalidBody.getOrDefault("calories", 0);
         // Assert that calories are still 1500 (unchanged)
         assertEquals(1500, afterInvalidCalories.intValue());
     }
