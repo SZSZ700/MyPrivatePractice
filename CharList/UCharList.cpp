@@ -1,16 +1,19 @@
 #include "UCharList.h"
+// constructor()
 UCharList::UCharList(list<unique_ptr<char>> &otherList) {
     chain.splice(this->chain.begin(), otherList);
 }
 
+// swap()
 void UCharList::swap(const char letter) {
 
     // Lambda function that searches for a specific character inside a given list
+    // and returns iterator to the BinNode that contains it
     [[maybe_unused]]auto findAfter =
     [&](
-        // the list
+        // the given list
         list<unique_ptr<char>>& otherList,
-        // pointer to some binnode
+        // iterator to some binnode
         const list<unique_ptr<char>>::iterator it,
         // the charcter that should be in some binnode
         const char letterr
@@ -26,10 +29,11 @@ void UCharList::swap(const char letter) {
         return otherList.end(); // Not found
     };
 
-    // the lambda returns iterator to the last binnode that contains the letter
+    // Lambda function that returns iterator to the last binnode
+    // that contains the letter
     [[maybe_unused]] auto last =
         [&](
-            // the list
+            // the given list
             list<unique_ptr<char>>& chain,
             // the character that should be in some binnode
             const char letterr
