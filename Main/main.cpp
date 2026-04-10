@@ -2593,6 +2593,110 @@ void twentyTwentyFiveSummerB() {
     // 2 - StarCount Class
 }
 
+void bsTree() {
+    [[maybe_unused]]auto tq = [&] (std::queue<int*> *q1, std::queue<int*> *q2) -> bool {
+        // validation
+        if (!q1 || !q2) return false;
+
+        // create first restoration queue
+        const auto temp1 = new std::queue<int*>();
+        // create second restoration queue
+        const auto temp2 = new std::queue<int*>();
+        auto notValid = false;
+
+        // iteration on the first queue
+        while (!q1->empty()) {
+            // keep current value from first queue
+            auto firstValue = q1->front();
+            q1->pop();
+            // push it to the first restoration queue
+            temp1->push(firstValue);
+
+            // prevent crashing
+            if (firstValue) {
+                while (!q2->empty()) {
+                    // keep current value from second queue
+                    auto secValue = q2->front();
+                    q2->pop();
+                    // push it to the second restoration queue
+                    temp2->push(secValue);
+
+                    // prevent crashing
+                    if (secValue) {
+                        // check for validation
+                        if (*firstValue <= *secValue) { notValid = true; }
+                    }
+                }
+
+                // restore sec queue
+                while (!temp2->empty()) {
+                    q2->push(temp2->front());
+                    temp2->pop();
+                }
+            }
+        }
+
+        // restore first queue
+        while (!temp1->empty()) {
+            q1->push(temp1->front());
+            temp1->pop();
+        }
+
+        // delete restorations queues
+        delete temp1;
+        delete temp2;
+
+        // return the !flag_val
+        return !notValid;
+    };
+
+    [[maybe_unused]]auto validAdvancedBstTree = [&] (BinNode<queue<int*>*> *root) -> bool {
+        // search queue
+        queue<BinNode<queue<int*>*>*> q;
+        // push the root of the tree to search queue
+        q.push(root);
+
+        // iteration on the search queue
+        while (!q.empty()) {
+            // current BinNode
+            const auto father = q.front();
+            // queue of current BinNode
+            const auto fatherQ = father->getValue();
+            // pop current BinNode from the search queue
+            q.pop();
+
+            // left_son BinNode
+            const auto leftSon = father->getLeft();
+            // queue of left_son BinNode
+            const auto leftSonQ = leftSon->getValue();
+            // right_son BinNode
+            const auto rightSon = father->getRight();
+            // queue of right_son BinNode
+            const auto rightSonQ = rightSon->getValue();
+
+            // all values in the father queue should be bigger
+            // than all values in the left son queue
+            const auto fatherQBiggerThanLeftSonQ = tq(fatherQ, leftSonQ);
+
+            // all values in the father queue should be smaller
+            // than all values in the right son queue
+            // ReSharper disable once CppTooWideScopeInitStatement
+            const auto fatherQsmallerThanRightSonQ = tq(rightSonQ, fatherQ);
+
+            if (!fatherQBiggerThanLeftSonQ || !fatherQsmallerThanRightSonQ) {
+                return false;
+            }
+
+            // push left son to the queue
+            if (father->getLeft()) { q.push(father->getLeft()); }
+            // push right son to the queue
+            if (father->getRight()) { q.push(father->getRight()); }
+        }
+
+        return true;
+    };
+}
+
 int main() {
     system("chcp 65001 > nul"); // 💡 Change console to UTF-8 mode (Windows CMD command)
     someTry0();

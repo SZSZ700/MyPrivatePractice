@@ -80,4 +80,8 @@ add_executable(untitled1 Main/main.cpp
         RestaurantQ/Table.h
         RestaurantQ/Restaurant.cpp
         RestaurantQ/Restaurant.h
+        CharList/CharList.cpp
+        CharList/CharList.h
+        CharList/UCharList.cpp
+        CharList/UCharList.h
 )
