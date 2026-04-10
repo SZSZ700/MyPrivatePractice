@@ -2650,49 +2650,70 @@ void bsTree() {
         return !notValid;
     };
 
-    [[maybe_unused]]auto validAdvancedBstTree = [&] (BinNode<queue<int*>*> *root) -> bool {
-        // search queue
+    [[maybe_unused]] auto validAdvancedBstTree = [&](BinNode<queue<int*>*>* root) -> bool {
+        // Validate root pointer
+        if (!root) { return false; }
+        // Search queue for BFS traversal on the tree
         queue<BinNode<queue<int*>*>*> q;
-        // push the root of the tree to search queue
+        // Push the root of the tree into the search queue
         q.push(root);
 
-        // iteration on the search queue
+        // BFS traversal on the tree
         while (!q.empty()) {
-            // current BinNode
+            // Get the current father node from the queue
             const auto father = q.front();
-            // queue of current BinNode
-            const auto fatherQ = father->getValue();
-            // pop current BinNode from the search queue
+            // Remove the current father node from the queue
             q.pop();
+            // Extra safety check for null pointer
+            if (!father) { return false; }
 
-            // left_son BinNode
-            const auto leftSon = father->getLeft();
-            // queue of left_son BinNode
-            const auto leftSonQ = leftSon->getValue();
-            // right_son BinNode
-            const auto rightSon = father->getRight();
-            // queue of right_son BinNode
-            const auto rightSonQ = rightSon->getValue();
+            // Get the queue stored inside the current father node
+            const auto fatherQ = father->getValue();
+            // Validate father queue pointer
+            if (!fatherQ) { return false; }
 
-            // all values in the father queue should be bigger
-            // than all values in the left son queue
-            const auto fatherQBiggerThanLeftSonQ = tq(fatherQ, leftSonQ);
+            // If left son exists, validate it against the father
+            if (father->getLeft()) {
+                // Get the left son node
+                const auto leftSon = father->getLeft();
+                // Get the queue stored inside the left son node
+                const auto leftSonQ = leftSon->getValue();
 
-            // all values in the father queue should be smaller
-            // than all values in the right son queue
-            // ReSharper disable once CppTooWideScopeInitStatement
-            const auto fatherQsmallerThanRightSonQ = tq(rightSonQ, fatherQ);
+                // Validate left son queue pointer
+                if (!leftSonQ) { return false; }
 
-            if (!fatherQBiggerThanLeftSonQ || !fatherQsmallerThanRightSonQ) {
-                return false;
+                // All values in the father queue should be bigger
+                // than all values in the left son queue
+                // If the condition fails, the tree is invalid
+                if (const auto fatherQBiggerThanLeftSonQ = tq(fatherQ, leftSonQ);
+                    !fatherQBiggerThanLeftSonQ) { return false; }
+
+                // Push the left son into the search queue
+                q.push(leftSon);
             }
 
-            // push left son to the queue
-            if (father->getLeft()) { q.push(father->getLeft()); }
-            // push right son to the queue
-            if (father->getRight()) { q.push(father->getRight()); }
+            // If right son exists, validate it against the father
+            if (father->getRight()) {
+                // Get the right son node
+                const auto rightSon = father->getRight();
+                // Get the queue stored inside the right son node
+                const auto rightSonQ = rightSon->getValue();
+
+                // Validate right son queue pointer
+                if (!rightSonQ) { return false; }
+
+                // All values in the father queue should be smaller
+                // than all values in the right son queue
+                // If the condition fails, the tree is invalid
+                if (const auto fatherQsmallerThanRightSonQ = tq(rightSonQ, fatherQ);
+                    !fatherQsmallerThanRightSonQ) { return false; }
+
+                // Push the right son into the search queue
+                q.push(rightSon);
+            }
         }
 
+        // If all nodes passed the validation, the tree is valid
         return true;
     };
 }
