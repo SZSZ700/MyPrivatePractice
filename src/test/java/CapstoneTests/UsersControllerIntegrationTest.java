@@ -75,7 +75,8 @@ public class UsersControllerIntegrationTest {
     private final long TIMEOUT_SECONDS = 20L;
 
     // Keep track of all usernames created during this test class
-    private final List<String> createdUsernames = new ArrayList<>();
+    // Use a synchronized set to avoid duplicate entries and be safe if tests run in parallel.
+    private final Set<String> createdUsernames = Collections.synchronizedSet(new HashSet<>());
 
     // --------------------------- HELPER METHODS ---------------------------
 
@@ -105,8 +106,11 @@ public class UsersControllerIntegrationTest {
         var future = firebaseService.createUser(user);
         // Wait for the async result with a timeout
         var created = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        // Fail fast if setup did not actually create the user
+        assertTrue(created, "Failed to create test user in Firebase: " + username);
 
         // If user was created successfully, remember the username for cleanup
+        //noinspection ConstantValue
         if (created) { createdUsernames.add(username); }
         // Return the User object that was attempted to be created
         return user;
@@ -137,8 +141,8 @@ public class UsersControllerIntegrationTest {
 
     @AfterAll
     void cleanupAllTestUsers() {
-        // Iterate over all created usernames and delete each one
-        for (String username : this.createdUsernames) {
+        // Iterate over a snapshot to avoid concurrent modification while cleaning up.
+        for (String username : new ArrayList<>(this.createdUsernames)) {
             deleteUserInFirebase(username);
         }
     }
@@ -262,8 +266,11 @@ public class UsersControllerIntegrationTest {
         var users = response.getBody();
         // Assert that the array is not null
         assertNotNull(users);
-        // Assert that the array contains at least one element
-        assertTrue(users.length >= 1);
+        // Assert that the array contains the user created by this test
+        assertTrue(
+                Arrays.stream(users).anyMatch(u -> username.equals(u.getUserName())),
+                "Expected getAllUsers response to include created test user: " + username
+        );
     }
 
     // --------------------------- GET USER TESTS ---------------------------
@@ -695,13 +702,15 @@ public class UsersControllerIntegrationTest {
         // Build URL for GET request
         var url = "/api/users/" + username + "/weeklyAverages";
 
-        // Perform GET request expecting String body
-        var response = this.restTemplate.getForEntity(url, String.class);
+        // Perform GET request expecting a JSON map body
+        var response = this.restTemplate.exchange(url, HttpMethod.GET, null, Map.class);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        // Assert that response body is "{}" (empty JSON object)
-        assertEquals("{}", response.getBody());
+        // Assert that response body is an empty JSON object (parsed as map)
+        @SuppressWarnings("unchecked") Map<String, Object> body = response.getBody();
+        assertNotNull(body);
+        assertTrue(body.isEmpty());
     }
 
     // --------------------------- GOAL MODULE TESTS ---------------------------
