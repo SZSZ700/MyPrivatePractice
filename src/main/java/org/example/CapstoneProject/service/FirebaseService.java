@@ -1,17 +1,32 @@
 // Define the package for this service class
 package org.example.CapstoneProject.service;
+// Import Firebase async result wrapper.
+import com.google.api.core.ApiFuture;
+// Import Google service account credentials support.
 import com.google.auth.oauth2.GoogleCredentials;
+// Import the Firebase app bootstrap class.
 import com.google.firebase.FirebaseApp;
+// Import Firebase app configuration builder.
 import com.google.firebase.FirebaseOptions;
+// Import Realtime Database types used throughout the service.
 import com.google.firebase.database.*;
+// Import environment-based Firebase URL configuration.
 import org.example.CapstoneProject.EnvConfiguration.EnvConfig;
+// Import the app's user model.
 import org.example.CapstoneProject.model.User;
+// Import JSON object support for API responses.
 import org.json.JSONObject;
+// Mark this class as a Spring service bean.
 import org.springframework.stereotype.Service;
+// Import checked exception for Firebase initialization.
 import java.io.IOException;
+// Import stream support for reading the service account file.
 import java.io.InputStream;
+// Import date formatting for daily water keys.
 import java.text.SimpleDateFormat;
+// Import Java collections and date utilities.
 import java.util.*;
+// Import CompletableFuture for async method results.
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -24,6 +39,247 @@ public class FirebaseService {
     // "waiting in line" on this reference. The real concurrency is handled
     // inside the Firebase SDK and the network layer, not by this Java object.
     private final DatabaseReference usersRef;
+    // Keep a separate index from username -> user key for fast lookups.
+    private final DatabaseReference usernamesRef;
+
+    // Query the users collection by the embedded "userName" field.
+    private CompletableFuture<DataSnapshot> queryByUsername(String username) {
+        var future = new CompletableFuture<DataSnapshot>();
+
+        // Read matching users once and complete the future with the result snapshot.
+        usersRef.orderByChild("userName").equalTo(username)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        // Resolve with the raw query snapshot for downstream processing.
+                        future.complete(snapshot);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        // Surface Firebase read failures to the caller.
+                        future.completeExceptionally(error.toException());
+                    }
+                });
+        return future;
+    }
+
+    // Fall back to scanning the user records when the username index is missing or stale.
+    private CompletableFuture<DataSnapshot> scanFirstUserByUsername(String username) {
+        var future = new CompletableFuture<DataSnapshot>();
+        // Reuse the username query and extract only the first matching child.
+        queryByUsername(username).whenComplete((snapshot, ex) -> {
+            if (ex != null) {
+                future.completeExceptionally(ex);
+                return;
+            }
+
+            // Collapse the query result to a single user snapshot.
+            var first = firstChildOrNull(snapshot);
+
+            if (first != null) {
+                // Best-effort index healing when found by scan.
+                reserveUsername(username, first.getKey());
+            }
+
+            future.complete(first);
+        });
+        return future;
+    }
+
+    // Resolve a user snapshot through the username index, with scan-based recovery if needed.
+    private CompletableFuture<DataSnapshot> findUserSnapshotByUsername(String username) {
+        var future = new CompletableFuture<DataSnapshot>();
+
+        // Reject blank usernames early to avoid unnecessary database reads.
+        if (username == null || username.isBlank()) {
+            future.complete(null);
+            return future;
+        }
+
+        // Read the username index entry first to locate the actual user node.
+        usernamesRef.child(username).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot usernameIndexSnap) {
+                // Extract the user key stored in the username index.
+                var userKey = usernameIndexSnap.getValue(String.class);
+
+                if (userKey == null || userKey.isBlank()) {
+                    // Fall back to a full scan when the index has no usable entry.
+                    scanFirstUserByUsername(username).whenComplete((scanSnap, scanEx) -> {
+                        if (scanEx != null) {
+                            future.completeExceptionally(scanEx);
+                            return;
+                        }
+                        future.complete(scanSnap);
+                    });
+                    return;
+                }
+
+                // Fetch the user node pointed to by the index entry.
+                usersRef.child(userKey).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot userSnap) {
+                        // Verify the indexed user still exists and still owns this username.
+                        var storedUsername = userSnap.child("userName").getValue(String.class);
+
+                        if (!userSnap.exists() || !username.equals(storedUsername)) {
+                            // Clean up the stale index entry before retrying by scan.
+                            clearUsernameIndexIfMatches(username, userKey).whenComplete((ignored, clearEx) -> {
+                                if (clearEx != null) {
+                                    future.completeExceptionally(clearEx);
+                                    return;
+                                }
+                                scanFirstUserByUsername(username).whenComplete((scanSnap, scanEx) -> {
+                                    if (scanEx != null) {
+                                        future.completeExceptionally(scanEx);
+                                        return;
+                                    }
+                                    future.complete(scanSnap);
+                                });
+                            });
+                            return;
+                        }
+                        // Return the validated user snapshot.
+                        future.complete(userSnap);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        // Propagate failures while loading the indexed user.
+                        future.completeExceptionally(error.toException());
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Propagate failures while loading the username index entry.
+                future.completeExceptionally(error.toException());
+            }
+        });
+        return future;
+    }
+
+    // Return the first child in a snapshot, or null when the snapshot is empty.
+    private DataSnapshot firstChildOrNull(DataSnapshot snapshot) {
+        for (var child : snapshot.getChildren()) {
+            return child;
+        }
+
+        return null;
+    }
+
+    // Convert a Firebase ApiFuture into the service's Boolean completion pattern.
+    private void completeBooleanFromApiFuture(ApiFuture<?> op, CompletableFuture<Boolean> target) {
+        // Finish with true on success and false on any Firebase write failure.
+        op.addListener(() -> {
+            try {
+                op.get();
+                target.complete(true);
+            } catch (Exception e) {
+                target.complete(false);
+            }
+        }, Runnable::run);
+    }
+
+    // Reserve a username atomically so two users cannot claim it at the same time.
+    private CompletableFuture<Boolean> reserveUsername(String username, String userKey) {
+        var future = new CompletableFuture<Boolean>();
+        // Use a transaction to avoid race conditions on the username index.
+        usernamesRef.child(username).runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData currentData) {
+                // Read the currently reserved user key, if any.
+                var existing = currentData.getValue(String.class);
+
+                if (existing == null || existing.isBlank()) {
+                    // Claim the username when it is free.
+                    currentData.setValue(userKey);
+                    return Transaction.success(currentData);
+                }
+
+                if (userKey.equals(existing)) {
+                    // Treat repeated reservation by the same user as success.
+                    return Transaction.success(currentData);
+                }
+
+                // Abort when another user already owns this username.
+                return Transaction.abort();
+            }
+
+            @Override
+            public void onComplete(DatabaseError error, boolean committed, DataSnapshot currentData) {
+                if (error != null) {
+                    // Fail the future when the transaction itself errors.
+                    future.completeExceptionally(error.toException());
+                    return;
+                }
+                // committed=false means the username was already taken.
+                future.complete(committed);
+            }
+        });
+        return future;
+    }
+
+    // Release a username reservation after a failed user creation attempt.
+    private void releaseUsernameReservation(String username, String userKey) {
+        // Clear the index entry only if it still points to this user key.
+        usernamesRef.child(username).runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData currentData) {
+                // Read the current reservation target.
+                var existing = currentData.getValue(String.class);
+                if (userKey.equals(existing)) {
+                    // Remove the reservation owned by this user key.
+                    currentData.setValue(null);
+                    return Transaction.success(currentData);
+                }
+                // Abort when the index has already changed.
+                return Transaction.abort();
+            }
+
+            @Override
+            public void onComplete(DatabaseError error, boolean committed, DataSnapshot currentData) {
+                // Best-effort cleanup.
+            }
+        });
+    }
+
+    // Remove a stale username index entry only when it still points at the expected user key.
+    private CompletableFuture<Boolean> clearUsernameIndexIfMatches(String username, String userKey) {
+        var future = new CompletableFuture<Boolean>();
+        // Empty usernames have nothing to clean up.
+        if (username == null || username.isBlank()) {
+            future.complete(true);
+            return future;
+        }
+        // Use a transaction so the cleanup does not race with a new reservation.
+        usernamesRef.child(username).runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData currentData) {
+                // Read the current indexed user key.
+                var existing = currentData.getValue(String.class);
+                if (userKey.equals(existing)) {
+                    // Remove the entry only when it still matches the stale key.
+                    currentData.setValue(null);
+                }
+                return Transaction.success(currentData);
+            }
+
+            @Override
+            public void onComplete(DatabaseError error, boolean committed, DataSnapshot currentData) {
+                if (error != null) {
+                    // Report transaction failures back to the caller.
+                    future.completeExceptionally(error.toException());
+                    return;
+                }
+                // Cleanup is treated as successful even when nothing changed.
+                future.complete(true);
+            }
+        });
+        return future;
+    }
 
     // ----------------------------- INIT ---------------------------------
     // Initializes Firebase Admin SDK (only once) and binds usersRef to "/Users"
@@ -55,6 +311,7 @@ public class FirebaseService {
 
         // Bind usersRef to the "Users" node in the database
         this.usersRef = FirebaseDatabase.getInstance().getReference("Users");
+        this.usernamesRef = FirebaseDatabase.getInstance().getReference("Usernames");
     }
 
     // =========================================================
@@ -63,45 +320,45 @@ public class FirebaseService {
     // =========================================================
     public CompletableFuture<String> signup(User user) {
         var future = new CompletableFuture<String>();
+        // Safely extract the requested username from the incoming user object.
+        var username = user != null ? user.getUserName() : null;
 
-        // Read all users once
-        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                // Iterate through all existing users
-                for (var child : snapshot.getChildren()) {
-                    var existingUser = child.child("userName").getValue(String.class);
+        if (username == null || username.isBlank()) {
+            future.complete("Error: invalid username");
+            return future;
+        }
 
-                    // If username already exists → return error
-                    if (existingUser != null && existingUser.equals(user.getUserName())) {
-                        future.complete("Username already exists");
-                        return;
-                    }
-                }
+        // Generate a new Firebase key for the user record.
+        var key = usersRef.push().getKey();
+        if (key == null) {
+            future.complete("Error generating key");
+            return future;
+        }
 
-                // If no duplicate username, create a new record
-                var key = usersRef.push().getKey();
-                if (key == null) {
-                    future.complete("Error generating key");
-                    return;
-                }
-
-                // Save new user under the generated key
-                //noinspection unused
-                usersRef.child(key).setValue(user, (error, ref) -> {
-                    if (error == null) {
-                        future.complete("User created successfully");
-                    } else {
-                        future.complete("Error: " + error.getMessage());
-                    }
-                });
+        // Reserve the username before writing the user record itself.
+        reserveUsername(username, key).whenComplete((reserved, ex) -> {
+            if (ex != null) {
+                future.complete("Error: " + ex.getMessage());
+                return;
             }
 
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // Handle Firebase cancellation error
-                future.complete("Error: " + error.getMessage());
+            if (!reserved) {
+                future.complete("Username already exists");
+                return;
             }
+
+            //noinspection unused
+            // Persist the user under the generated key.
+            //noinspection unused
+            usersRef.child(key).setValue(user, (error, ref) -> {
+                if (error == null) {
+                    future.complete("User created successfully");
+                } else {
+                    // Release the username if the actual user write fails.
+                    releaseUsernameReservation(username, key);
+                    future.complete("Error: " + error.getMessage());
+                }
+            });
         });
 
         return future;
@@ -112,35 +369,23 @@ public class FirebaseService {
     // =========================================================
     public CompletableFuture<User> login(String username, String password) {
         CompletableFuture<User> future = new CompletableFuture<>();
-
-        // Read all users once
-        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                User foundUser = null;
-
-                // Iterate through all users
-                for (var child : snapshot.getChildren()) {
-                    var existingUser = child.child("userName").getValue(String.class);
-                    var existingPass = child.child("password").getValue(String.class);
-
-                    // Check if both username and password match
-                    if (existingUser != null && existingPass != null &&
-                            existingUser.equals(username) &&
-                            existingPass.equals(password)) {
-                        // If match found, retrieve full User object
-                        foundUser = child.getValue(User.class);
-                        break;
-                    }
-                }
-
-                // Complete with found user or null if not found
-                future.complete(foundUser);
+        // Load the user snapshot for the supplied username.
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                future.completeExceptionally(ex);
+                return;
             }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // On error, complete with null
+            if (userSnap == null || !userSnap.exists()) {
+                future.complete(null);
+                return;
+            }
+            // Compare the stored password to the one supplied by the caller.
+            var existingPass = userSnap.child("password").getValue(String.class);
+            if (existingPass != null && existingPass.equals(password)) {
+                // Return the full user object on successful authentication.
+                future.complete(userSnap.getValue(User.class));
+            } else {
+                // Hide auth failure details by returning null.
                 future.complete(null);
             }
         });
@@ -153,28 +398,43 @@ public class FirebaseService {
     // Returns a CompletableFuture<Boolean> where true = user created, false = user already exists.
     public CompletableFuture<Boolean> createUser(User user) {
         var future = new CompletableFuture<Boolean>();
+        // Extract and validate the target username before allocating Firebase state.
+        var username = user != null ? user.getUserName() : null;
+        if (username == null || username.isBlank()) {
+            future.complete(false);
+            return future;
+        }
 
-        // Query by username to check if user already exists
-        usersRef.orderByChild("userName").equalTo(user.getUserName())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // If user already exists, return false
-                        if (snapshot.exists()) {
-                            future.complete(false);
-                            return;
-                        }
-                        // If not, push a new user object into Firebase
-                        usersRef.push().setValueAsync(user)
-                                .addListener(() -> future.complete(true), Runnable::run);
-                    }
+        // Generate the storage key for the new user record.
+        var key = usersRef.push().getKey();
+        if (key == null) {
+            future.complete(false);
+            return future;
+        }
 
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Complete with exception if query fails
-                        future.completeExceptionally(error.toException());
-                    }
-                });
+        // Reserve the username before creating the user document.
+        reserveUsername(username, key).whenComplete((reserved, ex) -> {
+            if (ex != null) {
+                future.completeExceptionally(ex);
+                return;
+            }
+            if (!reserved) {
+                future.complete(false);
+                return;
+            }
+            // Write the user object asynchronously after the reservation succeeds.
+            var writeFuture = usersRef.child(key).setValueAsync(user);
+            writeFuture.addListener(() -> {
+                try {
+                    writeFuture.get();
+                    future.complete(true);
+                } catch (Exception e) {
+                    // Roll back the reservation if the user write fails.
+                    releaseUsernameReservation(username, key);
+                    future.complete(false);
+                }
+            }, Runnable::run);
+        });
 
         return future;
     }
@@ -216,28 +476,14 @@ public class FirebaseService {
     public CompletableFuture<User> getUser(String username) {
         var future = new CompletableFuture<User>();
 
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // Iterate through matching user snapshots
-                        for (var child : snapshot.getChildren()) {
-                            var user = child.getValue(User.class);
-                            if (user != null) {
-                                future.complete(user);
-                                return;
-                            }
-                        }
-                        // Complete with null if no user found
-                        future.complete(null);
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Complete with exception if query fails
-                        future.completeExceptionally(error.toException());
-                    }
-                });
+        // Resolve the user snapshot and deserialize it if present.
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                future.completeExceptionally(ex);
+                return;
+            }
+            future.complete(userSnap != null ? userSnap.getValue(User.class) : null);
+        });
 
         return future;
     }
@@ -248,31 +494,21 @@ public class FirebaseService {
     public CompletableFuture<Boolean> updateUser(String username, User updatedUser) {
         var future = new CompletableFuture<Boolean>();
 
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // If user does not exist, return false
-                        if (!snapshot.exists()) {
-                            future.complete(false);
-                            return;
-                        }
-
-                        // For each matching user (normally one)
-                        for (var child : snapshot.getChildren()) {
-                            // Replace existing data with the updated user object
-                            child.getRef().setValueAsync(updatedUser)
-                                    .addListener(() -> future.complete(true), Runnable::run);
-                            return;
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Complete with exception if query fails
-                        future.completeExceptionally(error.toException());
-                    }
-                });
+        // Load the existing user so we can update the correct Firebase path.
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                future.completeExceptionally(ex);
+                return;
+            }
+            if (userSnap == null || !userSnap.exists()) {
+                future.complete(false);
+                return;
+            }
+            // Keep path identity stable to avoid username index drift.
+            updatedUser.setUserName(username);
+            // Replace the entire stored user object in one write.
+            completeBooleanFromApiFuture(userSnap.getRef().setValueAsync(updatedUser), future);
+        });
 
         return future;
     }
@@ -285,48 +521,63 @@ public class FirebaseService {
         var future = new CompletableFuture<User>();
 
         // Query Firebase for the given username
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                future.completeExceptionally(ex);
+                return;
+            }
+            // If user not found, complete with null
+            if (userSnap == null || !userSnap.exists()) {
+                future.complete(null);
+                return;
+            }
+            // Hold a reference to the existing user node for patch and refresh operations.
+            var ref = userSnap.getRef();
+
+            // Copy incoming updates so the method can safely filter unsupported fields.
+            var safeUpdates = new HashMap<>(updates);
+
+            // username changes require index migration; block here for consistency.
+            safeUpdates.remove("userName");
+            if (safeUpdates.isEmpty()) {
+                // No writable fields remain, so just return the current user state.
+                ref.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // If user not found, complete with null
-                        if (!snapshot.exists()) {
-                            future.complete(null);
-                            return;
-                        }
-
-                        // For each matching user (normally one)
-                        for (var child : snapshot.getChildren()) {
-                            var ref = child.getRef();
-                            // Apply partial updates asynchronously
-                            ref.updateChildrenAsync(updates).addListener(() -> {
-                                // After update, re-read the snapshot to return fresh data
-                                ref.addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(DataSnapshot refreshed) {
-                                        // Convert refreshed snapshot into User object
-                                        var updated = refreshed.getValue(User.class);
-                                        // Complete the future with updated User
-                                        future.complete(updated);
-                                    }
-
-                                    @Override
-                                    public void onCancelled(DatabaseError error) {
-                                        // Complete with exception if refresh query fails
-                                        future.completeExceptionally(error.toException());
-                                    }
-                                });
-                            }, Runnable::run);
-                            return;
-                        }
+                    public void onDataChange(DataSnapshot refreshed) {
+                        future.complete(refreshed.getValue(User.class));
                     }
 
                     @Override
                     public void onCancelled(DatabaseError error) {
-                        // Complete with exception if query fails
                         future.completeExceptionally(error.toException());
                     }
                 });
+                return;
+            }
+            // Apply partial updates asynchronously
+            var patchFuture = ref.updateChildrenAsync(safeUpdates);
+            patchFuture.addListener(() -> {
+                try {
+                    patchFuture.get();
+                } catch (Exception e) {
+                    // Fail fast when Firebase rejects the partial update.
+                    future.completeExceptionally(e);
+                    return;
+                }
+                // After successful update, re-read snapshot to return fresh data
+                ref.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot refreshed) {
+                        future.complete(refreshed.getValue(User.class));
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        future.completeExceptionally(error.toException());
+                    }
+                });
+            }, Runnable::run);
+        });
 
         return future;
     }
@@ -339,31 +590,38 @@ public class FirebaseService {
         var future = new CompletableFuture<Boolean>();
 
         // Query Firebase by username
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // If user does not exist, complete with false
-                        if (!snapshot.exists()) {
-                            future.complete(false);
-                            return;
-                        }
-
-                        // For each matching user (usually one)
-                        for (var child : snapshot.getChildren()) {
-                            // Remove the user node asynchronously
-                            child.getRef().removeValueAsync()
-                                    .addListener(() -> future.complete(true), Runnable::run);
-                            return;
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Complete with exception if query fails
-                        future.completeExceptionally(error.toException());
-                    }
-                });
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                future.completeExceptionally(ex);
+                return;
+            }
+            if (userSnap == null || !userSnap.exists()) {
+                future.complete(false);
+                return;
+            }
+            // Capture identifiers needed to clear the username index after deletion.
+            var userKey = userSnap.getKey();
+            var storedUsername = userSnap.child("userName").getValue(String.class);
+            // Remove the main user node first.
+            var deleteFuture = userSnap.getRef().removeValueAsync();
+            deleteFuture.addListener(() -> {
+                try {
+                    deleteFuture.get();
+                } catch (Exception e) {
+                    future.complete(false);
+                    return;
+                }
+                // Clear the username index if it still points at the deleted record.
+                clearUsernameIndexIfMatches(storedUsername, userKey)
+                        .whenComplete((ignored, clearEx) -> {
+                            if (clearEx != null) {
+                                future.completeExceptionally(clearEx);
+                                return;
+                            }
+                            future.complete(true);
+                        });
+            }, Runnable::run);
+        });
 
         return future;
     }
@@ -375,20 +633,13 @@ public class FirebaseService {
         var future = new CompletableFuture<Boolean>();
 
         // Query Firebase by username
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // Complete with true if user exists, otherwise false
-                        future.complete(snapshot.exists());
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Complete with exception if query fails
-                        future.completeExceptionally(error.toException());
-                    }
-                });
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                future.completeExceptionally(ex);
+                return;
+            }
+            future.complete(userSnap != null && userSnap.exists());
+        });
 
         return future;
     }
@@ -400,30 +651,18 @@ public class FirebaseService {
         var future = new CompletableFuture<Boolean>();
 
         // Query Firebase by username
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // If user not found, complete with false
-                        if (!snapshot.exists()) {
-                            future.complete(false);
-                            return;
-                        }
-                        // For each matching user (normally one)
-                        for (var child : snapshot.getChildren()) {
-                            // Update the BMI field asynchronously
-                            child.getRef().child("bmi").setValueAsync(bmi)
-                                    .addListener(() -> future.complete(true), Runnable::run);
-                            return;
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Complete with exception if query fails
-                        future.completeExceptionally(error.toException());
-                    }
-                });
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                future.completeExceptionally(ex);
+                return;
+            }
+            if (userSnap == null || !userSnap.exists()) {
+                future.complete(false);
+                return;
+            }
+            // Update only the BMI field on the located user node.
+            completeBooleanFromApiFuture(userSnap.getRef().child("bmi").setValueAsync(bmi), future);
+        });
 
         return future;
     }
@@ -435,103 +674,70 @@ public class FirebaseService {
     // - Uses a Firebase Realtime Database Transaction for atomic updates
     // --------------------------------------------------------------
     public CompletableFuture<Boolean> updateWater(String username, int waterAmount) {
-        // Future that will be completed once the async work finishes
         var future = new CompletableFuture<Boolean>();
 
-        // Optional guard: ignore invalid amounts (<= 0)
+        // Reject empty or negative drink entries before hitting Firebase.
         if (waterAmount <= 0) {
             future.complete(false);
             return future;
         }
 
-        // Find user by userName
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // If user is not found, finish with false
-                        if (!snapshot.exists()) {
-                            future.complete(false);
-                            return;
-                        }
+        // Load the target user so we can update today's water log.
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                System.err.println("ERROR updateWater -> " + ex.getMessage());
+                future.completeExceptionally(ex);
+                return;
+            }
+            if (userSnap == null || !userSnap.exists()) {
+                future.complete(false);
+                return;
+            }
 
-                        // We expect a single user, but loop just in case
-                        for (var userSnap : snapshot.getChildren()) {
-                            // Build today's date key: yyyy-MM-dd
-                            var dayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                                    .format(new Date());
+            // Build the per-day log key using the device locale date.
+            var dayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+            // Point to the list that stores today's cumulative total and individual drinks.
+            var todayRef = userSnap.getRef().child("waterLog").child(dayKey);
 
-                            // Reference to the "today" node (Users/<uid>/waterLog/<yyyy-MM-dd>)
-                            var todayRef = userSnap.getRef()
-                                    .child("waterLog")
-                                    .child(dayKey);
-
-                            // Run a transaction to update sum (index 0) and append the new cup atomically
-                            todayRef.runTransaction(new Transaction.Handler() {
-                                @Override
-                                public Transaction.Result doTransaction(MutableData currentData) {
-                                    // Try to read current value as a List<Long> (array-like structure)
-                                    List<Long> dayList = currentData.getValue(new GenericTypeIndicator<>() {
-                                    });
-
-                                    // If there's no list yet for today, create one
-                                    if (dayList == null) {
-                                        dayList = new ArrayList<>();
-                                    }
-
-                                    // Ensure index 0 exists (daily sum slot)
-                                    if (dayList.isEmpty()) {
-                                        dayList.add(0L); // index 0 = sum
-                                    } else //noinspection SequencedCollectionMethodCanBeUsed
-                                        if (dayList.get(0) == null) {
-                                        dayList.set(0, 0L);
-                                    }
-
-                                    // Update the daily sum (index 0)
-                                    @SuppressWarnings("SequencedCollectionMethodCanBeUsed") long currentSum = dayList.get(0);
-                                    var newSum = currentSum + waterAmount;
-                                    dayList.set(0, newSum);
-
-                                    // Append the new drink amount to the end of the list (index 1..N)
-                                    dayList.add((long) waterAmount);
-
-                                    // Write the updated list back to the transaction data
-                                    currentData.setValue(dayList);
-
-                                    // Commit the transaction
-                                    return Transaction.success(currentData);
-                                }
-
-                                @Override
-                                public void onComplete(DatabaseError error, boolean committed, DataSnapshot snapshot) {
-                                    if (error != null) {
-                                        future.complete(false);
-                                        return;
-                                    }
-
-                                    if (!committed) {
-                                        future.complete(false);
-                                        return;
-                                    }
-
-                                    future.complete(true);
-                                }
-                            });
-
-                            // We handled the first (and only) user; stop iterating
-                            break;
-                        }
+            // Use a transaction so concurrent drink updates do not overwrite each other.
+            todayRef.runTransaction(new Transaction.Handler() {
+                @Override
+                public Transaction.Result doTransaction(MutableData currentData) {
+                    // Read the existing daily list where slot 0 is the running total.
+                    List<Long> dayList = currentData.getValue(new GenericTypeIndicator<>() {
+                    });
+                    if (dayList == null) {
+                        // Start a new day with an empty list when no entry exists yet.
+                        dayList = new ArrayList<>();
+                    }
+                    if (dayList.isEmpty()) {
+                        // Initialize slot 0 to hold the total consumed today.
+                        dayList.add(0L);
+                    } else if (dayList.getFirst() == null) {
+                        // Repair malformed data where the total slot exists but is null.
+                        dayList.set(0, 0L);
                     }
 
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Read of the user failed
-                        System.err.println("ERROR updateWater -> onCancelled: " + error.getMessage());
-                        future.completeExceptionally(error.toException());
-                    }
-                });
+                    // Add the new drink both to the running total and the event list.
+                    @SuppressWarnings("DataFlowIssue") long currentSum = dayList.getFirst();
+                    dayList.set(0, currentSum + waterAmount);
+                    dayList.add((long) waterAmount);
+                    currentData.setValue(dayList);
+                    return Transaction.success(currentData);
+                }
 
-        // Return the future immediately; it will be completed asynchronously
+                @Override
+                public void onComplete(DatabaseError error, boolean committed, DataSnapshot snapshot) {
+                    if (error != null || !committed) {
+                        future.complete(false);
+                        return;
+                    }
+                    // Signal success only after Firebase commits the transaction.
+                    future.complete(true);
+                }
+            });
+        });
+
         return future;
     }
 
@@ -539,342 +745,203 @@ public class FirebaseService {
     // Returns a JSON object in the format {"todayWater": <ml>, "yesterdayWater": <ml>}
     // This format is required to match what the Android client expects.
     public CompletableFuture<JSONObject> getWater(String username) {
-        // Create a new future that will hold the resulting JSON object
         var future = new CompletableFuture<JSONObject>();
 
-        // Build date key for today
+        // Compute the date key for today's water log.
         var todayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-
-        // Build date key for yesterday (by subtracting one day from calendar)
+        // Compute the date key for yesterday's water log.
         var cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, -1);
         var yesterdayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
 
-        // Query Firebase for the given username
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // If user does not exist, complete future with null
-                        if (!snapshot.exists()) {
-                            future.complete(null);
-                            return;
-                        }
+        // Load the user so both water totals can be read from a single snapshot.
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                future.completeExceptionally(ex);
+                return;
+            }
+            if (userSnap == null || !userSnap.exists()) {
+                future.complete(null);
+                return;
+            }
 
-                        // Loop through matching user snapshots (usually one user)
-                        for (var userSnap : snapshot.getChildren()) {
-                            // Read daily totals for today and yesterday (slot "0")
-                            var todayAmt = userSnap.child("waterLog").child(todayKey).child("0").getValue(Long.class);
-                            var yesterdayAmt = userSnap.child("waterLog").child(yesterdayKey).child("0").getValue(Long.class);
+            // Read slot 0 from each day, which stores the total water for that date.
+            var todayAmt = userSnap.child("waterLog").child(todayKey).child("0").getValue(Long.class);
+            var yesterdayAmt = userSnap.child("waterLog").child(yesterdayKey).child("0").getValue(Long.class);
 
-                            var obj = new JSONObject();
-                            try {
-                                // IMPORTANT: keys must match what Android WaterActivity expects
-                                obj.put("todayWater", todayAmt == null ? 0 : todayAmt);
-                                obj.put("yesterdayWater", yesterdayAmt == null ? 0 : yesterdayAmt);
-                            } catch (Exception e) {
-                                // If exception occurs while building JSON, complete with null
-                                future.complete(null);
-                                return;
-                            }
-                            // Successfully built JSON object, complete the future
-                            future.complete(obj);
-                            return;
-                        }
-                    }
+            // Build the response object expected by the Android client.
+            var obj = new JSONObject();
+            try {
+                obj.put("todayWater", todayAmt == null ? 0 : todayAmt);
+                obj.put("yesterdayWater", yesterdayAmt == null ? 0 : yesterdayAmt);
+            } catch (Exception e) {
+                future.complete(null);
+                return;
+            }
+            future.complete(obj);
+        });
 
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // If Firebase query fails, complete future with exception
-                        future.completeExceptionally(error.toException());
-                    }
-                });
-
-        // Return the future immediately (will complete later asynchronously)
         return future;
     }
 
     // ------------------------------- GET WATER HISTORY MAP --------------------------
     // Returns {"2025-09-29": 4600, "2025-09-28": 0, ...} for last N days
     public CompletableFuture<Map<String, Long>> getWaterHistoryMap(String username, int days) {
-        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
-        // Future result container (async) that will eventually hold a Map<String, Long>
         var future = new CompletableFuture<Map<String, Long>>();
 
-        // Prepare a list of the last `days` date-keys (e.g., today, yesterday, etc.)
+        // Precompute the date keys to read, starting from today and moving backward.
         List<String> keys = new ArrayList<>();
         var sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         var cal = Calendar.getInstance();
-
-        // Generate date strings for the last `days` days
         for (var i = 0; i < days; i++) {
-            // Format the current calendar date into a key
-            var dateKey = sdf.format(cal.getTime());
-            keys.add(dateKey);                 // Add formatted date to the list
-            cal.add(Calendar.DAY_OF_YEAR, -1); // Move one day backwards
+            keys.add(sdf.format(cal.getTime()));
+            cal.add(Calendar.DAY_OF_YEAR, -1);
         }
-        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
 
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                future.completeExceptionally(ex);
+                return;
+            }
+            if (userSnap == null || !userSnap.exists()) {
+                future.complete(null);
+                return;
+            }
 
+            // Preserve insertion order so the response follows the generated key list.
+            Map<String, Long> result = new LinkedHashMap<>();
+            try {
+                for (var key : keys) {
+                    // Read the stored daily total from slot 0 for each requested day.
+                    var amt = userSnap.child("waterLog").child(key).child("0").getValue(Long.class);
+                    result.put(key, amt == null ? 0 : amt);
+                }
+                future.complete(result);
+            } catch (Exception e) {
+                //noinspection CallToPrintStackTrace
+                e.printStackTrace();
+                future.complete(null);
+            }
+        });
 
-        // ⚠️⤵️ Executed in a SEPARATE THREAD ⤵️⚠️
-        // Query Firebase for this username
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // If the user does not exist, complete future with null and stop
-                        if (!snapshot.exists()) {
-                            future.complete(null);
-                            return;
-                        }
-
-                        // Map to store the final water history (date -> daily sum)
-                        Map<String, Long> result = new LinkedHashMap<>();
-
-                        // Loop through user snapshots (should normally be one user)
-                        for (var userSnap : snapshot.getChildren()) {
-                            try {
-                                // Loop through all prepared date keys
-                                for (var key : keys) {
-                                    // Read slot "0" which contains the daily sum for this date
-                                    var amt = userSnap.child("waterLog")
-                                            .child(key)
-                                            .child("0")
-                                            .getValue(Long.class);
-
-
-                                    // Default to 0 if value is null
-                                    long safeAmt = (amt == null ? 0 : amt);
-
-                                    // Put the date and amount into the result map
-                                    result.put(key, safeAmt);
-                                }
-
-                                // Complete the future with the final map
-                                future.complete(result);
-                                return; // Important: exit after first userSnap
-                            } catch (Exception e) {
-                                //noinspection CallToPrintStackTrace
-                                e.printStackTrace();
-                                future.complete(null);
-                                return;
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // If query is cancelled or fails, complete future with the exception
-                        future.completeExceptionally(error.toException());
-                    }
-                });
-        // ⚠️⤴️ Executed in a SEPARATE THREAD ⤴️⚠️
-
-
-
-        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
         return future;
-        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
     }
 
     // ------------------------------- GET WEEKLY AVERAGES (4 WEEKS) --------------------------
     // Reads slot "0" (daily sum) for the last 28 days, groups by week (7-day chunks),
     // and returns a LinkedHashMap in this order: Week 1 (oldest) .. Week 4 (newest).
     public CompletableFuture<Map<String, Integer>> getWeeklyAverages(String username) {
-        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
-        // Create a new CompletableFuture instance that will hold a Map<String, Integer> result
         var future = new CompletableFuture<Map<String, Integer>>();
 
-        // Build the exact 28 date keys (today inclusive, going backwards)
+        // Build the last 28 day keys so they can be grouped into four 7-day buckets.
         var sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         var cal = Calendar.getInstance();
-
-        // Create a list where each element will hold a string representation of a specific date
-        // The list will contain 28 dates -> 28 days -> 4 weeks
         List<String> last28 = new ArrayList<>(28);
         for (var i = 0; i < 28; i++) {
-            // Add the current date (formatted as yyyy-MM-dd) to the list
             last28.add(sdf.format(cal.getTime()));
-            // Move the calendar one day backwards
             cal.add(Calendar.DAY_OF_YEAR, -1);
         }
-        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
 
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                future.completeExceptionally(ex);
+                return;
+            }
+            if (userSnap == null || !userSnap.exists()) {
+                future.complete(Collections.emptyMap());
+                return;
+            }
 
+            try {
+                // Track the total and populated-day count for each week window.
+                var sums = new long[4];
+                var counts = new int[4];
 
-        // ⚠️⤵️ Executed in a SEPARATE THREAD ⤵️⚠️
-        // This code runs in a completely separate thread, holding a reference to the FUTURE object
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        // If no user with this username exists, complete the future with an empty map
-                        if (!snapshot.exists()) {
-                            future.complete(Collections.emptyMap());
-                            return;
-                        }
-
-                        // Iterate over all matching users (should usually be just one)
-                        for (var userSnap : snapshot.getChildren()) {
-                            try {
-                                // Arrays for weekly sums and counts
-                                // sums[w] = total water amount for week w
-                                // counts[w] = number of days with logged water intake for week w
-                                var sums = new long[4];
-                                var counts = new int[4];
-
-                                // Loop over the 28 dates (last 4 weeks)
-                                for (var i = 0; i < 28; i++) {
-                                    var dateKey = last28.get(i);
-                                    // Determine which week this date belongs to (0=newest week, 3=oldest)
-                                    var weekIdx = i / 7;
-                                    // Read slot "0" which represents the daily total
-                                    var amt = userSnap.child("waterLog").child(dateKey).child("0").getValue(Long.class);
-                                    if (amt != null) {
-                                        sums[weekIdx] += amt;   // add amount to this week's sum
-                                        counts[weekIdx] += 1;   // increment count of active days in this week
-                                    }
-                                }
-
-                                // Build output as a LinkedHashMap to preserve order
-                                // Order: Week 1 (newest) -> Week 4 (oldest)
-                                Map<String, Integer> out = new LinkedHashMap<>();
-                                for (var w = 0; w < 4; w++) {
-                                    // Calculate average if count > 0, otherwise set to 0
-                                    var avg = (counts[w] > 0) ? (int) (sums[w] / counts[w]) : 0;
-                                    // out.put("Week " + (w + 1), avg);
-                                    out.put("Week " + (4 - w), avg);
-                                }
-
-                                // Complete the future with the calculated map
-                                future.complete(out);
-                                return;
-                            } catch (Exception e) {
-                                // If any exception occurs, complete future with empty map
-                                //noinspection CallToPrintStackTrace
-                                e.printStackTrace();
-                                future.complete(Collections.emptyMap());
-                                return;
-                            }
-                        }
+                for (var i = 0; i < 28; i++) {
+                    var dateKey = last28.get(i);
+                    // Days 0-6 map to bucket 0, 7-13 to bucket 1, and so on.
+                    var weekIdx = i / 7;
+                    var amt = userSnap.child("waterLog").child(dateKey).child("0").getValue(Long.class);
+                    if (amt != null) {
+                        sums[weekIdx] += amt;
+                        counts[weekIdx] += 1;
                     }
+                }
 
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // If Firebase query is cancelled or fails, complete future with exception
-                        future.completeExceptionally(error.toException());
-                    }
-                });
-                // ⚠️⤴️ Executed in a SEPARATE THREAD ⤴️⚠️
+                // Return the averages oldest-to-newest in a stable response order.
+                Map<String, Integer> out = new LinkedHashMap<>();
+                for (var w = 0; w < 4; w++) {
+                    var avg = (counts[w] > 0) ? (int) (sums[w] / counts[w]) : 0;
+                    out.put("Week " + (4 - w), avg);
+                }
+                future.complete(out);
+            } catch (Exception e) {
+                //noinspection CallToPrintStackTrace
+                e.printStackTrace();
+                future.complete(Collections.emptyMap());
+            }
+        });
 
-
-
-        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
-        // Returned back to the USERSCONTROLLER
-        // Inside the call to firebaseService.getWeeklyAverages(username)
         return future;
-        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
     }
 
     // get Daily drink goal
     public CompletableFuture<Integer> getGoalMl(String username) {
-        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
-        // Future that will hold the user's goal (or default if missing)
         var fut = new CompletableFuture<Integer>();
-        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
 
+        // Read the user so the stored goal can be returned or defaulted.
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                fut.completeExceptionally(ex);
+                return;
+            }
+            if (userSnap == null || !userSnap.exists()) {
+                fut.complete(3000);
+                return;
+            }
 
-        // ⚠️⤵️ Executed in a SEPARATE THREAD ⤵️⚠️
-        // Query Firebase for user by username
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snap) {
-                        // If user not found, return default value (3000)
-                        if (!snap.exists()) {
-                            fut.complete(3000);
-                            return;
-                        }
+            // Fall back to 3000 ml when the goal field is missing.
+            var goal = userSnap.child("goalMl").getValue(Integer.class);
+            fut.complete(goal != null ? goal : 3000);
+        });
 
-                        // For each user match (usually just one)
-                        for (var userSnap : snap.getChildren()) {
-                            // Read goalMl as Integer
-                            var goal = userSnap.child("goalMl").getValue(Integer.class);
-                            // Return value or default if null
-                            fut.complete(goal != null ? goal : 3000);
-                            return; // Only first match
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Complete exceptionally
-                        fut.completeExceptionally(error.toException());
-                    }
-                });
-        // ⚠️⤴️ Executed in a SEPARATE THREAD ⤴️⚠️
-
-
-
-        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
         return fut;
-        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
     }
 
     // update Daily drink goal
     public CompletableFuture<Boolean> updateGoalMl(String username, int goalMl) {
-        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
-        // Future that will hold true/false depending on update result
         var fut = new CompletableFuture<Boolean>();
 
-        // Validate input (example: between 500ml and 10000ml)
+        // Keep goal values within a reasonable application-defined range.
         if (goalMl < 500 || goalMl > 10000) {
             fut.complete(false);
             return fut;
         }
-        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
 
+        // Load the target user before writing the new goal.
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                fut.completeExceptionally(ex);
+                return;
+            }
+            if (userSnap == null || !userSnap.exists()) {
+                fut.complete(false);
+                return;
+            }
 
-        // ⚠️⤵️ Executed in a SEPARATE THREAD ⤵️⚠️
-        // Query Firebase for user by username
-        // Create a query in which child nodes are ordered by the values of the specified path.
-        // Add a listener for a single change in the data at this location.
-        // This listener will be triggered once with the value of the data at the location.
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snap) {
-                        // If no user found, complete with false
-                        if (!snap.exists()) {
-                            fut.complete(false);
-                            return;
-                        }
+            //noinspection unused
+            // Persist the updated daily water goal on the user record.
+            //noinspection unused
+            userSnap.getRef().child("goalMl").setValue(goalMl, (err, ref) -> {
+                if (err != null) {
+                    fut.complete(false);
+                } else {
+                    fut.complete(true);
+                }
+            });
+        });
 
-                        // For each match, update goalMl field
-                        for (var userSnap : snap.getChildren()) {
-                            //noinspection unused
-                            userSnap.getRef().child("goalMl").setValue(goalMl, (err, ref) -> {
-                                if (err != null) { fut.complete(false); }
-                                else { fut.complete(true); }
-                            });
-                            return; // Stop after first update
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Complete exceptionally if query cancelled
-                        fut.completeExceptionally(error.toException());
-                    }
-                });
-        // ⚠️⤴️ Executed in a SEPARATE THREAD ⤴️⚠️
-
-
-
-        // ⚠️⤵️ Executed in the CURRENT THREAD ⤵️⚠️
         return fut;
-        // ⚠️⤴️ Executed in the CURRENT THREAD ⤴️⚠️
     }
 
     // ------------------------------ BMI DISTRIBUTION (GLOBAL) --------------------------
@@ -936,36 +1003,23 @@ public class FirebaseService {
     // Returns the current calories field for a user.
     // If user not found or field missing → returns 0.
     public CompletableFuture<Integer> getCalories(String username) {
-        // Future that will hold the result (calories or default 0)
         var fut = new CompletableFuture<Integer>();
 
-        // Query Firebase by username
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snap) {
-                        // If user not found → return 0 (default)
-                        if (!snap.exists()) {
-                            fut.complete(0);
-                            return;
-                        }
+        // Read the user once and return the stored calories total if available.
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                fut.completeExceptionally(ex);
+                return;
+            }
+            if (userSnap == null || !userSnap.exists()) {
+                fut.complete(0);
+                return;
+            }
 
-                        // For each matching user (usually one)
-                        for (var userSnap : snap.getChildren()) {
-                            // Read "calories" as Integer
-                            var cals = userSnap.child("calories").getValue(Integer.class);
-                            // Default to 0 if null
-                            fut.complete(cals != null ? cals : 0);
-                            return; // Only first match
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Complete exceptionally
-                        fut.completeExceptionally(error.toException());
-                    }
-                });
+            // Default to 0 when no calories value has been saved yet.
+            var cals = userSnap.child("calories").getValue(Integer.class);
+            fut.complete(cals != null ? cals : 0);
+        });
 
         return fut;
     }
@@ -974,44 +1028,36 @@ public class FirebaseService {
     // Updates the "calories" field for a user.
     // Returns true if updated, false if user not found or invalid input.
     public CompletableFuture<Boolean> updateCalories(String username, int calories) {
-        // Future that will hold true/false depending on update result
         var fut = new CompletableFuture<Boolean>();
 
-        // Optional validation: we do not allow negative values
+        // Reject clearly invalid calorie totals before attempting a write.
         if (calories < 0 || calories > 20000) {
             fut.complete(false);
             return fut;
         }
 
-        // Query Firebase for user by username
-        usersRef.orderByChild("userName").equalTo(username)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snap) {
-                        // If no user found, complete with false
-                        if (!snap.exists()) {
-                            fut.complete(false);
-                            return;
-                        }
+        // Load the user first so we update the correct Firebase node.
+        findUserSnapshotByUsername(username).whenComplete((userSnap, ex) -> {
+            if (ex != null) {
+                fut.completeExceptionally(ex);
+                return;
+            }
+            if (userSnap == null || !userSnap.exists()) {
+                fut.complete(false);
+                return;
+            }
 
-                        // For each match, update "calories" field
-                        for (var userSnap : snap.getChildren()) {
-                            //noinspection unused
-                            userSnap.getRef().child("calories").setValue(calories, (err, ref) -> {
-                                if (err != null) { fut.complete(false); }
-                                else { fut.complete(true); }
-                            });
-
-                            return; // Stop after first update
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Complete exceptionally if query cancelled
-                        fut.completeExceptionally(error.toException());
-                    }
-                });
+            //noinspection unused
+            // Persist the new calories value on the user record.
+            //noinspection unused
+            userSnap.getRef().child("calories").setValue(calories, (err, ref) -> {
+                if (err != null) {
+                    fut.complete(false);
+                } else {
+                    fut.complete(true);
+                }
+            });
+        });
 
         return fut;
     }

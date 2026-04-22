@@ -272,6 +272,9 @@ public class TwentyTwentyFiveTest {
         // Define the main restaurant logic: manage tables + waiting clients + seating algorithm.
         //noinspection FieldMayBeFinal
         class Restaurant {
+            // Hold the head and tail of a table chain without using a generic array.
+            private record TableChain(Node<Table> head, Node<Table> tail) {}
+
             // Keep a FIFO queue of clients waiting to be seated.
             private Queue<Client> clients;
 
@@ -284,7 +287,7 @@ public class TwentyTwentyFiveTest {
             // Build a restaurant with a specific number of small/medium/large tables.
             public Restaurant(int small, int medium, int large) {
                 // Define a helper lambda that creates a linked list of tables of a given size.
-                Function<Integer, Node<Table>[]> createTbl = (size) -> {
+                Function<Integer, TableChain> createTbl = (size) -> {
                     // Point to the head of the new linked list (starts empty).
                     Node<Table> chain = null;
 
@@ -332,8 +335,7 @@ public class TwentyTwentyFiveTest {
                     }
 
                     // Return both head and tail so callers can chain lists efficiently.
-                    //noinspection unchecked
-                    return new Node[]{chain, tail};
+                    return new TableChain(chain, tail);
                 };
 
                 // Initialize the clients queue as an empty FIFO structure.
@@ -343,28 +345,28 @@ public class TwentyTwentyFiveTest {
                 var arrayOflistOfSmallTables = createTbl.apply(small);
 
                 // Extract the head of the small list.
-                var head1 = arrayOflistOfSmallTables[0];
+                var head1 = arrayOflistOfSmallTables.head();
 
                 // Extract the tail of the small list.
-                var tail1 = arrayOflistOfSmallTables[1];
+                var tail1 = arrayOflistOfSmallTables.tail();
 
                 // Build the medium-tables list and get its head and tail.
                 var arrayOflistOfMediumTables = createTbl.apply(medium);
 
                 // Extract the head of the medium list.
-                var head2 = arrayOflistOfMediumTables[0];
+                var head2 = arrayOflistOfMediumTables.head();
 
                 // Extract the tail of the medium list.
-                var tail2 = arrayOflistOfMediumTables[1];
+                var tail2 = arrayOflistOfMediumTables.tail();
 
                 // Build the large-tables list and get its head and tail.
                 var arrayOflistOfBigTables = createTbl.apply(large);
 
                 // Extract the head of the large list.
-                var head3 = arrayOflistOfBigTables[0];
+                var head3 = arrayOflistOfBigTables.head();
 
                 // Extract the tail of the large list.
-                var tail3 = arrayOflistOfBigTables[1];
+                var tail3 = arrayOflistOfBigTables.tail();
 
                 // Set the restaurant tables list to start at the small tables.
                 this.tables = head1;

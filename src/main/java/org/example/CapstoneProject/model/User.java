@@ -29,6 +29,9 @@ public class User {
     // This represents the total calories the user has eaten (for the current day / last update)
     private int calories;
 
+    // Daily hydration goal in milliliters.
+    private int goalMl = 3000;
+
     // Constructor with all fields
     public User(String userName, String password, int age, String fullName) {
         this.userName = userName;
@@ -36,12 +39,14 @@ public class User {
         this.age = age;
         this.fullName = fullName;
         this.calories = 0;
+        this.goalMl = 3000;
     }
 
     // Constructor with username and password only
     public User(String userName, String password) {
         this.userName = userName;
         this.password = password;
+        this.goalMl = 3000;
     }
 
     // ------------------------------
@@ -122,6 +127,16 @@ public class User {
         this.calories = calories;
     }
 
+    // Getter for goalMl
+    public int getGoalMl() {
+        return goalMl;
+    }
+
+    // Setter for goalMl
+    public void setGoalMl(int goalMl) {
+        this.goalMl = goalMl;
+    }
+
     // toString for debugging
     @Override
     public String toString() {
@@ -132,6 +147,7 @@ public class User {
                 ", fullName='" + fullName + '\'' +
                 ", bmi=" + bmi +
                 ", calories=" + calories +
+                ", goalMl=" + goalMl +
                 ", waterLog=" + (waterLog != null ? waterLog.toString() : "null") +
                 '}';
     }
