@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 // Import the TestInstance lifecycle enum
 import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 // Import the ParameterizedTest annotation for parameterized test methods
 // Import ValueSource to supply simple parameter values for parameterized tests
 // Import the SpringBootTest annotation to load the full Spring context
@@ -47,17 +49,19 @@ import java.util.*;
 @SpringBootTest(classes = Application.class)
 // Use a single test instance for the whole class so @BeforeAll and @AfterAll can be non-static
 @TestInstance(Lifecycle.PER_CLASS)
+@Execution(ExecutionMode.SAME_THREAD)
 public class FirebaseServiceIntegrationTest {
 
     // Inject the real FirebaseService bean from the Spring context
     @Autowired
     private FirebaseService firebaseService;
 
-    // Define a constant username for the main integration test user
-    private final String TEST_USERNAME_1 = "integrationUser1";
+    // Per-run usernames for shared baseline users.
+    private String TEST_USERNAME_1;
+    private String TEST_USERNAME_2;
 
-    // Define a second test username that will be used for comparison scenarios
-    private final String TEST_USERNAME_2 = "integrationUser2";
+    // Track all test-created users so cleanup still works even if a test fails midway.
+    private final Set<String> createdUsernames = Collections.synchronizedSet(new HashSet<>());
 
     // Store the main test user object for convenience
     @SuppressWarnings("FieldCanBeLocal")
@@ -69,9 +73,20 @@ public class FirebaseServiceIntegrationTest {
 
     // --------------------------- TEST LIFECYCLE ---------------------------
 
+    private void createUserOrFail(User user) throws Exception {
+        CompletableFuture<Boolean> future = firebaseService.createUser(user);
+        Boolean created = future.get(20, TimeUnit.SECONDS);
+        assertTrue(created, "Failed to create test user: " + user.getUserName());
+        createdUsernames.add(user.getUserName());
+    }
+
     // This method will run once before all tests in this class
     @BeforeAll
     void setUpTestUsers() throws Exception {
+        String runId = String.valueOf(System.currentTimeMillis());
+        TEST_USERNAME_1 = "integrationUser1_" + runId;
+        TEST_USERNAME_2 = "integrationUser2_" + runId;
+
         // Create a new User instance for the first test user
         testUser1 = new User();
         // Set the username for the first test user
@@ -86,37 +101,21 @@ public class FirebaseServiceIntegrationTest {
         // Set a password for the second test user
         testUser2.setPassword("pass2");
 
-        // Try to create the first test user in Firebase (if already exists, result may be false)
-        CompletableFuture<Boolean> create1 = firebaseService.createUser(testUser1);
-        // Wait for the asynchronous creation result with a timeout of 20 seconds
-        Boolean created1 = create1.get(20, TimeUnit.SECONDS);
-        // Print debug information about the creation result for user 1
-        System.out.println("DEBUG setUpTestUsers -> create user1 result = " + created1);
-
-        // Try to create the second test user in Firebase
-        CompletableFuture<Boolean> create2 = firebaseService.createUser(testUser2);
-        // Wait for the asynchronous creation result with a timeout of 20 seconds
-        Boolean created2 = create2.get(20, TimeUnit.SECONDS);
-        // Print debug information about the creation result for user 2
-        System.out.println("DEBUG setUpTestUsers -> create user2 result = " + created2);
+        createUserOrFail(testUser1);
+        createUserOrFail(testUser2);
     }
 
     // This method will run once after all tests in this class
     @AfterAll
-    void cleanUpTestUsers() throws Exception {
-        // Call deleteUser on the first test username
-        CompletableFuture<Boolean> delete1 = firebaseService.deleteUser(TEST_USERNAME_1);
-        // Wait for the asynchronous delete result with a timeout of 20 seconds
-        Boolean deleted1 = delete1.get(20, TimeUnit.SECONDS);
-        // Print debug information about the deletion result for user 1
-        System.out.println("DEBUG cleanUpTestUsers -> delete user1 result = " + deleted1);
-
-        // Call deleteUser on the second test username
-        CompletableFuture<Boolean> delete2 = firebaseService.deleteUser(TEST_USERNAME_2);
-        // Wait for the asynchronous delete result with a timeout of 20 seconds
-        Boolean deleted2 = delete2.get(20, TimeUnit.SECONDS);
-        // Print debug information about the deletion result for user 2
-        System.out.println("DEBUG cleanUpTestUsers -> delete user2 result = " + deleted2);
+    void cleanUpTestUsers() {
+        for (String username : new ArrayList<>(createdUsernames)) {
+            try {
+                firebaseService.deleteUser(username).get(20, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                System.out.println("WARN cleanup failed for username=" + username
+                        + " message=" + e.getMessage());
+            }
+        }
     }
 
     // --------------------------- SIGNUP / CREATE / DELETE ---------------------------
@@ -144,6 +143,7 @@ public class FirebaseServiceIntegrationTest {
         String firstResult = resultFuture.get(20, TimeUnit.SECONDS);
         // Assert that the first signup attempt completed with a success message
         assertEquals("User created successfully", firstResult);
+        createdUsernames.add(uniqueUsername);
 
         // Call signup again with the same username to check duplicate handling
         CompletableFuture<String> duplicateFuture = firebaseService.signup(signupUser);
@@ -176,6 +176,7 @@ public class FirebaseServiceIntegrationTest {
         Boolean created = createFuture.get(20, TimeUnit.SECONDS);
         // Assert that the user was created successfully
         assertTrue(created);
+        createdUsernames.add(tempUsername);
 
         // Call exists to check that the user now exists in Firebase
         CompletableFuture<Boolean> existsFuture = firebaseService.exists(tempUsername);
@@ -240,6 +241,7 @@ public class FirebaseServiceIntegrationTest {
         Boolean created = createFuture.get(20, TimeUnit.SECONDS);
         // Assert that the user was created successfully
         assertTrue(created);
+        createdUsernames.add(tempUsername);
 
         // Create a new User instance representing the updated state
         User updatedUser = new User();
@@ -512,6 +514,7 @@ public class FirebaseServiceIntegrationTest {
         Boolean created = createFuture.get(20, TimeUnit.SECONDS);
         // Assert that the user was created successfully
         assertTrue(created);
+        createdUsernames.add(username);
 
         // Call getGoalMl before any explicit update to read the default goal
         CompletableFuture<Integer> beforeFuture =
@@ -657,6 +660,7 @@ public class FirebaseServiceIntegrationTest {
         Boolean created = createFuture.get(20, TimeUnit.SECONDS);
         // Assert that the user was created successfully
         assertTrue(created);
+        createdUsernames.add(username);
 
         // Read the initial calories value for this user
         CompletableFuture<Integer> initialFuture =
@@ -775,6 +779,7 @@ public class FirebaseServiceIntegrationTest {
             Boolean created = createFuture.get(20, TimeUnit.SECONDS);
             // Assert that the user was created successfully (or at least not failed)
             assertTrue(created);
+            createdUsernames.add(bmiUsers[i]);
 
             // Update the BMI value for this user according to the array
             CompletableFuture<Boolean> bmiFuture =
