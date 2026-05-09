@@ -14,6 +14,7 @@ public class EXCTRY {
 
                 long sum = 0;
 
+                //noinspection ConstantValue
                 for (var j = 0; j < 5_000_000_000L; j++) {
                     sum += j;
                 }
