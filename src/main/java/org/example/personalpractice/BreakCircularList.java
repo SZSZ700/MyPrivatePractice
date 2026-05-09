@@ -23,6 +23,7 @@ public class BreakCircularList {
         // list: [start-[1]] -> [2] -> [3] -> [4] -> [5] -> [end-[6]] -> [1]
         // map: {{1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 1}}
         Function<Node<Integer>, Node<Integer>> findEnd = (listy) -> {
+            // pointer to the list head.
             this.chain = listy;
 
             // Empty listy: there is no tail.
@@ -55,9 +56,7 @@ public class BreakCircularList {
                 map.put(currentNode, nextNode);
 
                 // If nextNode is already a key, then pos is the node that closes the loop.
-                if (map.containsKey(nextNode)){
-                    return pos;
-                }
+                if (map.containsKey(nextNode)){ return pos; }
 
                 // Move forward.
                 pos = pos.getNext();
