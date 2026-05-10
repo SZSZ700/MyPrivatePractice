@@ -6,15 +6,16 @@ import java.util.function.Function;
 
 @SuppressWarnings("unused")
 public class BreakMapOfTreesOfCircularLists {
-    // internal map of trees of circular lists
+    // field: internal map of trees of circular lists
     private final HashMap<Integer,BinNode<Node<Integer>>> map;
 
-    // constructor
+    // constructor:
     public BreakMapOfTreesOfCircularLists(HashMap<Integer,BinNode<Node<Integer>>> mp) {
+        // assign the map to the field
         this.map = mp;
     }
 
-    // fix the map
+    // fix the map:
     public void fixMap() {
         // -- ✅ -- //
         // O(n) time | O(n) space
