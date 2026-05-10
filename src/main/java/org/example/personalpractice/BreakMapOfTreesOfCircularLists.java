@@ -10,15 +10,17 @@ public class BreakMapOfTreesOfCircularLists {
     private final HashMap<Integer,BinNode<Node<Integer>>> map;
 
     // constructor
-    public BreakMapOfTreesOfCircularLists(HashMap<Integer,BinNode<Node<Integer>>> MapOftreeOfCrclists) {
-        this.map = MapOftreeOfCrclists;
+    public BreakMapOfTreesOfCircularLists(HashMap<Integer,BinNode<Node<Integer>>> mp) {
+        this.map = mp;
     }
 
+    // fix the map
     public void fixMap() {
         // -- ✅ -- //
         // O(n) time | O(n) space
-        // Finds the node that should be treated as the tail.
-        // If the list has a loop, this returns the node whose next pointer starts the loop.
+        // function that finds the node that should be treated as the tail.
+        // If the list has a loop, this returns the node whose next pointer
+        // starts the loop.
         // list: [start-[1]] -> [2] -> [3] -> [4] -> [5] -> [end-[6]] -> [1]
         // map: {{1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 1}}
         Function<Node<Integer>, Node<Integer>> findEnd = (listy) -> {
@@ -65,7 +67,7 @@ public class BreakMapOfTreesOfCircularLists {
 
         // -- ✅ -- //
         // O(n) time | O(1) space
-        // Find the tail or the node that closes the loop
+        // function that find the tail or the node that closes the loop
         // and end the loop by making it point to null.
         Consumer<Node<Integer>> endLoop = (listy) -> {
             // Find the tail or the node that closes the loop.
@@ -76,6 +78,8 @@ public class BreakMapOfTreesOfCircularLists {
         // -- ✅ -- //
 
         // -- ✅ -- //
+        // function that iterates over the tree and call endLoop()
+        // for each list in the tree.
         // O(n)^2 time | O(n) space
         Consumer<BinNode<Node<Integer>>> endAllLoops = (rootOfTree) -> {
             // If the root is null, there is nothing to do.
@@ -112,6 +116,8 @@ public class BreakMapOfTreesOfCircularLists {
         // -- ✅ -- //
 
         // -- ✅ -- //
+        // function that iterate over the map and call endAllLoops()
+        // for each tree in the map.
         // O(n)^3 time | O(1) space
         Consumer<HashMap<Integer,BinNode<Node<Integer>>>> endAllLoopsInMap = (map) -> {
             // If the map is null, there is nothing to do.
@@ -134,6 +140,8 @@ public class BreakMapOfTreesOfCircularLists {
         // -- ✅ -- //
 
         // -- ✅ -- //
+        // call endAllLoopsInMap() to end the cercularity
+        // of all the lists in the trees that in the map.
         endAllLoopsInMap.accept(this.map);
         // -- ✅ -- //
     }
