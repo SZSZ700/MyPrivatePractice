@@ -11102,6 +11102,38 @@ public class Main {
                     // return the map
                     return map;
                 };
+
+                // leetcode
+                // 226. Invert Binary Tree
+                Consumer<BinNode<Integer>> invertTree = (root) -> {
+                    // check if the root is null
+                    if (root == null) return;
+
+                    // create a queue to iterate through the tree
+                    var queue = new LinkedList<BinNode<Integer>>();
+                    // add the root node to the queue
+                    queue.offer(root);
+
+                    // iterate through the queue
+                    while (!queue.isEmpty()) {
+                        // get the current node
+                        var current = queue.poll();
+                        // swap the left and right children of the current node
+                        // keep the left child of the current node
+                        var temp = current.getLeft();
+                        // set the left child of the current node
+                        // to be the right child of the current node
+                        current.setLeft(current.getRight());
+                        // set the right child of the current node
+                        // to be the left child of the current node
+                        current.setRight(temp);
+
+                        // if the current node has a left child, add it to the queue
+                        if (current.hasLeft()) { queue.offer(current.getLeft()); }
+                        // if the current node has a right child, add it to the queue
+                        if (current.hasRight()) { queue.offer(current.getRight()); }
+                    }
+                };
             });
 
             //The End
