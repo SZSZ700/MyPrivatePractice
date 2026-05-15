@@ -11057,6 +11057,53 @@ public class Main {
 
             });
 
+            q.offer(() -> {
+                Function<BinNode<Integer>, LinkedHashMap<Integer ,Queue<Integer>>> advbfs = (root) -> {
+                    if (root == null) throw new IllegalArgumentException("Root cannot be null");
+
+                    // create a queue to iterate through the tree
+                    var queue = new LinkedList<BinNode<Integer>>();
+                    // add the root node to the queue
+                    queue.offer(root);
+
+                    // create a map to store:
+                    // {key: level number,
+                    // value: queue of values of the nodes of each level of the tree}
+                    var map = new LinkedHashMap<Integer, Queue<Integer>>();
+                    // symbolize some level in the tree
+                    var level = 0;
+
+                    // iterate through the queue
+                    while (!queue.isEmpty()) {
+                        // get the current size of the queue
+                        var size = queue.size();
+                        // create a queue to store the values
+                        // of the nodes of the current level
+                        var internalQueue = new LinkedList<Integer>();
+
+                        // iteration over the current level of the tree
+                        for (var i = 0; i < size; i++) {
+                            // get the current node
+                            var current = queue.poll();
+                            // add the value of the current node to the queue
+                            internalQueue.offer(current.getValue());
+
+                            // if the current node has a left child, add it to the queue
+                            if (current.hasLeft()) { queue.offer(current.getLeft()); }
+                            // if the current node has a right child, add it to the queue
+                            if (current.hasRight()) { queue.offer(current.getRight()); }
+                        }
+
+                        // end of each level //
+                        // {level in the tree, queue of values in the current level}
+                        map.putLast(level++, internalQueue);
+                    }
+
+                    // return the map
+                    return map;
+                };
+            });
+
             //The End
             q.offer(() -> {
                 System.out.println("Java <--> JVM <--> ByteCode(mechine code) /or/ JNI(Bridge interface) <--> native code (c,c++) <--> Assembly(mechine code)? ");
