@@ -11056,8 +11056,9 @@ public class Main {
                 // - isSubStack: Sliding window search in lists → O(n * m).
 
             });
-
+            // advanced bfs, and regular dfs
             q.offer(() -> {
+                // function that returns map {{level, queue of vaslues at that level}, ...}
                 Function<BinNode<Integer>, LinkedHashMap<Integer ,Queue<Integer>>> advbfs = (root) -> {
                     if (root == null) throw new IllegalArgumentException("Root cannot be null");
 
@@ -11101,6 +11102,41 @@ public class Main {
 
                     // return the map
                     return map;
+                };
+
+                // regular dfs
+                Function<BinNode<Integer>, Integer> numOfPaths = (root) -> {
+                    // if the tree is empty
+                    if (root == null) { return 0; }
+
+                    // create a stack for DFS traversal
+                    var stk = new Stack<BinNode<Integer>>();
+
+                    // push the root node
+                    stk.push(root);
+
+                    // counter for root-to-leaf paths
+                    var paths = 0;
+
+                    // iterate through the stack
+                    while (stk.size() > 0) {
+                        // get the current node
+                        var current = stk.pop();
+
+                        // if the current node is a leaf
+                        if (current.getLeft() == null && current.getRight() == null) {
+                            // count the path
+                            paths++;
+                        }
+
+                        // push the right child first
+                        if (current.getRight() != null) { stk.push(current.getRight()); }
+
+                        // push the left child second
+                        if (current.getLeft() != null) { stk.push(current.getLeft()); }
+                    }
+
+                    return paths;
                 };
 
                 // leetcode
