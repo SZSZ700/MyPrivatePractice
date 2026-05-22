@@ -11171,9 +11171,11 @@ public class Main {
                     }
                 };
             });
+
+            // LeetCode Questions:
+            // 103. Binary Tree Zigzag Level Order Traversal
             // 199. Binary Tree Right Side View
             q.offer(() -> {
-
                 final class TreeNode {
                     // fields
                     private int val;
@@ -11205,6 +11207,10 @@ public class Main {
                 }
 
                 // 103. Binary Tree Zigzag Level Order Traversal
+                // function that return the zigzag level order traversal of
+                // its nodes' values.
+                // (i.e., from left to right,
+                // then right to left for the next level and alternate between).
                 Function<TreeNode, List<List<Integer>>> zigzagLevelOrder = (root) -> {
                     // if the root is null, return an empty list
                     if(root == null) return new ArrayList<>();
@@ -11215,7 +11221,8 @@ public class Main {
                     queue.offer(root);
 
                     // create a map to store:
-                    // {key: level number, value: deque of values of the nodes of the current level of the tree}
+                    // {key: level number,
+                    // value: deque of values of the nodes of the current level of the tree}
                     var map = new LinkedHashMap<Integer ,Deque<Integer>>();
                     // symbolize some level in the tree
                     var level = 0;
@@ -11275,7 +11282,9 @@ public class Main {
                     return res;
                 };
 
-                // function that returns a list of the values at the right side of the tree
+                // // 199. Binary Tree Right Side View
+                // function that returns a list of the values at the right side
+                // of the tree
                 Function<TreeNode, List<Integer>> rightSideView = (root) -> {
                     // if the tree is empty return an empty list
                     if (root == null) return new ArrayList<>();
