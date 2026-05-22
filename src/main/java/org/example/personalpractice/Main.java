@@ -11173,6 +11173,7 @@ public class Main {
             });
             // 199. Binary Tree Right Side View
             q.offer(() -> {
+
                 final class TreeNode {
                     // fields
                     private int val;
@@ -11203,6 +11204,77 @@ public class Main {
                     public void setRight(TreeNode right) { this.right = right; }
                 }
 
+                // 103. Binary Tree Zigzag Level Order Traversal
+                Function<TreeNode, List<List<Integer>>> zigzagLevelOrder = (root) -> {
+                    // if the root is null, return an empty list
+                    if(root == null) return new ArrayList<>();
+
+                    // create a queue to iterate through the tree
+                    var queue = new LinkedList<TreeNode>();
+                    // add the root node to the queue
+                    queue.offer(root);
+
+                    // create a map to store:
+                    // {key: level number, value: deque of values of the nodes of the current level of the tree}
+                    var map = new LinkedHashMap<Integer ,Deque<Integer>>();
+                    // symbolize some level in the tree
+                    var level = 0;
+
+                    // iterate through the queue
+                    while (!queue.isEmpty()) {
+                        // get the current size of the queue
+                        var size = queue.size();
+                        // create a deque to store the values
+                        var currentLevel = new ArrayDeque<Integer>();
+                        // iteration over the current level of the tree
+                        for (var i = 0; i < size; i++) {
+                            // get the current node
+                            var current = queue.poll();
+                            // add the value of the current node to the queue
+                            currentLevel.offer(current.getVal());
+                            // if the current node has a left child, add it to the queue
+                            if (current.getLeft() != null) { queue.offer(current.getLeft()); }
+                            // if the current node has a right child, add it to the queue
+                            if (current.getRight() != null) { queue.offer(current.getRight()); }
+                        }
+
+                        // end of each level //
+                        // {level in the tree, deque of values in the current level}
+                        map.putLast(level++, currentLevel);
+                    }
+
+                    // convert the map to a list of lists
+                    // create a list that will contains all the levels
+                    // if the level number is even, the values in the current level
+                    // will added to the list in regular order
+                    // if the level number is odd, the values in the current level
+                    // will added to the list in reverse order
+                    var res = new LinkedList<List<Integer>>();
+                    for (var entry : map.entrySet()) {
+                        // get the current level
+                        var currentLevel = entry.getKey();
+                        // get the current level deque
+                        var currentLevelDeque = entry.getValue();
+
+                        // if the current level is even
+                        if (currentLevel % 2 == 0) {
+                            // add the current level deque to the result list
+                            res.add(new ArrayList<>(currentLevelDeque));
+                        } else {
+                            // reverse the current level deque
+                            // and add it to the result list
+                            var reversed = new ArrayList<>(currentLevelDeque);
+                            // reverse the current level deque
+                            Collections.reverse(reversed);
+                            // add the reversed current level deque to the result list
+                            res.add(reversed);
+                        }
+                    }
+
+                    // return the result list
+                    return res;
+                };
+
                 // function that returns a list of the values at the right side of the tree
                 Function<TreeNode, List<Integer>> rightSideView = (root) -> {
                     // if the tree is empty return an empty list
@@ -11215,7 +11287,7 @@ public class Main {
 
                     // create a list to store all the deques that this loop will create
                     // each deque represents a level of the tree
-                    var listOfDeques = new LinkedList<Deque<Integer>>();
+                    var listOfDeques = new ArrayDeque<Deque<Integer>>();
 
                     // iterate through the queue
                     while (!queue.isEmpty()) {
@@ -11258,6 +11330,7 @@ public class Main {
                     return res;
                 };
             });
+
             //The End
             q.offer(() -> {
                 System.out.println("Java <--> JVM <--> ByteCode(mechine code) /or/ JNI(Bridge interface) <--> native code (c,c++) <--> Assembly(mechine code)? ");
