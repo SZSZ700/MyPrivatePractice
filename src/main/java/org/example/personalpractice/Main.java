@@ -11171,7 +11171,81 @@ public class Main {
                     }
                 };
             });
+            // 199. Binary Tree Right Side View
+            q.offer(() -> {
+                class TreeNode {
+                    // fields
+                    int val;
+                    TreeNode left;
+                    TreeNode right;
+                    // constructor 1
+                    TreeNode() {}
+                    // constructor 2
+                    TreeNode(int val) { this.val = val; }
 
+                    // constructor 3
+                    TreeNode(int val, TreeNode left, TreeNode right) {
+                        this.val = val;
+                        this.left = left;
+                        this.right = right;
+                    }
+                }
+
+                // function that returns a list of the values at the right side of the tree
+                Function<TreeNode, List<Integer>> rightSideView = (root) -> {
+                    // if the tree is empty return an empty list
+                    if (root == null) return new ArrayList<>();
+
+                    // create a queue to iterate through the tree
+                    var queue = new LinkedList<TreeNode>();
+                    // add the root node to the queue
+                    queue.offer(root);
+
+                    // create a list to store all the deques that this loop will create
+                    // each deque represents a level of the tree
+                    var listOfDeques = new LinkedList<Deque<Integer>>();
+
+                    // iterate through the queue
+                    while (!queue.isEmpty()) {
+                        // get the current size of the queue
+                        var size = queue.size();
+
+                        // create a deque to store the values
+                        // of the nodes of the current level
+                        var dq = new LinkedList<Integer>();
+
+                        // iteration over the current level of the tree
+                        for (var i = 0; i < size; i++) {
+                            // get the current node
+                            var current = queue.poll();
+                            // add the value of the current node to the deque
+                            dq.offer(current.val);
+
+                            // if the current node has a left child, add it to the deque
+                            if (current.left != null) { queue.offer(current.left); }
+                            // if the current node has a right child, add it to the deque
+                            if (current.right != null) { queue.offer(current.right); }
+                        }
+
+                        // add the deque to the list
+                        listOfDeques.add(dq);
+                    }
+
+                    // create a list to store the values of the nodes that shown
+                    // from the right side of the tree
+                    var res = new LinkedList<Integer>();
+
+                    // iterate through the list of deques
+                    // each deque represents a level of the tree
+                    for (var dq : listOfDeques) {
+                        // add the last value of the current deque to the list
+                        res.offer(dq.peekLast());
+                    }
+
+                    // return the list of values
+                    return res;
+                };
+            });
             //The End
             q.offer(() -> {
                 System.out.println("Java <--> JVM <--> ByteCode(mechine code) /or/ JNI(Bridge interface) <--> native code (c,c++) <--> Assembly(mechine code)? ");
