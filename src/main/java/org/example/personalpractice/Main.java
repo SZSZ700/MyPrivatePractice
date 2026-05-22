@@ -11282,6 +11282,49 @@ public class Main {
                     return res;
                 };
 
+                // 107. Binary Tree Level Order Traversal II
+                // function that return the levels order traversal of its nodes' values.'
+                // from bottom to top.
+                Function<TreeNode, List<List<Integer>>> levelOrderBottom = (root) -> {
+                    // if the root is null, return an empty list
+                    if (root == null) return new ArrayList<>();
+
+                    // create a queue to iterate through the tree
+                    var queue = new LinkedList<TreeNode>();
+                    // add the root node to the queue
+                    queue.offer(root);
+
+                    List<List<Integer>> finalDq = new LinkedList<List<Integer>>();
+
+                    // iterate through the queue
+                    while (!queue.isEmpty()) {
+                        // get the current size of the queue
+                        var size = queue.size();
+                        // create a deque to store the values
+                        // of the nodes of the current level of the tree
+                        var currentLevel = new LinkedList<Integer>();
+
+                        // iteration over the current level of the tree
+                        for (var i = 0; i < size; i++) {
+                            // get the current node
+                            var current = queue.poll();
+                            // add the value of the current node to the deque
+                            currentLevel.offer(current.getVal());
+                            // if the current node has a left child, add it to the queue
+                            if (current.getLeft() != null) { queue.offer(current.getLeft()); }
+                            // if the current node has a right child, add it to the queue
+                            if (current.getRight() != null) { queue.offer(current.getRight()); }
+                        }
+
+                        // end of each level //
+                        // add the current level deque to the final deque
+                        finalDq.addFirst(currentLevel);
+                    }
+
+                    // return the final deque
+                    return  finalDq;
+                };
+
                 // // 199. Binary Tree Right Side View
                 // function that returns a list of the values at the right side
                 // of the tree
