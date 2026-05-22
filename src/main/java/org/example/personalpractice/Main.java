@@ -11173,22 +11173,34 @@ public class Main {
             });
             // 199. Binary Tree Right Side View
             q.offer(() -> {
-                class TreeNode {
+                final class TreeNode {
                     // fields
-                    int val;
-                    TreeNode left;
-                    TreeNode right;
+                    private int val;
+                    private TreeNode left;
+                    private TreeNode right;
                     // constructor 1
                     TreeNode() {}
                     // constructor 2
                     TreeNode(int val) { this.val = val; }
-
                     // constructor 3
                     TreeNode(int val, TreeNode left, TreeNode right) {
                         this.val = val;
                         this.left = left;
                         this.right = right;
                     }
+
+                    // getter for the field val
+                    public int getVal() { return this.val; }
+                    // setter for the field val
+                    public void setVal(int val) { this.val = val; }
+                    // getter for the field left
+                    public TreeNode getLeft() { return left; }
+                    // setter for the field left
+                    public void setLeft(TreeNode left) { this.left = left; }
+                    // getter for the field right
+                    public TreeNode getRight() { return right; }
+                    // setter for the field right
+                    public void setRight(TreeNode right) { this.right = right; }
                 }
 
                 // function that returns a list of the values at the right side of the tree
@@ -11219,12 +11231,12 @@ public class Main {
                             // get the current node
                             var current = queue.poll();
                             // add the value of the current node to the deque
-                            dq.offer(current.val);
+                            dq.offer(current.getVal());
 
                             // if the current node has a left child, add it to the deque
-                            if (current.left != null) { queue.offer(current.left); }
+                            if (current.getLeft() != null) { queue.offer(current.getLeft()); }
                             // if the current node has a right child, add it to the deque
-                            if (current.right != null) { queue.offer(current.right); }
+                            if (current.getRight() != null) { queue.offer(current.getRight()); }
                         }
 
                         // add the deque to the list
