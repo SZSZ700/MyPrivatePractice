@@ -11294,7 +11294,7 @@ public class Main {
                     // add the root node to the queue
                     queue.offer(root);
 
-                    // create a list to store all the deques that this loop will create
+                    // create a deque of deques to store all the deques that this loop will create
                     // each deque represents a level of the tree
                     var listOfDeques = new ArrayDeque<Deque<Integer>>();
 
@@ -11328,10 +11328,10 @@ public class Main {
                     // from the right side of the tree
                     var res = new LinkedList<Integer>();
 
-                    // iterate through the list of deques
+                    // iterate through the deque of deques
                     // each deque represents a level of the tree
                     for (var dq : listOfDeques) {
-                        // add the last value of the current deque to the list
+                        // add the last value of the current deque to the final list
                         res.offer(dq.peekLast());
                     }
 
