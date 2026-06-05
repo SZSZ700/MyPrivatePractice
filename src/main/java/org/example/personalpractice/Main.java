@@ -11325,6 +11325,71 @@ public class Main {
                     return  finalDq;
                 };
 
+                // 117. populating next right pointers in each node
+                // function that populates each next pointer to point to its next right node.
+                // Definition for a Node.
+                class LeetNode {
+                    public int val;
+                    public LeetNode left;
+                    public LeetNode right;
+                    public LeetNode next;
+
+                    public LeetNode() {}
+
+                    public LeetNode(int _val) {
+                        val = _val;
+                    }
+
+                    public LeetNode(int _val, LeetNode _left, LeetNode _right, LeetNode _next) {
+                        val = _val;
+                        left = _left;
+                        right = _right;
+                        next = _next;
+                    }
+                };
+                Function<LeetNode, LeetNode> connect = (root) -> {
+                    // if the root is null, return null
+                    if (root == null) return root;
+                    // create a queue to iterate through the tree
+                    var qu = new LinkedList<LeetNode>();
+                    // add the root node to the queue
+                    qu.offer(root);
+
+                    // iterate through the queue
+                    while (!qu.isEmpty()) {
+                        // get the current size of the queue
+                        var size = qu.size();
+                        // create a arrayList to store the values
+                        var temp = new ArrayList<LeetNode>();
+
+                        // iteration over the current level of the tree
+                        for (var i = 0; i < size; i++) {
+                            // get the current node
+                            var currentLeetNode = qu.poll();
+                            // add the current node to the arrayList
+                            temp.addLast(currentLeetNode);
+                            // if the current node has a left child, add it to the queue
+                            if (currentLeetNode.left != null) qu.offer(currentLeetNode.left);
+                            // if the current node has a right child, add it to the queue
+                            if (currentLeetNode.right != null) qu.offer(currentLeetNode.right);
+                        }
+
+                        // end of each level //
+                        // iterate through the arrayList
+                        for (var i = 0; i < temp.size()-1; i++) {
+                            // get the current node from the arrayList
+                            var currentLeetNode = temp.get(i);
+                            // get the next node from the arrayList
+                            var nextLeetNode = temp.get(i+1);
+                            // set the next pointer of the current node to the next node
+                            currentLeetNode.next = nextLeetNode;
+                        }
+                    }
+
+                    // return the root node
+                    return root;
+                };
+
                 // // 199. Binary Tree Right Side View
                 // function that returns a list of the values at the right side
                 // of the tree
