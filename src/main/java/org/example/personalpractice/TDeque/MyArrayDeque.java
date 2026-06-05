@@ -225,21 +225,26 @@ public class MyArrayDeque<T> implements Cloneable, TDeque<T> {
     // O(n) ✅
     // Deletes an element from a real array index.
     private void deleteAt(int index) {
-        // Copy all elements after the removed element one step left.
-        for (var i = index; i != this.tail; i = (i + 1) & (this.elements.length - 1)) {
+        // Calculate the real index of the last active element.
+        var lastIndex = (this.tail - 1) & (this.elements.length - 1);
+
+        // Shift elements left only until the old last element.
+        for (var i = index; i != lastIndex; i = (i + 1) & (this.elements.length - 1)) {
             // Calculate the next circular index.
             var nextIndex = (i + 1) & (this.elements.length - 1);
 
-            // Move the next element into the current place.
+            // Move the next active element into the current place.
             this.elements[i] = this.elements[nextIndex];
         }
 
-        // Move tail one step backward.
-        this.tail = (this.tail - 1) & (this.elements.length - 1);
+        // Move tail to the old last element position.
+        this.tail = lastIndex;
 
-        this.elements[this.tail] = null; // Clear the old tail position.
+        // Clear the removed duplicate last slot.
+        this.elements[this.tail] = null;
 
-        this.size--; // Decrease the size.
+        // Decrease the size.
+        this.size--;
     }
 
     // O(n) ✅
