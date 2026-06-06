@@ -192,9 +192,9 @@ public class Graph<T> {
         // If the start vertex does not exist, return an empty list.
         if (!this.adjList.containsKey(start)) { return result; }
 
-        // This list stores all visited vertices.
+        // This set stores all visited vertices.
         var visited = new HashSet<>();
-        // Add the start vertex to the visited list.
+        // Add the start vertex to the visited set.
         visited.add(start);
 
         // This queue stores the vertices that still need to be processed.
