@@ -5,7 +5,6 @@ import java.util.HashMap;
 
 @SuppressWarnings("unused")
 public class Graph<T> {
-
     // This map stores each vertex and its list of neighbors.
     private HashMap<T, ArrayList<T>> adjList;
 
@@ -37,7 +36,6 @@ public class Graph<T> {
 
     // This method adds a new vertex to the graph.
     public void addVertex(T vertex) {
-
         // If the vertex does not exist, add it with an empty neighbors list.
         if (!this.adjList.containsKey(vertex)) {
             this.adjList.put(vertex, new ArrayList<>());
@@ -46,10 +44,8 @@ public class Graph<T> {
 
     // This method adds an edge between two vertices.
     public void addEdge(T v1, T v2) {
-
         // Make sure the first vertex exists in the graph.
         this.addVertex(v1);
-
         // Make sure the second vertex exists in the graph.
         this.addVertex(v2);
 
@@ -83,15 +79,11 @@ public class Graph<T> {
 
     // This method removes an edge between two vertices.
     public void removeEdge(T v1, T v2) {
-
         // If v1 exists, remove v2 from its neighbors list.
-        if (this.adjList.containsKey(v1)) {
-            this.adjList.get(v1).remove(v2);
-        }
+        if (this.adjList.containsKey(v1)) { this.adjList.get(v1).remove(v2); }
 
         // If the graph is undirected, also remove v1 from the neighbors list of v2.
         if (!this.directed) {
-
             // If v2 exists, remove v1 from its neighbors list.
             if (this.adjList.containsKey(v2)) {
                 this.adjList.get(v2).remove(v1);
@@ -101,12 +93,11 @@ public class Graph<T> {
 
     // This method removes a vertex from the graph.
     public void removeVertex(T vertex) {
-
         // If the vertex does not exist, stop the method.
         if (!this.adjList.containsKey(vertex)) { return; }
 
         // Create a list of all vertices in the graph.
-        ArrayList<T> keys = new ArrayList<>(this.adjList.keySet());
+        var keys = new ArrayList<>(this.adjList.keySet());
 
         // Go over all vertices in the graph.
         for (T current : keys) {
@@ -121,29 +112,23 @@ public class Graph<T> {
 
     // This method returns the neighbors of a given vertex.
     public ArrayList<T> getNeighbors(T vertex) {
-
         // If the vertex does not exist, return an empty list.
-        if (!this.adjList.containsKey(vertex)) {
-            return new ArrayList<>();
-        }
+        if (!this.adjList.containsKey(vertex)) { return new ArrayList<>(); }
 
         // Return the neighbors list of the given vertex.
         return this.adjList.get(vertex);
     }
 
     // This method returns the number of vertices in the graph.
-    public int getVertexCount() {
-        return this.adjList.size();
-    }
+    public int getVertexCount() { return this.adjList.size(); }
 
     // This method returns the number of edges in the graph.
     public int getEdgeCount() {
-
         // This variable counts all neighbor connections.
-        int count = 0;
+        var count = 0;
 
         // Create a list of all vertices in the graph.
-        ArrayList<T> keys = new ArrayList<>(this.adjList.keySet());
+        var keys = new ArrayList<>(this.adjList.keySet());
 
         // Go over all vertices.
         for (T current : keys) {
@@ -167,13 +152,11 @@ public class Graph<T> {
 
     // This method prints the graph.
     public void printGraph() {
-
         // Create a list of all vertices in the graph.
-        ArrayList<T> keys = new ArrayList<>(this.adjList.keySet());
+        var keys = new ArrayList<>(this.adjList.keySet());
 
         // Go over all vertices.
         for (T vertex : keys) {
-
             // Get the current vertex.
             // Print the vertex and its neighbors.
             System.out.println(vertex + " -> " + this.adjList.get(vertex));
