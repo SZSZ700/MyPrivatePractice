@@ -189,18 +189,18 @@ public class Graph<T> {
     // This method returns the BFS traversal as a list starting from a given vertex.
     public ArrayList<T> bfsList(T start) {
         // This list stores the BFS result.
-        ArrayList<T> result = new ArrayList<>();
+        var result = new ArrayList<T>();
 
         // If the start vertex does not exist, return an empty list.
         if (!this.adjList.containsKey(start)) { return result; }
 
         // This list stores all visited vertices.
-        ArrayList<T> visited = new ArrayList<>();
+        var visited = new ArrayList<>();
+        // Add the start vertex to the visited list.
+        visited.add(start);
 
         // This queue stores the vertices that still need to be processed.
         Queue<T> q = new LinkedList<>();
-        // Add the start vertex to the visited list.
-        visited.add(start);
         // Add the start vertex to the queue.
         q.offer(start);
 
