@@ -1,6 +1,8 @@
 package org.example.personalpractice.TGraph;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
 
 @SuppressWarnings("unused")
 public class Graph<T> {
@@ -160,5 +162,49 @@ public class Graph<T> {
             // Print the vertex and its neighbors.
             System.out.println(vertex + " -> " + this.adjList.get(vertex));
         }
+    }
+
+    // This method returns the BFS traversal as a list starting from a given vertex.
+    public ArrayList<T> bfsList(T start) {
+        // This list stores the BFS result.
+        ArrayList<T> result = new ArrayList<>();
+
+        // If the start vertex does not exist, return an empty list.
+        if (!this.adjList.containsKey(start)) { return result; }
+
+        // This list stores all visited vertices.
+        ArrayList<T> visited = new ArrayList<>();
+
+        // This queue stores the vertices that still need to be processed.
+        Queue<T> q = new LinkedList<>();
+        // Add the start vertex to the visited list.
+        visited.add(start);
+        // Add the start vertex to the queue.
+        q.offer(start);
+
+        // Continue while the queue is not empty.
+        while (!q.isEmpty()) {
+            // Take the first vertex from the queue.
+            T current = q.poll();
+
+            // Add the current vertex to the result list.
+            result.add(current);
+
+            // Get the neighbors list of the current vertex.
+            ArrayList<T> neighbors = this.adjList.get(current);
+
+            // Go over all neighbors of the current vertex.
+            for (T neighbor : neighbors) {
+                // Get the current neighbor.
+                // If the neighbor was not visited yet, add it to visited and to the queue.
+                if (!visited.contains(neighbor)) {
+                    visited.add(neighbor);
+                    q.offer(neighbor);
+                }
+            }
+        }
+
+        // Return the BFS result.
+        return result;
     }
 }
