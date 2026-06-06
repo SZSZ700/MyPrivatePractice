@@ -78,6 +78,28 @@ public class Graph<T> {
         return this.adjList.get(v1).contains(v2);
     }
 
+    // This method checks if there is any connection between two vertices in any direction.
+    public boolean hasConnection(T v1, T v2) {
+        // This variable checks the edge from v1 to v2.
+        boolean fromFirstToSecond = false;
+
+        // This variable checks the edge from v2 to v1.
+        boolean fromSecondToFirst = false;
+
+        // If v1 exists, check if v2 is inside the neighbors list of v1.
+        if (this.adjList.containsKey(v1)) {
+            fromFirstToSecond = this.adjList.get(v1).contains(v2);
+        }
+
+        // If v2 exists, check if v1 is inside the neighbors list of v2.
+        if (this.adjList.containsKey(v2)) {
+            fromSecondToFirst = this.adjList.get(v2).contains(v1);
+        }
+
+        // Return true if at least one direction exists.
+        return fromFirstToSecond || fromSecondToFirst;
+    }
+
     // This method removes an edge between two vertices.
     public void removeEdge(T v1, T v2) {
         // If v1 exists, remove v2 from its neighbors list.
