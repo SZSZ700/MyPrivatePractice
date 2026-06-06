@@ -1,8 +1,5 @@
 package org.example.personalpractice.TGraph;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 @SuppressWarnings("unused")
 public class Graph<T> {
@@ -195,12 +192,12 @@ public class Graph<T> {
         if (!this.adjList.containsKey(start)) { return result; }
 
         // This list stores all visited vertices.
-        var visited = new ArrayList<>();
+        var visited = new HashSet<>();
         // Add the start vertex to the visited list.
         visited.add(start);
 
         // This queue stores the vertices that still need to be processed.
-        Queue<T> q = new LinkedList<>();
+        var q = new LinkedList<T>();
         // Add the start vertex to the queue.
         q.offer(start);
 
@@ -213,7 +210,7 @@ public class Graph<T> {
             result.add(current);
 
             // Get the neighbors list of the current vertex.
-            ArrayList<T> neighbors = this.adjList.get(current);
+            var neighbors = this.adjList.get(current);
 
             // Go over all neighbors of the current vertex.
             for (T neighbor : neighbors) {
