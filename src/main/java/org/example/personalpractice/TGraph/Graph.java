@@ -25,9 +25,7 @@ public class Graph<T> {
     }
 
     // This method returns the adjacency list of the graph.
-    public HashMap<T, ArrayList<T>> getAdjList() {
-        return this.adjList;
-    }
+    public HashMap<T, ArrayList<T>> getAdjList() { return this.adjList; }
 
     // This method sets a new adjacency list for the graph.
     public void setAdjList(HashMap<T, ArrayList<T>> adjList) {
@@ -35,9 +33,7 @@ public class Graph<T> {
     }
 
     // This method returns true if the graph is directed.
-    public boolean getDirected() {
-        return this.directed;
-    }
+    public boolean getDirected() { return this.directed; }
 
     // This method adds a new vertex to the graph.
     public void addVertex(T vertex) {
@@ -64,7 +60,6 @@ public class Graph<T> {
 
         // If the graph is undirected, add v1 to the neighbors list of v2.
         if (!this.directed) {
-
             // Add v1 to the neighbors list of v2 if it is not already there.
             if (!this.adjList.get(v2).contains(v1)) {
                 this.adjList.get(v2).add(v1);
@@ -79,11 +74,8 @@ public class Graph<T> {
 
     // This method checks if an edge exists between two vertices.
     public boolean hasEdge(T v1, T v2) {
-
         // If the first vertex does not exist, the edge cannot exist.
-        if (!this.adjList.containsKey(v1)) {
-            return false;
-        }
+        if (!this.adjList.containsKey(v1)) { return false; }
 
         // Check if v2 is inside the neighbors list of v1.
         return this.adjList.get(v1).contains(v2);
@@ -111,16 +103,13 @@ public class Graph<T> {
     public void removeVertex(T vertex) {
 
         // If the vertex does not exist, stop the method.
-        if (!this.adjList.containsKey(vertex)) {
-            return;
-        }
+        if (!this.adjList.containsKey(vertex)) { return; }
 
         // Create a list of all vertices in the graph.
         ArrayList<T> keys = new ArrayList<>(this.adjList.keySet());
 
         // Go over all vertices in the graph.
         for (T current : keys) {
-
             // Get the current vertex.
             // Remove the given vertex from the neighbors list of the current vertex.
             this.adjList.get(current).remove(vertex);
@@ -158,30 +147,23 @@ public class Graph<T> {
 
         // Go over all vertices.
         for (T current : keys) {
-
             // Get the current vertex.
             // Add the number of neighbors of the current vertex.
-            count = count + this.adjList.get(current).size();
+            count += this.adjList.get(current).size();
         }
 
         // In a directed graph, each edge is counted once.
-        if (this.directed) {
-            return count;
-        }
+        if (this.directed) { return count; }
 
         // In an undirected graph, each edge is counted twice.
         return count / 2;
     }
 
     // This method checks if the graph is empty.
-    public boolean isEmpty() {
-        return this.adjList.isEmpty();
-    }
+    public boolean isEmpty() { return this.adjList.isEmpty(); }
 
     // This method removes all vertices and edges from the graph.
-    public void clear() {
-        this.adjList.clear();
-    }
+    public void clear() { this.adjList.clear(); }
 
     // This method prints the graph.
     public void printGraph() {
