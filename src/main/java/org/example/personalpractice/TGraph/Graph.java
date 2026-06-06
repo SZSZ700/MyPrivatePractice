@@ -183,7 +183,8 @@ public class Graph<T> {
         }
     }
 
-    // This method returns the BFS traversal as a list starting from a given vertex.
+    // This method returns the BFS traversal
+    // as a list starting from a given vertex.
     public ArrayList<T> bfsList(T start) {
         // This list stores the BFS result.
         var result = new ArrayList<T>();
