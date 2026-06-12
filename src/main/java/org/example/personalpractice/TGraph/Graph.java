@@ -1,4 +1,6 @@
 package org.example.personalpractice.TGraph;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.*;
 
 @SuppressWarnings("unused")
@@ -9,39 +11,65 @@ public class Graph<T> {
     // This variable tells us if the graph is directed or undirected.
     private final boolean directed;
 
-    // This constructor creates an undirected graph by default.
+    /** This constructor creates an undirected graph by default. **/
     public Graph() {
         this.adjList = new HashMap<>();
         this.directed = false;
     }
 
-    // This constructor creates a graph according to the given direction type.
+    /**
+     * This constructor creates a graph according to the given direction type.
+     * @param directed true if the graph is directed, false if it is undirected.
+     */
     public Graph(boolean directed) {
         this.adjList = new HashMap<>();
         this.directed = directed;
     }
 
-    // This method returns the adjacency list of the graph.
+    /** This method returns the adjacency list of the graph.
+     * The adjacency list is a map where:
+     * The key is the vertex
+     * and The value is the list of neighbors.
+     * @return the adjacency list of the graph.
+     */
     public HashMap<T, ArrayList<T>> getAdjList() { return this.adjList; }
 
-    // This method sets a new adjacency list for the graph.
-    public void setAdjList(HashMap<T, ArrayList<T>> adjList) {
+    /** This method sets a new adjacency list for the graph.
+     * The adjacency list is a map where:
+     * The key is the vertex
+     * and The value is the list of neighbors.
+     * @param adjList the new adjacency list to set.
+     */
+    public void setAdjList(@NotNull HashMap<T, ArrayList<T>> adjList) {
         this.adjList = adjList;
     }
 
-    // This method returns true if the graph is directed.
+    /** This method returns true if the graph is directed.
+     * Otherwise, it returns false.
+     * @return true if the graph is directed, false otherwise.
+     */
     public boolean getDirected() { return this.directed; }
 
-    // This method adds a new vertex to the graph.
-    public void addVertex(T vertex) {
+    /** This method adds a new vertex to the graph.
+     * If the vertex already exists, nothing happens.
+     * If the graph is undirected, the vertex will be added to both directions.
+     * If the graph is directed, the vertex will be added only to the first direction.
+     * @param vertex the vertex to add
+     */
+    public void addVertex(@NotNull T vertex) {
         // If the vertex does not exist, add it with an empty neighbors list.
         if (!this.adjList.containsKey(vertex)) {
             this.adjList.put(vertex, new ArrayList<>());
         }
     }
 
-    // This method adds an edge between two vertices.
-    public void addEdge(T v1, T v2) {
+    /** This method adds an edge between two vertices.
+     * If the graph is undirected, the edge will be added in both directions.
+     * If the graph is directed, the edge will be added only in the first direction.
+     * @param v1 1st vertex to add the edge to
+     * @param v2 2nd vertex to add the edge to
+     */
+    public void addEdge(@NotNull T v1, @NotNull T v2) {
         // Make sure the first vertex exists in the graph.
         this.addVertex(v1);
         // Make sure the second vertex exists in the graph.
@@ -61,13 +89,20 @@ public class Graph<T> {
         }
     }
 
-    // This method checks if a vertex exists in the graph.
-    public boolean hasVertex(T vertex) {
+    /** This method checks if a vertex exists in the graph.
+     * @param vertex the vertex to check for
+     * @return true if the vertex exists, false otherwise.
+     **/
+    public boolean hasVertex(@NotNull T vertex) {
         return this.adjList.containsKey(vertex);
     }
 
-    // This method checks if an edge exists between two vertices.
-    public boolean hasEdge(T v1, T v2) {
+    /** This method checks if an edge exists between two vertices.
+     * @param v1 1st vertex to check for the edge
+     * @param v2 2nd vertex to check for the edge
+     * @return true if the edge exists, false otherwise.
+     **/
+    public boolean hasEdge(@NotNull T v1, @NotNull T v2) {
         // If the first vertex does not exist, the edge cannot exist.
         if (!this.adjList.containsKey(v1)) { return false; }
 
@@ -75,13 +110,17 @@ public class Graph<T> {
         return this.adjList.get(v1).contains(v2);
     }
 
-    // This method checks if there is any connection between two vertices in any direction.
-    public boolean hasConnection(T v1, T v2) {
+    /** This method checks if there is any connection between two vertices in any direction.
+     * @param v1 1st vertex to check for connection
+     * @param v2 2nd vertex to check for connection
+     * @return true if there is a connection between the vertices, false otherwise.
+     */
+    public boolean hasConnection(@NotNull T v1, @NotNull T v2) {
         // This variable checks the edge from v1 to v2.
-        boolean fromFirstToSecond = false;
+        var fromFirstToSecond = false;
 
         // This variable checks the edge from v2 to v1.
-        boolean fromSecondToFirst = false;
+        var fromSecondToFirst = false;
 
         // If v1 exists, check if v2 is inside the neighbors list of v1.
         if (this.adjList.containsKey(v1)) {
@@ -97,8 +136,12 @@ public class Graph<T> {
         return fromFirstToSecond || fromSecondToFirst;
     }
 
-    // This method removes an edge between two vertices.
-    public void removeEdge(T v1, T v2) {
+    /** This method removes an edge between two vertices.
+     * If the graph is undirected, the edge will be removed in both directions.
+     * @param v1 1st vertex to remove the edge from
+     * @param v2 2nd vertex to remove the edge from
+     */
+    public void removeEdge(@NotNull T v1, @NotNull T v2) {
         // If v1 exists, remove v2 from its neighbors list.
         if (this.adjList.containsKey(v1)) { this.adjList.get(v1).remove(v2); }
 
@@ -111,8 +154,12 @@ public class Graph<T> {
         }
     }
 
-    // This method removes a vertex from the graph.
-    public void removeVertex(T vertex) {
+    /** This method removes a vertex from the graph.
+     * If the graph is undirected, the vertex will be removed in both directions.
+     * If the graph is directed, the vertex will be removed only from the first direction.
+     * @param vertex the vertex to remove
+     */
+    public void removeVertex(@NotNull T vertex) {
         // If the vertex does not exist, stop the method.
         if (!this.adjList.containsKey(vertex)) { return; }
 
@@ -130,19 +177,31 @@ public class Graph<T> {
         this.adjList.remove(vertex);
     }
 
-    // This method returns the neighbors of a given vertex.
-    public ArrayList<T> getNeighbors(T vertex) {
+    /** This method returns the neighbors of a given vertex.
+     * If the vertex does not exist, an empty list is returned.
+     * If the graph is directed, the neighbors are the vertices that can be reached from the given vertex.
+     * If the graph is undirected, the neighbors are the vertices that can be reached from the given vertex in both directions.
+     * @param vertex the vertex to get the neighbors of
+     * @return a list of the neighbors of the given vertex
+     */
+    public ArrayList<T> getCopyOfNeighbors(@NotNull T vertex) {
         // If the vertex does not exist, return an empty list.
         if (!this.adjList.containsKey(vertex)) { return new ArrayList<>(); }
 
         // Return the neighbors list of the given vertex.
-        return this.adjList.get(vertex);
+        return new ArrayList<>(this.adjList.get(vertex));
     }
 
-    // This method returns the number of vertices in the graph.
+    /** This method returns the number of vertices in the graph.
+     * @return the number of vertices in the graph
+     */
     public int getVertexCount() { return this.adjList.size(); }
 
-    // This method returns the number of edges in the graph.
+    /** This method returns the number of edges in the graph.
+     * If the graph is directed, each edge is counted once.
+     * If the graph is undirected, each edge is counted twice.
+     * @return the number of edges in the graph
+     */
     public int getEdgeCount() {
         // This variable counts all neighbor connections.
         var count = 0;
@@ -164,13 +223,21 @@ public class Graph<T> {
         return count / 2;
     }
 
-    // This method checks if the graph is empty.
+    /** This method checks if the graph is empty.
+     * If the graph is empty, it returns true.
+     * If the graph is not empty, it returns false.
+     * @return true if the graph is empty, false otherwise
+     */
     public boolean isEmpty() { return this.adjList.isEmpty(); }
 
-    // This method removes all vertices and edges from the graph.
+    /** This method removes all vertices and edges from the graph.
+     * It clears the adjacency list.
+     */
     public void clear() { this.adjList.clear(); }
 
-    // This method prints the graph.
+    /** This method prints the graph.
+     * It prints the vertices and their neighbors.
+     */
     public void printGraph() {
         // Create a list of all vertices in the graph.
         var keys = new ArrayList<>(this.adjList.keySet());
@@ -183,33 +250,29 @@ public class Graph<T> {
         }
     }
 
-    // This method returns the BFS traversal
-    // as a list starting from a given vertex.
-    public ArrayList<T> bfsList(T start) {
-        // This list stores the BFS result.
-        var result = new ArrayList<T>();
+    /** This method returns the BFS traversal as a list starting from a given vertex.
+     * If the start vertex does not exist, an empty list is returned.
+     * If the graph is directed, the traversal is from the start vertex to all reachable vertices.
+     * @param start the vertex to start the BFS from
+     * @return a list of the vertices in the BFS traversal, starting from the start vertex
+     */
+    public ArrayList<T> bfsList(@NotNull T start) {
+        var result = new ArrayList<T>(); // This list stores the BFS result.
 
         // If the start vertex does not exist, return an empty list.
         if (!this.adjList.containsKey(start)) { return result; }
 
-        // This set stores all visited vertices.
-        var visited = new HashSet<>();
-        // Add the start vertex to the visited set.
-        visited.add(start);
+        var visited = new HashSet<>(); // This set stores all visited vertices.
+        visited.add(start); // Add the start vertex to the visited set.
 
         // This queue stores the vertices that still need to be processed.
         var q = new LinkedList<T>();
-        // Add the start vertex to the queue.
-        q.offer(start);
+        q.offer(start); // Add the start vertex to the queue.
 
         // Continue while the queue is not empty.
         while (!q.isEmpty()) {
-            // Take the first vertex from the queue.
-            T current = q.poll();
-
-            // Add the current vertex to the result list.
-            result.add(current);
-
+            T current = q.poll(); // Take the first vertex from the queue.
+            result.add(current); // Add the current vertex to the result list.
             // Get the neighbors list of the current vertex.
             var neighbors = this.adjList.get(current);
 
