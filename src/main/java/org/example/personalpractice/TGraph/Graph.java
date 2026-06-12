@@ -274,13 +274,13 @@ public class Graph<T> {
         var visited = new HashSet<>(); // This set stores all visited vertices.
         visited.add(start); // Add the start vertex to the visited set.
 
-        // This queue stores the vertices that still need to be processed.
+        // This deque stores the vertices that still need to be processed.
         var dq = new ArrayDeque<T>();
-        dq.addLast(start); // Add the start vertex to the queue.
+        dq.addLast(start); // Add the start vertex to the deque.
 
-        // Continue while the queue is not empty.
+        // Continue while the deque is not empty.
         while (!dq.isEmpty()) {
-            T current = dq.removeFirst(); // Take the first vertex from the queue.
+            T current = dq.removeFirst(); // Take the first vertex from the deque.
             result.add(current); // Add the current vertex to the result list.
             // Get the neighbors list of the current vertex.
             var neighbors = this.adjList.get(current);
@@ -288,7 +288,7 @@ public class Graph<T> {
             // Go over all neighbors of the current vertex.
             for (T neighbor : neighbors) {
                 // Get the current neighbor.
-                // If the neighbor was not visited yet, add it to visited and to the queue.
+                // If the neighbor was not visited yet, add it to visited and to the deque.
                 if (!visited.contains(neighbor)) {
                     visited.add(neighbor);
                     dq.addLast(neighbor);
