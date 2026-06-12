@@ -1,14 +1,23 @@
 package org.example.personalpractice.TGraph;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.*;
 
+/** a generic graph class
+ * @param <T> the type of the vertices in the graph
+ **/
 @SuppressWarnings("unused")
 public class Graph<T> {
-    // This map stores each vertex and its list of neighbors.
+    /** This map stores each vertex and its list of neighbors.
+     * The key is the vertex
+     * and The value is the list of neighbors.
+     */
     private HashMap<T, ArrayList<T>> adjList;
 
-    // This variable tells us if the graph is directed or undirected.
+    /** This variable tells us if the graph is directed or undirected.
+     * If it is directed, the graph will only store edges in one direction.
+     * If it is undirected, the graph will store edges in both directions.
+     * The default value is false.
+     */
     private final boolean directed;
 
     /** This constructor creates an undirected graph by default. **/
@@ -177,7 +186,7 @@ public class Graph<T> {
         this.adjList.remove(vertex);
     }
 
-    /** This method returns the neighbors of a given vertex.
+    /** This method returns copy of the neighbors of a given vertex.
      * If the vertex does not exist, an empty list is returned.
      * If the graph is directed, the neighbors are the vertices that can be reached from the given vertex.
      * If the graph is undirected, the neighbors are the vertices that can be reached from the given vertex in both directions.
