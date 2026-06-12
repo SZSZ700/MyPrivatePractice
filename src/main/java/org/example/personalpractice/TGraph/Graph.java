@@ -275,12 +275,12 @@ public class Graph<T> {
         visited.add(start); // Add the start vertex to the visited set.
 
         // This queue stores the vertices that still need to be processed.
-        var q = new LinkedList<T>();
-        q.offer(start); // Add the start vertex to the queue.
+        var dq = new ArrayDeque<T>();
+        dq.addLast(start); // Add the start vertex to the queue.
 
         // Continue while the queue is not empty.
-        while (!q.isEmpty()) {
-            T current = q.poll(); // Take the first vertex from the queue.
+        while (!dq.isEmpty()) {
+            T current = dq.removeFirst(); // Take the first vertex from the queue.
             result.add(current); // Add the current vertex to the result list.
             // Get the neighbors list of the current vertex.
             var neighbors = this.adjList.get(current);
@@ -291,7 +291,7 @@ public class Graph<T> {
                 // If the neighbor was not visited yet, add it to visited and to the queue.
                 if (!visited.contains(neighbor)) {
                     visited.add(neighbor);
-                    q.offer(neighbor);
+                    dq.addLast(neighbor);
                 }
             }
         }
