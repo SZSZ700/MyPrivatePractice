@@ -264,7 +264,7 @@ public class Graph<T> {
      * If the graph is directed, the traversal is from the start vertex to all reachable vertices.
      * @param start the vertex to start the BFS from
      * @return a list of the vertices in the BFS traversal, starting from the start vertex
-     */
+     **/
     public ArrayList<T> bfsList(@NotNull T start) {
         var result = new ArrayList<T>(); // This list stores the BFS result.
 
@@ -296,7 +296,6 @@ public class Graph<T> {
             }
         }
 
-        // Return the BFS result.
-        return result;
+        return result; // Return the BFS result.
     }
 }
