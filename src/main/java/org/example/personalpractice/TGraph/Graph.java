@@ -387,4 +387,79 @@ public class Graph<T> {
 
         return false; // Return false if no path was found.
     }
+
+    /** This method returns the shortest path between two vertices.
+     * If one of the vertices does not exist, an empty list is returned.
+     * If there is no path between the vertices, an empty list is returned.
+     * If the graph is directed, the path is checked from the start vertex to the target vertex.
+     * @param start the vertex to start the search from
+     * @param target the vertex to search for
+     * @return a list of the vertices in the shortest path from start to target
+     **/
+    public ArrayList<T> shortestPath(@NotNull T start, @NotNull T target) {
+        var path = new ArrayList<T>(); // This list stores the shortest path.
+
+        // If one of the vertices does not exist, return an empty list.
+        if (!this.adjList.containsKey(start) || !this.adjList.containsKey(target)) {
+            return path;
+        }
+
+        // If both vertices are the same, return a path with only this vertex.
+        if (start.equals(target)) {
+            path.add(start);
+            return path;
+        }
+
+        var visited = new HashSet<T>(); // This set stores all visited vertices.
+        visited.add(start); // Add the start vertex to the visited set.
+
+        // This map stores from which vertex we reached each vertex.
+        var previous = new HashMap<T, T>();
+
+        // This deque stores the vertices that still need to be processed.
+        var dq = new ArrayDeque<T>();
+        dq.addLast(start); // Add the start vertex to the deque.
+
+        var found = false; // This variable tells us if the target was found.
+
+        // Continue while the deque is not empty and the target was not found yet.
+        while (!dq.isEmpty() && !found) {
+            T current = dq.removeFirst(); // Take the first vertex from the deque.
+
+            // Get the neighbors list of the current vertex.
+            var neighbors = this.adjList.get(current);
+
+            // Go over all neighbors of the current vertex.
+            for (T neighbor : neighbors) {
+                // If the neighbor was not visited yet, add it to visited and to the deque.
+                if (!visited.contains(neighbor)) {
+                    visited.add(neighbor);
+                    previous.put(neighbor, current);
+                    dq.addLast(neighbor);
+
+                    // If the target was found, stop the search.
+                    if (neighbor.equals(target)) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // If the target was not found, return an empty list.
+        if (!found) { return path; }
+
+        // Rebuild the path from target back to start.
+        T current = target;
+
+        while (current != null) {
+            path.add(current);
+            current = previous.get(current);
+        }
+
+        // Reverse the path because it was built from target to start.
+        Collections.reverse(path);
+
+        return path; // Return the shortest path.
+    }
 }
