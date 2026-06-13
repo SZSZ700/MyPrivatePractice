@@ -356,9 +356,7 @@ public class Graph<T> {
         }
 
         // If both vertices are the same, there is a path from the vertex to itself.
-        if (start.equals(target)) {
-            return true;
-        }
+        if (start.equals(target)) { return true; }
 
         var visited = new HashSet<T>(); // This set stores all visited vertices.
         visited.add(start); // Add the start vertex to the visited set.
@@ -377,9 +375,7 @@ public class Graph<T> {
             // Go over all neighbors of the current vertex.
             for (T neighbor : neighbors) {
                 // If the target was found, return true.
-                if (neighbor.equals(target)) {
-                    return true;
-                }
+                if (neighbor.equals(target)) { return true; }
 
                 // If the neighbor was not visited yet, add it to visited and to the deque.
                 if (!visited.contains(neighbor)) {
