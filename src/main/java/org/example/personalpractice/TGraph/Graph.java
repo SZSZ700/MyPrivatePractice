@@ -298,4 +298,97 @@ public class Graph<T> {
 
         return result; // Return the BFS result.
     }
+
+    /** This method returns the DFS traversal as a list starting from a given vertex.
+     * If the start vertex does not exist, an empty list is returned.
+     * If the graph is directed, the traversal is from the start vertex to all reachable vertices.
+     * @param start the vertex to start the DFS from
+     * @return a list of the vertices in the DFS traversal, starting from the start vertex
+     **/
+    public ArrayList<T> dfsList(@NotNull T start) {
+        var result = new ArrayList<T>(); // This list stores the DFS result.
+
+        // If the start vertex does not exist, return an empty list.
+        if (!this.adjList.containsKey(start)) { return result; }
+
+        var visited = new HashSet<T>(); // This set stores all visited vertices.
+
+        // This deque works like a stack for the vertices that still need to be processed.
+        var stack = new ArrayDeque<T>();
+        stack.addLast(start); // Add the start vertex to the stack.
+
+        // Continue while the stack is not empty.
+        while (!stack.isEmpty()) {
+            T current = stack.removeLast(); // Take the last vertex from the stack.
+
+            // If the current vertex was already visited, skip it.
+            if (visited.contains(current)) { continue; }
+
+            visited.add(current); // Add the current vertex to the visited set.
+            result.add(current); // Add the current vertex to the result list.
+
+            // Get the neighbors list of the current vertex.
+            var neighbors = this.adjList.get(current);
+
+            // Go over all neighbors of the current vertex.
+            for (T neighbor : neighbors) {
+                // If the neighbor was not visited yet, add it to the stack.
+                if (!visited.contains(neighbor)) {
+                    stack.addLast(neighbor);
+                }
+            }
+        }
+
+        return result; // Return the DFS result.
+    }
+
+    /** This method checks if there is a path between two vertices.
+     * If one of the vertices does not exist, false is returned.
+     * If the graph is directed, the path is checked from the start vertex to the target vertex.
+     * @param start the vertex to start the search from
+     * @param target the vertex to search for
+     * @return true if there is a path from start to target, false otherwise
+     **/
+    public boolean hasPath(@NotNull T start, @NotNull T target) {
+        // If one of the vertices does not exist, there cannot be a path.
+        if (!this.adjList.containsKey(start) || !this.adjList.containsKey(target)) {
+            return false;
+        }
+
+        // If both vertices are the same, there is a path from the vertex to itself.
+        if (start.equals(target)) {
+            return true;
+        }
+
+        var visited = new HashSet<T>(); // This set stores all visited vertices.
+        visited.add(start); // Add the start vertex to the visited set.
+
+        // This deque stores the vertices that still need to be processed.
+        var dq = new ArrayDeque<T>();
+        dq.addLast(start); // Add the start vertex to the deque.
+
+        // Continue while the deque is not empty.
+        while (!dq.isEmpty()) {
+            T current = dq.removeFirst(); // Take the first vertex from the deque.
+
+            // Get the neighbors list of the current vertex.
+            var neighbors = this.adjList.get(current);
+
+            // Go over all neighbors of the current vertex.
+            for (T neighbor : neighbors) {
+                // If the target was found, return true.
+                if (neighbor.equals(target)) {
+                    return true;
+                }
+
+                // If the neighbor was not visited yet, add it to visited and to the deque.
+                if (!visited.contains(neighbor)) {
+                    visited.add(neighbor);
+                    dq.addLast(neighbor);
+                }
+            }
+        }
+
+        return false; // Return false if no path was found.
+    }
 }
