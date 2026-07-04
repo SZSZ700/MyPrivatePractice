@@ -2,6 +2,7 @@ package org.example.personalpractice.TGraph;
 
 import org.jetbrains.annotations.NotNull;
 import java.util.*;
+import java.util.function.BiFunction;
 
 /** a generic graph class
  * @param <T> the type of the vertices in the graph
@@ -55,9 +56,7 @@ public class Graph<T> {
          * @return a string representation of the edge
          */
         @Override
-        public String toString() {
-            return this.from + " -> " + this.to;
-        }
+        public String toString() { return this.from + " -> " + this.to; }
     }
 
     /** This constructor creates an undirected graph by default. **/
@@ -202,14 +201,8 @@ public class Graph<T> {
         // If the vertex does not exist, stop the method.
         if (!this.adjList.containsKey(vertex)) { return; }
 
-        // Create a list of all vertices in the graph.
-        var keys = new ArrayList<>(this.adjList.keySet());
-
-        // Go over all vertices in the graph.
-        for (T current : keys) {
-            // Remove the given vertex from the neighbors set of the current vertex.
-            this.adjList.get(current).remove(vertex);
-        }
+        // Remove the given vertex from all neighbors sets.
+        this.adjList.values().forEach(neighbors -> neighbors.remove(vertex));
 
         // Remove the vertex itself from the graph.
         this.adjList.remove(vertex);
@@ -241,17 +234,15 @@ public class Graph<T> {
     public int getEdgeCount() {
         // If the graph is directed, count all outgoing edges.
         if (this.directed) {
-            var count = 0;
+            var c = 0;
 
             // Create a list of all vertices in the graph.
             var keys = new ArrayList<>(this.adjList.keySet());
 
             // Go over all vertices.
-            for (T current : keys) {
-                count += this.adjList.get(current).size();
-            }
+            for (T current : keys) { c += this.adjList.get(current).size(); }
 
-            return count;
+            return c; // return the counter of all outgoing edges.
         }
 
         // In an undirected graph, getAllEdges returns each edge only once.
@@ -272,13 +263,10 @@ public class Graph<T> {
      * It prints the vertices and their neighbors.
      */
     public void printGraph() {
-        // Create a list of all vertices in the graph.
-        var keys = new ArrayList<>(this.adjList.keySet());
-
-        // Go over all vertices.
-        for (T vertex : keys) {
+        // Go over all vertices and their neighbors in the graph.
+        for (var entry : this.adjList.entrySet()) {
             // Print the vertex and its neighbors.
-            System.out.println(vertex + " -> " + this.adjList.get(vertex));
+            System.out.println(entry.getKey() + " -> " + entry.getValue());
         }
     }
 
@@ -672,6 +660,7 @@ public class Graph<T> {
         return new ArrayList<>(this.adjList.keySet());
     }
 
+
     /** This method returns all edges in the graph.
      * If the graph is undirected, each edge is returned only once.
      * If the graph is directed, each edge is returned according to its direction.
@@ -680,25 +669,35 @@ public class Graph<T> {
     public ArrayList<Edge<T>> getAllEdges() {
         var edges = new ArrayList<Edge<T>>(); // This list stores all edges.
 
-        // Create a list of all vertices in the graph.
-        var keys = new ArrayList<>(this.adjList.keySet());
+        // This function checks if an edge list already contains a connection.
+        BiFunction<ArrayList<Edge<T>>, Edge<T>, Boolean> elistContainsConnection =
+                (list, newEdge) -> {
+                    // Go over all edges in the list.
+                    for (Edge<T> edge : list) {
+                        // If one of the directions exists, the connection already exists.
+                        return edge.getFrom().equals(newEdge.getFrom())
+                                && edge.getTo().equals(newEdge.getTo())
+                                || edge.getFrom().equals(newEdge.getTo())
+                                && edge.getTo().equals(newEdge.getFrom());
+                    }
 
-        // Go over all vertices in the graph.
-        for (T from : keys) {
-            // Get the neighbors set of the current vertex.
-            var neighbors = this.adjList.get(from);
+                    return false; // Return false if the connection was not found.
+                };
+
+        // Go over all vertices and their neighbors in the graph.
+        for (var entry : this.adjList.entrySet()) {
+            T from = entry.getKey(); // Get the current vertex.
+            var neighbors = entry.getValue(); // Get the neighbors set of the current vertex.
 
             // Go over all neighbors of the current vertex.
             for (T to : neighbors) {
-                // If the graph is directed, add the edge according to its direction.
-                if (this.directed) {
-                    edges.add(new Edge<>(from, to));
-                }
-                // If the graph is undirected, make sure the edge is not already added.
-                else {
-                    if (!this.edgeListContainsConnection(edges, from, to)) {
-                        edges.add(new Edge<>(from, to));
-                    }
+                // Create the current edge.
+                var currentEdge = new Edge<>(from, to);
+
+                // Add the edge if the graph is directed or if the undirected connection was not added yet.
+                if (this.directed
+                        || !elistContainsConnection.apply(edges, currentEdge)) {
+                    edges.add(currentEdge);
                 }
             }
         }
@@ -781,9 +780,7 @@ public class Graph<T> {
         connectedNeighbors.addAll(this.adjList.get(vertex));
 
         // If the graph is undirected, outgoing neighbors are enough.
-        if (!this.directed) {
-            return connectedNeighbors;
-        }
+        if (!this.directed) { return connectedNeighbors; }
 
         // Create a list of all vertices in the graph.
         var keys = new ArrayList<>(this.adjList.keySet());
@@ -797,33 +794,6 @@ public class Graph<T> {
         }
 
         return connectedNeighbors; // Return all connected neighbors.
-    }
-
-    /** This private helper method checks if an edge list already contains a connection.
-     * It is used to avoid duplicate edges in an undirected graph.
-     * @param edges the edge list to check
-     * @param from the first vertex of the connection
-     * @param to the second vertex of the connection
-     * @return true if the connection already exists, false otherwise
-     */
-    private boolean edgeListContainsConnection(@NotNull ArrayList<Edge<T>> edges,
-                                               @NotNull T from,
-                                               @NotNull T to) {
-        // Go over all edges in the list.
-        for (Edge<T> edge : edges) {
-            // Check the same direction.
-            var sameDirection = edge.getFrom().equals(from) && edge.getTo().equals(to);
-
-            // Check the opposite direction.
-            var oppositeDirection = edge.getFrom().equals(to) && edge.getTo().equals(from);
-
-            // If one of the directions exists, the connection already exists.
-            if (sameDirection || oppositeDirection) {
-                return true;
-            }
-        }
-
-        return false; // Return false if the connection was not found.
     }
 
     /** This private helper method checks if an undirected graph has a cycle.
