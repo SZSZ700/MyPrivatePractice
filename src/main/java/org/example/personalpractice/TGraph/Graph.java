@@ -873,9 +873,9 @@ public class Graph<T> {
         }
 
         // Go over all vertices and their neighbors in the graph.
-        for (var entry : this.adjList.entrySet()) {
-            T originalFrom = entry.getKey(); // Get the original from vertex.
-            var originalNeighbors = entry.getValue(); // Get the original neighbors set.
+        for (var originalentry : this.adjList.entrySet()) {
+            T originalFrom = originalentry.getKey(); // Get the original from vertex.
+            var originalNeighbors = originalentry.getValue(); // Get the original neighbors set.
 
             // Get the copied from vertex.
             T copiedFrom = copiedVertices.get(originalFrom);
