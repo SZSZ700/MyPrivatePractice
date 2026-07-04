@@ -2,7 +2,7 @@ package org.example.personalpractice.TGraph;
 
 import org.jetbrains.annotations.NotNull;
 import java.util.*;
-import java.util.function.BiFunction;
+import java.util.function.*;
 
 /** a generic graph class
  * @param <T> the type of the vertices in the graph
@@ -125,9 +125,7 @@ public class Graph<T> {
         this.adjList.get(v1).add(v2);
 
         // If the graph is undirected, add v1 to the neighbors set of v2.
-        if (!this.directed) {
-            this.adjList.get(v2).add(v1);
-        }
+        if (!this.directed) { this.adjList.get(v2).add(v1); }
     }
 
     /** This method checks if a vertex exists in the graph.
@@ -188,9 +186,7 @@ public class Graph<T> {
 
         // If the graph is undirected, also remove v1 from the neighbors set of v2.
         if (!this.directed) {
-            if (this.adjList.containsKey(v2)) {
-                this.adjList.get(v2).remove(v1);
-            }
+            if (this.adjList.containsKey(v2)) { this.adjList.get(v2).remove(v1); }
         }
     }
 
@@ -473,6 +469,39 @@ public class Graph<T> {
         return path; // Return the shortest path.
     }
 
+    /** This private helper method returns all connected neighbors of a given vertex.
+     * If the graph is undirected, it returns the regular neighbors.
+     * If the graph is directed, it returns outgoing and incoming neighbors.
+     * This method is used for weak connection checks.
+     * @param vertex the vertex to get all connected neighbors of
+     * @return a set of all connected neighbors of the given vertex
+     */
+    private LinkedHashSet<T> getAllConnectedNeighbors(@NotNull T vertex) {
+        var neighbors = new LinkedHashSet<T>(); // This set stores all connected neighbors.
+
+        // If the vertex does not exist, return an empty set.
+        if (!this.adjList.containsKey(vertex)) { return neighbors; }
+
+        // Add all outgoing neighbors.
+        neighbors.addAll(this.adjList.get(vertex));
+
+        // If the graph is undirected, outgoing neighbors are enough.
+        if (!this.directed) { return neighbors; }
+
+        // Create a list of all vertices in the graph.
+        var keys = new ArrayList<>(this.adjList.keySet());
+
+        // Add all incoming neighbors.
+        for (T current : keys) {
+            // If current has an edge to vertex, then current is connected to vertex.
+            if (this.adjList.get(current).contains(vertex)) {
+                neighbors.add(current);
+            }
+        }
+
+        return neighbors; // Return all connected neighbors.
+    }
+
     /** This method checks if the graph is connected.
      * If the graph is empty, true is returned.
      * If the graph is directed, the method checks weak connection between the vertices.
@@ -566,16 +595,115 @@ public class Graph<T> {
     /** This method checks if the graph has a cycle.
      * If the graph is directed, it checks for a directed cycle.
      * If the graph is undirected, it checks for an undirected cycle.
+     * This method does not use recursion.
      * @return true if the graph has a cycle, false otherwise
      */
     public boolean hasCycle() {
-        // If the graph is directed, use the directed cycle check.
+        // Create a list of all vertices in the graph.
+        var keys = new ArrayList<>(this.adjList.keySet());
+
+        // If the graph is directed, use Kahn's Algorithm.
         if (this.directed) {
-            return this.hasCycleDirected();
+            // This map stores the in degree of each vertex.
+            var inDegree = new HashMap<T, Integer>();
+
+            // Set the initial in degree of all vertices to 0.
+            for (T vertex : keys) {
+                inDegree.put(vertex, 0);
+            }
+
+            // Calculate the in degree of each vertex.
+            for (T from : keys) {
+                // Get the neighbors set of the current vertex.
+                var neighbors = this.adjList.get(from);
+
+                // Go over all neighbors of the current vertex.
+                for (T to : neighbors) {
+                    inDegree.put(to, inDegree.get(to) + 1);
+                }
+            }
+
+            // This deque stores all vertices with in degree 0.
+            var dq = new ArrayDeque<T>();
+
+            // Add all vertices with in degree 0 to the deque.
+            for (T vertex : keys) {
+                if (inDegree.get(vertex) == 0) {
+                    dq.addLast(vertex);
+                }
+            }
+
+            var removedCount = 0; // This variable counts how many vertices were removed.
+
+            // Continue while the deque is not empty.
+            while (!dq.isEmpty()) {
+                T current = dq.removeFirst(); // Take the first vertex from the deque.
+                removedCount++; // Count this vertex as removed.
+
+                // Get the neighbors set of the current vertex.
+                var neighbors = this.adjList.get(current);
+
+                // Go over all neighbors of the current vertex.
+                for (T neighbor : neighbors) {
+                    // Reduce the in degree of the neighbor by 1.
+                    inDegree.put(neighbor, inDegree.get(neighbor) - 1);
+
+                    // If the neighbor now has in degree 0, add it to the deque.
+                    if (inDegree.get(neighbor) == 0) {
+                        dq.addLast(neighbor);
+                    }
+                }
+            }
+
+            // If not all vertices were removed, there is a directed cycle.
+            return removedCount != this.adjList.size();
         }
 
-        // If the graph is undirected, use the undirected cycle check.
-        return this.hasCycleUndirected();
+        // If the graph is undirected, use BFS with parent tracking.
+        var visited = new HashSet<T>(); // This set stores all visited vertices.
+
+        // Go over all vertices in the graph.
+        for (T start : keys) {
+            // If the vertex was already visited, skip it.
+            if (visited.contains(start)) { continue; }
+
+            // This map stores the parent of each vertex in the BFS traversal.
+            var parent = new HashMap<T, T>();
+
+            // This deque stores the vertices that still need to be processed.
+            var dq = new ArrayDeque<T>();
+            dq.addLast(start); // Add the start vertex to the deque.
+            visited.add(start); // Add the start vertex to the visited set.
+            parent.put(start, null); // The start vertex has no parent.
+
+            // Continue while the deque is not empty.
+            while (!dq.isEmpty()) {
+                T current = dq.removeFirst(); // Take the first vertex from the deque.
+
+                // Get the neighbors set of the current vertex.
+                var neighbors = this.adjList.get(current);
+
+                // Go over all neighbors of the current vertex.
+                for (T neighbor : neighbors) {
+                    // If the neighbor was not visited yet, add it to visited and to the deque.
+                    if (!visited.contains(neighbor)) {
+                        visited.add(neighbor);
+                        parent.put(neighbor, current);
+                        dq.addLast(neighbor);
+                    }
+                    // If the neighbor is visited and it is not the parent, a cycle exists.
+                    else {
+                        T currentParent = parent.get(current);
+
+                        if (!neighbor.equals(currentParent)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false; // Return false if no cycle was found.
     }
 
     /** This method checks if the graph is a tree.
@@ -670,19 +798,18 @@ public class Graph<T> {
         var edges = new ArrayList<Edge<T>>(); // This list stores all edges.
 
         // This function checks if an edge list already contains a connection.
-        BiFunction<ArrayList<Edge<T>>, Edge<T>, Boolean> elistContainsConnection =
-                (list, newEdge) -> {
-                    // Go over all edges in the list.
-                    for (Edge<T> edge : list) {
-                        // If one of the directions exists, the connection already exists.
-                        return edge.getFrom().equals(newEdge.getFrom())
-                                && edge.getTo().equals(newEdge.getTo())
-                                || edge.getFrom().equals(newEdge.getTo())
-                                && edge.getTo().equals(newEdge.getFrom());
-                    }
-
-                    return false; // Return false if the connection was not found.
-                };
+        BiFunction<ArrayList<Edge<T>>, Edge<T>, Boolean> contains;
+        contains = (list, newEdge) -> {
+            // Go over all edges in the list.
+            for (var edge : list) {
+                // If one of the directions exists, the connection already exists.
+                return edge.getFrom().equals(newEdge.getFrom())
+                        && edge.getTo().equals(newEdge.getTo())
+                        || edge.getFrom().equals(newEdge.getTo())
+                        && edge.getTo().equals(newEdge.getFrom());
+            }
+            return false; // Return false if the connection was not found.
+        };
 
         // Go over all vertices and their neighbors in the graph.
         for (var entry : this.adjList.entrySet()) {
@@ -695,8 +822,7 @@ public class Graph<T> {
                 var currentEdge = new Edge<>(from, to);
 
                 // Add the edge if the graph is directed or if the undirected connection was not added yet.
-                if (this.directed
-                        || !elistContainsConnection.apply(edges, currentEdge)) {
+                if (this.directed || !contains.apply(edges, currentEdge)) {
                     edges.add(currentEdge);
                 }
             }
@@ -709,26 +835,62 @@ public class Graph<T> {
      * The copied graph has the same direction type, vertices and edges.
      * @return a copy of the graph
      */
-    public Graph<T> copy() {
-        var graphCopy = new Graph<T>(this.directed); // This variable stores the copied graph.
+    public Graph<T> shallowcopy() {
+        var graph = new Graph<T>(this.directed); // This variable stores the copied graph.
+        var map = new HashMap<T, LinkedHashSet<T>>();
 
-        // Create a list of all vertices in the graph.
-        var vertices = new ArrayList<>(this.adjList.keySet());
+        for (var entry : this.adjList.entrySet()) {
+            map.put(entry.getKey(), new LinkedHashSet<>(entry.getValue()));
+        }
+        graph.setAdjList(map);
 
-        // Add all vertices to the copied graph.
-        for (T vertex : vertices) {
-            graphCopy.addVertex(vertex);
+        return graph; // Return the copied graph.
+    }
+
+    /** This method returns a deep copy of the graph.
+     * The copied graph has the same direction type, copied vertices and copied edges.
+     * This method uses a copy function because the graph does not know how to copy T by itself.
+     * @param copyFunction a function that knows how to copy a vertex
+     * @return a deep copy of the graph
+     */
+    // var copiedGraph = graph.deepCopy(SOME_ENTRY_VALUE_CLASS::new);
+    public Graph<T> deepCopy(@NotNull Function<T, T> copyFunction) {
+        var graph = new Graph<T>(this.directed); // This variable stores the copied graph.
+
+        // This map stores the relation between each original vertex and its copied vertex.
+        var copiedVertices = new HashMap<T, T>();
+
+        // Go over all vertices in the graph.
+        for (T vertex : this.adjList.keySet()) {
+            // Create a copy of the current vertex.
+            T copiedVertex = copyFunction.apply(vertex);
+
+            // Store the relation between the original vertex and the copied vertex.
+            copiedVertices.put(vertex, copiedVertex);
+
+            // Add the copied vertex to the copied graph.
+            graph.addVertex(copiedVertex);
         }
 
-        // Get all edges in the graph.
-        var edges = this.getAllEdges();
+        // Go over all vertices and their neighbors in the graph.
+        for (var entry : this.adjList.entrySet()) {
+            T originalFrom = entry.getKey(); // Get the original from vertex.
+            var originalNeighbors = entry.getValue(); // Get the original neighbors set.
 
-        // Add all edges to the copied graph.
-        for (Edge<T> edge : edges) {
-            graphCopy.addEdge(edge.getFrom(), edge.getTo());
+            // Get the copied from vertex.
+            T copiedFrom = copiedVertices.get(originalFrom);
+
+            // Go over all original neighbors.
+            for (T originalTo : originalNeighbors) {
+                // Get the copied to vertex.
+                T copiedTo = copiedVertices.get(originalTo);
+
+                // Add an edge between the copied vertices.
+                graph.addEdge(copiedFrom, copiedTo);
+            }
         }
 
-        return graphCopy; // Return the copied graph.
+        return graph; // Return the deep copied graph.
     }
 
     /** This method returns a reversed copy of the graph.
@@ -739,7 +901,7 @@ public class Graph<T> {
     public Graph<T> reverse() {
         // If the graph is undirected, the reverse is the same as a copy.
         if (!this.directed) {
-            return this.copy();
+            return this.shallowcopy();
         }
 
         var reversedGraph = new Graph<T>(true); // This variable stores the reversed graph.
@@ -761,155 +923,5 @@ public class Graph<T> {
         }
 
         return reversedGraph; // Return the reversed graph.
-    }
-
-    /** This private helper method returns all connected neighbors of a given vertex.
-     * If the graph is undirected, it returns the regular neighbors.
-     * If the graph is directed, it returns outgoing and incoming neighbors.
-     * This method is used for weak connection checks.
-     * @param vertex the vertex to get all connected neighbors of
-     * @return a set of all connected neighbors of the given vertex
-     */
-    private LinkedHashSet<T> getAllConnectedNeighbors(@NotNull T vertex) {
-        var connectedNeighbors = new LinkedHashSet<T>(); // This set stores all connected neighbors.
-
-        // If the vertex does not exist, return an empty set.
-        if (!this.adjList.containsKey(vertex)) { return connectedNeighbors; }
-
-        // Add all outgoing neighbors.
-        connectedNeighbors.addAll(this.adjList.get(vertex));
-
-        // If the graph is undirected, outgoing neighbors are enough.
-        if (!this.directed) { return connectedNeighbors; }
-
-        // Create a list of all vertices in the graph.
-        var keys = new ArrayList<>(this.adjList.keySet());
-
-        // Add all incoming neighbors.
-        for (T current : keys) {
-            // If current has an edge to vertex, then current is connected to vertex.
-            if (this.adjList.get(current).contains(vertex)) {
-                connectedNeighbors.add(current);
-            }
-        }
-
-        return connectedNeighbors; // Return all connected neighbors.
-    }
-
-    /** This private helper method checks if an undirected graph has a cycle.
-     * This method uses BFS and does not use recursion.
-     * @return true if the undirected graph has a cycle, false otherwise
-     */
-    private boolean hasCycleUndirected() {
-        var visited = new HashSet<T>(); // This set stores all visited vertices.
-
-        // Create a list of all vertices in the graph.
-        var keys = new ArrayList<>(this.adjList.keySet());
-
-        // Go over all vertices in the graph.
-        for (T start : keys) {
-            // If the vertex was already visited, skip it.
-            if (visited.contains(start)) { continue; }
-
-            // This map stores the parent of each vertex in the BFS traversal.
-            var parent = new HashMap<T, T>();
-
-            // This deque stores the vertices that still need to be processed.
-            var dq = new ArrayDeque<T>();
-            dq.addLast(start); // Add the start vertex to the deque.
-            visited.add(start); // Add the start vertex to the visited set.
-            parent.put(start, null); // The start vertex has no parent.
-
-            // Continue while the deque is not empty.
-            while (!dq.isEmpty()) {
-                T current = dq.removeFirst(); // Take the first vertex from the deque.
-
-                // Get the neighbors set of the current vertex.
-                var neighbors = this.adjList.get(current);
-
-                // Go over all neighbors of the current vertex.
-                for (T neighbor : neighbors) {
-                    // If the neighbor was not visited yet, add it to visited and to the deque.
-                    if (!visited.contains(neighbor)) {
-                        visited.add(neighbor);
-                        parent.put(neighbor, current);
-                        dq.addLast(neighbor);
-                    }
-                    // If the neighbor is visited and it is not the parent, a cycle exists.
-                    else {
-                        T currentParent = parent.get(current);
-
-                        if (!neighbor.equals(currentParent)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-
-        return false; // Return false if no cycle was found.
-    }
-
-    /** This private helper method checks if a directed graph has a cycle.
-     * This method uses Kahn's Algorithm and does not use recursion.
-     * @return true if the directed graph has a cycle, false otherwise
-     */
-    private boolean hasCycleDirected() {
-        // This map stores the in degree of each vertex.
-        var inDegree = new HashMap<T, Integer>();
-
-        // Create a list of all vertices in the graph.
-        var keys = new ArrayList<>(this.adjList.keySet());
-
-        // Set the initial in degree of all vertices to 0.
-        for (T vertex : keys) {
-            inDegree.put(vertex, 0);
-        }
-
-        // Calculate the in degree of each vertex.
-        for (T from : keys) {
-            // Get the neighbors set of the current vertex.
-            var neighbors = this.adjList.get(from);
-
-            // Go over all neighbors of the current vertex.
-            for (T to : neighbors) {
-                inDegree.put(to, inDegree.get(to) + 1);
-            }
-        }
-
-        // This deque stores all vertices with in degree 0.
-        var dq = new ArrayDeque<T>();
-
-        // Add all vertices with in degree 0 to the deque.
-        for (T vertex : keys) {
-            if (inDegree.get(vertex) == 0) {
-                dq.addLast(vertex);
-            }
-        }
-
-        var removedCount = 0; // This variable counts how many vertices were removed.
-
-        // Continue while the deque is not empty.
-        while (!dq.isEmpty()) {
-            T current = dq.removeFirst(); // Take the first vertex from the deque.
-            removedCount++; // Count this vertex as removed.
-
-            // Get the neighbors set of the current vertex.
-            var neighbors = this.adjList.get(current);
-
-            // Go over all neighbors of the current vertex.
-            for (T neighbor : neighbors) {
-                // Reduce the in degree of the neighbor by 1.
-                inDegree.put(neighbor, inDegree.get(neighbor) - 1);
-
-                // If the neighbor now has in degree 0, add it to the deque.
-                if (inDegree.get(neighbor) == 0) {
-                    dq.addLast(neighbor);
-                }
-            }
-        }
-
-        // If not all vertices were removed, there is a cycle.
-        return removedCount != this.adjList.size();
     }
 }
