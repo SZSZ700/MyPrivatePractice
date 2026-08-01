@@ -1,16 +1,15 @@
-
 plugins {
     alias(libs.plugins.android.application)
 }
 
 android {
     namespace = "com.example.myfinaltopapplication"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.example.myfinaltopapplication"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -20,12 +19,14 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -41,36 +42,23 @@ android {
 }
 
 dependencies {
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    // Application dependencies
+    implementation(libs.mpandroidchart)
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.firebase.crashlytics.buildtools)
-    implementation(libs.androidx.junit)
+    implementation(libs.okhttp)
 
-    // ============================
-    // OkHttp + MockWebServer 4.12.0
-    // ============================
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    testImplementation("com.squareup.okhttp3:okhttp:4.12.0")
-    androidTestImplementation("com.squareup.okhttp3:okhttp:4.12.0")
-
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-
-    // -------- Unit tests (JVM) --------
+    // JVM unit tests
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.mockito.core)
 
-    // Robolectric + Mockito
-    testImplementation("org.robolectric:robolectric:4.13")
-    testImplementation("org.mockito:mockito-core:5.2.0")
-    testImplementation("org.mockito:mockito-inline:5.2.0")
-    testImplementation("junit:junit:4.13.2")
-
-    // -------- Android instrumented tests --------
-    androidTestImplementation(libs.ext.junit)
+    // Android instrumented tests
+    androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.espresso.core)
-    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation(libs.androidx.runner)
+    androidTestImplementation(libs.mockwebserver)
 }
-
