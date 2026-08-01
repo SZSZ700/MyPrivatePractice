@@ -1,334 +1,257 @@
-# 🌐 Hi-Bari Spring Boot Server
-
-## 📌 Overview
-
-This directory contains the backend server for the Hi-Bari health and water tracking system.
-
-The server exposes a REST API used by the Android application, handles business logic and validation, and communicates securely with Firebase Realtime Database through the Firebase Admin SDK.
-
-## 🧠 Server Responsibilities
-
-The Spring Boot server is responsible for:
-
-- User registration and login
-- User data management
-- BMI data updates
-- Daily water goal management
-- Water intake updates
-- Water history retrieval
-- Request validation
-- Firebase communication
-- Transaction-safe database updates
-- REST API response handling
-
-## 🗂 Project Structure
-
+📱 Hi-Bari Android Application
+📌 Overview
+This directory contains the Android client of the Hi-Bari health and water tracking system.
+The application allows users to register, log in, calculate BMI, define a daily water goal, track water consumption, and view weekly water statistics.
+The Android client communicates with the Spring Boot backend through REST API requests.
+🎥 Application Demo
+![Watch the Hi-Bari application demo](https://img.youtube.com/vi/3k6u2FfhNGw/hqdefault.jpg)
+Click the image above to watch a short demonstration of the application.
+🧠 Application Architecture
 ```text
-Spring Server/
-├── README.md
-├── pom.xml
-├── .gitignore
-│
-└── src/
-    ├── main/
-    │   ├── java/
-    │   │   └── org/example/CapstoneProject/
-    │   │       ├── Application.java
-    │   │       ├── EnvConfiguration/
-    │   │       │   └── EnvConfig.java
-    │   │       ├── model/
-    │   │       │   └── User.java
-    │   │       ├── service/
-    │   │       │   └── FirebaseService.java
-    │   │       └── web/
-    │   │           └── UsersController.java
-    │   │
-    │   └── resources/
-    │
-    └── test/
-        └── java/
-            └── CapstoneTests/
-                ├── FirebaseServiceIntegrationTest.java
-                └── UsersControllerIntegrationTest.java
-```
-
-## 🧩 Main Components
-
-### `Application.java`
-
-The main Spring Boot application class used to start the server.
-
-### `UsersController.java`
-
-Defines the REST API endpoints used by the Android application.
-
-The controller receives HTTP requests, validates the input, calls the service layer, and returns the appropriate HTTP response.
-
-### `FirebaseService.java`
-
-Handles communication with Firebase Realtime Database.
-
-Main responsibilities include:
-
-- Creating users
-- Retrieving users
-- Updating user information
-- Managing daily water logs
-- Updating water consumption
-- Handling asynchronous Firebase operations
-- Performing transaction-safe updates
-
-### `User.java`
-
-Represents the user data model used by the backend and Firebase.
-
-### `EnvConfig.java`
-
-Loads environment configuration required by the server.
-
-Sensitive values are not stored in the repository.
-
-## 🧠 Architecture
-
-```text
-Android Application
+Android Activities
         ↓
-HTTP REST Request
+RestClient
         ↓
-UsersController
+OkHttp HTTP Requests
         ↓
-FirebaseService
+Spring Boot REST API
         ↓
 Firebase Realtime Database
-        ↓
-HTTP Response
-        ↓
-Android Application
 ```
-
-The controller layer handles HTTP communication.
-
-The service layer contains the Firebase operations and backend logic.
-
-Firebase Realtime Database stores user and water tracking data.
-
-## 🔄 Water Update Flow
-
-When the Android application sends a request to add water:
-
-1. The request reaches `UsersController`.
-2. The request data is validated.
-3. The controller calls `FirebaseService`.
-4. The service locates the user's daily water log.
-5. The new drink amount is added.
-6. The total daily amount is updated.
-7. Firebase stores the updated list.
-8. The server returns the result to the Android application.
-
+The Android application is responsible for:
+Displaying the user interface
+Collecting user input
+Managing local session data
+Sending HTTP requests to the backend
+Processing server responses
+Displaying water tracking and BMI information
+🗂 Project Structure
 ```text
+Hai-Bari android application/
+├── README.md
+├── build.gradle.kts
+├── settings.gradle.kts
+├── gradle.properties
+├── gradlew
+├── gradlew.bat
+├── gradle/
+│   ├── libs.versions.toml
+│   └── wrapper/
+│
+└── app/
+    ├── build.gradle.kts
+    ├── proguard-rules.pro
+    │
+    └── src/
+        ├── main/
+        │   ├── AndroidManifest.xml
+        │   ├── java/
+        │   │   └── com/example/myfinaltopapplication/
+        │   └── res/
+        │       ├── drawable/
+        │       ├── layout/
+        │       ├── mipmap-*/
+        │       ├── values/
+        │       └── xml/
+        │
+        ├── test/
+        │   └── java/
+        │
+        └── androidTest/
+            └── java/
+```
+🧩 Main Components
+`MainActivity`
+The main entry point of the Android application.
+`LoginActivity`
+Handles user login and communicates with the backend to validate user credentials.
+`signup`
+Handles new user registration and sends user information to the Spring Boot server.
+`HomePage`
+Displays the main application screen and provides navigation to the application's features.
+`WaterActivity`
+Allows users to add water consumption entries and view the current daily total.
+Supported drink amounts include:
+150 ml
+200 ml
+1000 ml
+`DailyWaterGoal`
+Allows users to define and update their daily water intake goal.
+`BMIActivity`
+Calculates BMI using user data and displays the result.
+`WaterChartActivity`
+Displays weekly water consumption data using MPAndroidChart.
+`WaterReminderReceiver`
+Handles water reminder notifications.
+`RestClient`
+Handles communication between the Android application and the Spring Boot backend.
+Main responsibilities:
+Sending REST API requests
+Processing HTTP responses
+Managing request bodies
+Handling network errors
+Connecting the Android client to backend endpoints
+`User`
+Represents user-related data transferred between the Android application and the backend.
+🔄 Application Flow
+```text
+Launch Application
+        ↓
+Login or Signup
+        ↓
+Home Page
+        ↓
+Choose Feature
+        ↓
+Water Tracking / BMI / Daily Goal / Weekly Chart
+        ↓
+REST Request to Spring Boot Server
+        ↓
+Updated Data Returned to Android
+```
+💧 Water Tracking Flow
+When the user adds water:
+The user selects a drink amount.
+`WaterActivity` sends the update through `RestClient`.
+`RestClient` sends an HTTP request to the Spring Boot server.
+The backend updates the user's water log.
+The server returns the updated water data.
+The Android interface displays the new daily total.
+```text
+User presses Add Water
+        ↓
+WaterActivity
+        ↓
+RestClient
+        ↓
 PATCH Request
-      ↓
-UsersController
-      ↓
-FirebaseService
-      ↓
-Firebase Transaction
-      ↓
-Updated Water Log
-      ↓
-HTTP Response
+        ↓
+Spring Boot Server
+        ↓
+Updated Water Data
+        ↓
+Android UI
 ```
-
-## ⚙️ Transaction-Safe Updates
-
-Water consumption updates use transaction-based logic to prevent data loss when multiple requests are processed at nearly the same time.
-
+🔐 Local Session Management
+The application uses `SharedPreferences` to store local session-related information.
+This allows the application to remember user-related data between screens and application sessions.
+Sensitive backend credentials are not stored inside the Android application.
+📊 Data Visualization
+The application uses MPAndroidChart to display water consumption information.
+Visualization features include:
+Weekly water chart
+Daily water totals
+Historical water consumption
+Progress toward the daily goal
+🧪 Android Testing
+The Android application includes automated tests for activities, UI behavior, business logic, and REST communication.
+Testing Technologies
+JUnit 4
+Robolectric
+Mockito
+OkHttp MockWebServer
+AndroidX Test
+JUnit 4
+JUnit 4 is used to define test methods and assertions.
+Robolectric
+Robolectric is used to test Android activities and Android framework behavior directly on the JVM without requiring a physical device or emulator.
+It is also used to work with Android-specific behavior such as:
+Activity lifecycle
+Application context
+Toast messages
+Android runtime components
+Mockito
+Mockito is used to create mock objects and isolate components during unit testing.
+OkHttp MockWebServer
+MockWebServer is used to simulate backend HTTP responses and inspect outgoing requests from the Android application.
+It allows tests to verify:
+HTTP methods
+Request paths
+Request bodies
+Response handling
+Error handling
+REST communication behavior
+AndroidX Test
+AndroidX Test is used for Android instrumentation testing.
+✅ Test Coverage
+The Android tests cover areas such as:
+Login behavior
+Signup behavior
+Activity lifecycle
+User interface logic
+BMI calculations
+Daily water goal management
+Water intake updates
+Weekly chart behavior
+REST API communication
+HTTP request validation
+HTTP response handling
+Network error handling
+Toast messages
+Android runtime behavior
+🛠 Technologies Used
+Java
+Android SDK
+Gradle
+Kotlin DSL
+OkHttp
+SharedPreferences
+MPAndroidChart
+JUnit 4
+Robolectric
+Mockito
+OkHttp MockWebServer
+AndroidX Test
+▶️ Running the Application
+Requirements
+Android Studio
+Java Development Kit
+Android SDK
+Internet connection
+Running Hi-Bari Spring Boot server
+Steps
+Open the following directory in Android Studio:
 ```text
-Without transaction:
-Request A reads old value
-Request B reads old value
-One update may overwrite the other ❌
-
-With transaction:
-Firebase applies both updates safely ✅
+Hai-Bari android application
 ```
-
-This helps prevent race conditions and maintains database consistency.
-
-## ☁️ Firebase Data Structure
-
-Example:
-
+Allow Gradle to synchronize and download the required dependencies.
+Make sure the Spring Boot server is running.
+Make sure the backend URL used by `RestClient` is correct for your environment.
+Select an Android emulator or a physical Android device.
+Run the application.
+The project includes the Gradle Wrapper, so the required Gradle version can be used automatically.
+🔗 Backend Dependency
+The Android application requires the Spring Boot backend to perform server-side operations.
+The backend project is located in:
 ```text
-Users/
-  userId/
-    userName
-    password
-    age
-    bmi
-    goalMl
-    waterLog/
-      yyyy-MM-dd/
-        [total, drink1, drink2, ...]
+../Spring Server/
 ```
-
-Water log format:
-
-```text
-Index 0   → Total daily water intake
-Index 1-N → Individual drink entries
-```
-
-Example:
-
-```text
-[1850, 150, 200, 500, 1000]
-```
-
-## 🧪 Backend Testing
-
-The server includes integration tests for the service and controller layers.
-
-Testing technologies:
-
-- JUnit 5
-- JUnit Jupiter
-- Spring Boot Test
-- TestRestTemplate
-- Firebase integration testing
-- Parallel test execution
-- Asynchronous operation testing
-
-### `FirebaseServiceIntegrationTest`
-
-Tests the interaction between `FirebaseService` and Firebase Realtime Database.
-
-The tests cover operations such as:
-
-- Creating users
-- Retrieving user data
-- Updating user information
-- Updating water consumption
-- Retrieving water history
-- Concurrent requests
-- Asynchronous Firebase operations
-- Transaction-safe updates
-
-### `UsersControllerIntegrationTest`
-
-Loads the full Spring Boot application and sends real HTTP requests to the server using `TestRestTemplate`.
-
-The tests cover:
-
-- REST endpoints
-- Request bodies
-- Response bodies
-- HTTP status codes
-- GET requests
-- POST requests
-- PUT requests
-- PATCH requests
-- DELETE requests
-- HEAD requests
-- Validation and error handling
-
-## 🔐 Security
-
-The server uses Firebase Admin SDK credentials for secure access to Firebase.
-
-Sensitive files are intentionally excluded from the repository.
-
-Examples:
-
-```text
-.env
-application.properties
-Firebase Admin SDK JSON file
-```
-
-These files must never be committed to GitHub.
-
-The `.gitignore` file prevents sensitive configuration files from being tracked.
-
-## ⚙️ Local Configuration
-
-Before running the server, create the required local configuration files.
-
-Example environment values may include:
-
-```text
-Firebase credentials path
-Firebase database URL
-Server configuration
-```
-
-Do not place real credentials directly inside source code.
-
-Do not upload credentials, passwords, private keys, or Firebase service-account files to GitHub.
-
-## ▶️ Running the Server
-
-### Requirements
-
-- Java
-- Maven
-- Internet access
-- Firebase project
-- Firebase Admin SDK credentials
-
-### Start from IntelliJ IDEA
-
-1. Open the `Spring Server` directory.
-2. Allow Maven to download the dependencies.
-3. Add the required local Firebase configuration.
-4. Run:
-
-```text
-src/main/java/org/example/CapstoneProject/Application.java
-```
-
-### Start from the terminal
-
-From the `Spring Server` directory:
-
-```bash
-mvn spring-boot:run
-```
-
-To run the tests:
-
-```bash
-mvn test
-```
-
-## 🛠 Technologies
-
-- Java
-- Spring Boot 3
-- Spring Web
-- Maven
-- REST API
-- Firebase Admin SDK
-- Firebase Realtime Database
-- JUnit 5
-- Spring Boot Test
-- TestRestTemplate
-- CompletableFuture
-
-## 🔗 Related Project
-
-The Android client is located in:
-
-```text
-../Hai-Bari android application/
-```
-
 The main repository documentation is located in:
-
 ```text
 ../README.md
 ```
-
-## 👨‍💻 Author
-
+🔐 Security Notes
+The following files should not be committed:
+```text
+local.properties
+*.jks
+*.keystore
+build/
+app/build/
+.idea/
+.gradle/
+```
+The Android application does not contain Firebase Admin SDK credentials.
+All secure Firebase operations are handled by the Spring Boot backend.
+🚀 Future Improvements
+Improved UI and UX
+More detailed health statistics
+Smart hydration suggestions using AI
+Better notification scheduling
+Token-based authentication
+Additional charts
+Offline data support
+Improved error messages
+Expanded automated test coverage
+👨‍💻 Author
 Sharbel Zarzour
