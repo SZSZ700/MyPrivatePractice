@@ -227,6 +227,70 @@ Benefits:
 - Allows detailed water consumption history
 - Supports real-time growth
 
+## 🧪 Software Testing
+
+The project includes automated tests for both the Android application and the Spring Boot backend.
+
+### 📱 Android Testing
+
+The Android application is tested using:
+
+- JUnit 4
+- Robolectric
+- Mockito
+- OkHttp MockWebServer
+- AndroidX Test
+
+Robolectric is used to run Android component tests directly on the JVM without requiring a physical device or emulator.
+
+Mockito is used to create mock objects and isolate dependencies during unit testing.
+
+MockWebServer is used to simulate backend HTTP responses and inspect outgoing requests from the Android application.
+
+The Android tests cover areas such as:
+
+- Activity behavior
+- User interface logic
+- Login and signup flows
+- BMI calculations
+- Daily water goal management
+- Water intake updates
+- Chart-related behavior
+- REST communication
+- HTTP request and response handling
+- Toast messages and Android runtime behavior
+
+### 🌐 Spring Boot Testing
+
+The Spring Boot backend is tested using:
+
+- JUnit 5 / JUnit Jupiter
+- Spring Boot Test
+- TestRestTemplate
+- Integration testing
+- Parallel test execution
+- Asynchronous operation testing
+
+`@SpringBootTest` is used to load the full Spring application context.
+
+`TestRestTemplate` is used to send real HTTP requests to the running Spring Boot server and verify status codes, response bodies, and REST endpoint behavior.
+
+The backend tests also interact with `FirebaseService` to prepare, update, retrieve, and verify data stored in Firebase.
+
+The Spring tests cover areas such as:
+
+- REST controller endpoints
+- User creation and retrieval
+- Login behavior
+- HTTP GET, POST, PUT, PATCH, DELETE, and HEAD requests
+- Response status validation
+- Firebase service operations
+- Water intake updates
+- Concurrent requests
+- Transaction-safe updates
+- Asynchronous operations
+- Error handling
+
 ## 🔐 Security
 
 The backend uses Firebase Admin SDK for server authentication.
@@ -274,6 +338,24 @@ local.properties
 ### Database
 
 - Firebase Realtime Database
+
+### Testing Technologies
+
+#### Android
+
+- JUnit 4
+- Robolectric
+- Mockito
+- OkHttp MockWebServer
+- AndroidX Test
+
+#### Backend
+
+- JUnit 5 / JUnit Jupiter
+- Spring Boot Test
+- TestRestTemplate
+- Firebase integration testing
+- Parallel and asynchronous testing
 
 ### Development Tools
 
@@ -369,6 +451,11 @@ This project was developed as a final capstone project in Software Engineering s
 - Spring Boot REST API
 - Cloud-based real-time database
 - Secure backend communication
+- Automated Android and backend testing
+- JVM-based Android component testing with Robolectric
+- Mocked HTTP testing with MockWebServer
+- Full Spring integration testing with TestRestTemplate
+- Concurrent and asynchronous operation testing
 - Transaction-safe updates
 - Dynamic data structure
 - Separation between client, server, and database
