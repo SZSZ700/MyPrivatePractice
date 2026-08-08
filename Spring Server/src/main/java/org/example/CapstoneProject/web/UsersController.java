@@ -3,6 +3,7 @@ package org.example.CapstoneProject.web;
 // Import the User model (POJO with username, password, age, fullName)
 import org.example.CapstoneProject.dto.LoginRequest;
 import org.example.CapstoneProject.dto.SignupRequest;
+import org.example.CapstoneProject.dto.UserResponse;
 import org.example.CapstoneProject.model.User;
 // Import the Firebase service that handles database operations
 import org.example.CapstoneProject.service.*;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 // Import Java utility classes
 import java.util.*;
 import java.util.concurrent.CompletableFuture;   // For async non-blocking calls
+import java.util.stream.Collectors;
+
 import jakarta.validation.Valid;
 import org.example.CapstoneProject.dto.UpdateUserRequest;
 
@@ -162,9 +165,19 @@ public class UsersController {
         // Call authenticationService.login() which validates credentials.
         return authenticationService.login(username, password).thenApply(user -> {
             if (user != null) {
-                // Return HTTP 200 with user object if valid.
+
+                // Create a response DTO from the internal User model.
+                var response = new UserResponse(
+                        user.getUserName(),
+                        user.getPassword(),
+                        user.getAge(),
+                        user.getFullName()
+                );
+
+                // Return HTTP 200 with the user response DTO.
                 return ResponseEntity
-                        .ok(user);
+                        .ok(response);
+
             } else {
                 // Return HTTP 401 if invalid.
                 return ResponseEntity
@@ -179,9 +192,24 @@ public class UsersController {
     // Returns a list of all users stored in Firebase
     // ---------------------------------------------------------------------
     @GetMapping
-    public CompletableFuture<ResponseEntity<List<User>>> getAllUsers() {
-        // Call Firebase service to fetch all users, wrap result in ResponseEntity
-        return userService.getAllUsers().thenApply( ResponseEntity::ok);
+    public CompletableFuture<ResponseEntity<List<UserResponse>>> getAllUsers() {
+
+        // Call UserService to fetch all users.
+        return userService.getAllUsers().thenApply(users -> {
+
+            // Convert each internal User model into a UserResponse DTO.
+            var response = users.stream()
+                    .map(user -> new UserResponse(
+                            user.getUserName(),
+                            user.getPassword(),
+                            user.getAge(),
+                            user.getFullName()
+                    ))
+                    .collect(Collectors.toList());
+
+            // Return HTTP 200 with the user response list.
+            return ResponseEntity.ok(response);
+        });
     }
 
     // ---------------------------------------------------------------------
@@ -189,17 +217,28 @@ public class UsersController {
     // Retrieves a single user by username
     // ---------------------------------------------------------------------
     @GetMapping("/{username}")
-    public CompletableFuture<ResponseEntity<?>> getUser(@PathVariable("username") String username) {
-        // Call Firebase service to fetch a specific user
+    public CompletableFuture<ResponseEntity<?>> getUser(
+            @PathVariable("username") String username) {
+
+        // Call UserService to fetch a specific user.
         return userService.getUser(username).thenApply(user -> {
-            // If user not found, return 404 response
+            // If user not found, return 404 response.
             if (user == null) {
                 return ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
                         .body("User not found");
             }
-            // If user found, return 200 OK with the user object
-            return ResponseEntity.ok(user);
+
+            // Create a response DTO from the internal User model.
+            var response = new UserResponse(
+                    user.getUserName(),
+                    user.getPassword(),
+                    user.getAge(),
+                    user.getFullName()
+            );
+
+            // Return HTTP 200 with the user response DTO.
+            return ResponseEntity.ok(response);
         });
     }
 
@@ -236,8 +275,16 @@ public class UsersController {
                         .body("User not found");
             }
 
-            // If success, return 200 OK with updated user.
-            return ResponseEntity.ok(updatedUser);
+            // Create a response DTO from the updated User model.
+            var response = new UserResponse(
+                    updatedUser.getUserName(),
+                    updatedUser.getPassword(),
+                    updatedUser.getAge(),
+                    updatedUser.getFullName()
+            );
+
+            // Return HTTP 200 with the user response DTO.
+            return ResponseEntity.ok(response);
         });
     }
 
@@ -251,14 +298,23 @@ public class UsersController {
             @RequestBody Map<String, Object> updates) {
         // Call Firebase service to patch user fields
         return userService.patchUser(username, updates).thenApply(updatedUser -> {
-            // If user not found, return 404
             if (updatedUser == null) {
+                // If user not found, return 404.
                 return ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
                         .body("User not found");
             }
-            // If success, return 200 OK with updated user object
-            return ResponseEntity.ok(updatedUser);
+
+            // Create a response DTO from the updated User model.
+            var response = new UserResponse(
+                    updatedUser.getUserName(),
+                    updatedUser.getPassword(),
+                    updatedUser.getAge(),
+                    updatedUser.getFullName()
+            );
+
+            // Return HTTP 200 with the user response DTO.
+            return ResponseEntity.ok(response);
         });
     }
 
