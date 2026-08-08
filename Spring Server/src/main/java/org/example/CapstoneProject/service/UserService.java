@@ -67,14 +67,16 @@ public class UserService {
         return userRepository.deleteByUsername(username);
     }
 
-    // ---------------------------------------------------------------------
-    // Replaces an existing user by username.
+    // -------------------------------------------------------------------------
+    // Updates a user's editable data.
     //
-    // Returns true when the user was found and updated.
-    // Returns false when no matching user exists.
-    // ---------------------------------------------------------------------
-    public CompletableFuture<Boolean> updateUser(String username, User updatedUser) {
-        // Delegate the database operation to the repository.
+    // Returns the complete updated user when successful.
+    // Returns null when the user does not exist.
+    // -------------------------------------------------------------------------
+    public CompletableFuture<User> updateUser(
+            String username,
+            User updatedUser) {
+
         return userRepository.updateByUsername(username, updatedUser);
     }
 

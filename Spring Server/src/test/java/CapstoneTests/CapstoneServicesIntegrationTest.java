@@ -233,112 +233,165 @@ public class CapstoneServicesIntegrationTest {
     }
 
     // --------------------------- UPDATE USER FULL RECORD TEST ---------------------------
-    // Test that updateUser replaces the entire user record for an existing user
+    // --------------------------- UPDATE USER EXISTING TEST ---------------------------
+    // Test that updateUser updates the editable fields for an existing user
+    // and returns the complete updated user.
     @Test
-    void updateUser_existing_replacesEntireRecord() throws Exception {
-        // Build a unique username for this test run
+    void updateUser_existing_updatesEditableFieldsAndReturnsUpdatedUser() throws Exception {
+
+        // Build a unique username for this test run.
         String tempUsername = "updateUserDeep_" + System.currentTimeMillis();
 
-        // Create a new User instance representing the original state
+        // Create a new User instance representing the original state.
         User originalUser = new User();
-        // Set username for the original user
+
+        // Set username for the original user.
         originalUser.setUserName(tempUsername);
-        // Set password for the original user
+
+        // Set password for the original user.
         originalUser.setPassword("origPass");
-        // Set full name for the original user
+
+        // Set full name for the original user.
         originalUser.setFullName("Original Name");
-        // Set age for the original user
+
+        // Set age for the original user.
         originalUser.setAge(20);
 
-        // Create the original user in Firebase using UserService.createUser
+        // Create the original user in Firebase using UserService.createUser.
         CompletableFuture<Boolean> createFuture =
                 userService.createUser(originalUser);
-        // Wait for the creation result with a timeout of 20 seconds
+
+        // Wait for the creation result with a timeout of 20 seconds.
         Boolean created = createFuture.get(20, TimeUnit.SECONDS);
-        // Assert that the user was created successfully
+
+        // Assert that the user was created successfully.
         assertTrue(created);
+
+        // Remember the username so the test user can also be cleaned up
+        // by the global cleanup method if needed.
         createdUsernames.add(tempUsername);
 
-        // Create a new User instance representing the updated state
+        // Create a new User instance containing the editable fields
+        // that should replace the current values.
         User updatedUser = new User();
-        // Keep the same username for the updated user
+
+        // Keep the same username for the updated user.
         updatedUser.setUserName(tempUsername);
-        // Set a new password for the updated user
+
+        // Set a new password for the updated user.
         updatedUser.setPassword("newPass");
-        // Set a new full name for the updated user
+
+        // Set a new full name for the updated user.
         updatedUser.setFullName("Updated Name");
-        // Set a new age for the updated user
+
+        // Set a new age for the updated user.
         updatedUser.setAge(30);
 
-        // Call updateUser to replace the existing record with the updated user
-        CompletableFuture<Boolean> updateFuture =
+        // Call updateUser and receive the complete updated user.
+        CompletableFuture<User> updateFuture =
                 userService.updateUser(tempUsername, updatedUser);
-        // Wait for the update result with a timeout of 20 seconds
-        Boolean updated = updateFuture.get(20, TimeUnit.SECONDS);
-        // Assert that the update operation succeeded
-        assertTrue(updated);
 
-        // Call getUser to read back the user after the update
+        // Wait for the update result with a timeout of 20 seconds.
+        User updated = updateFuture.get(20, TimeUnit.SECONDS);
+
+        // Assert that the update succeeded and returned a User object.
+        assertNotNull(updated);
+
+        // Assert that the returned username is still the original username.
+        assertEquals(tempUsername, updated.getUserName());
+
+        // Assert that the returned password was updated.
+        assertEquals("newPass", updated.getPassword());
+
+        // Assert that the returned full name was updated.
+        assertEquals("Updated Name", updated.getFullName());
+
+        // Assert that the returned age was updated.
+        assertEquals(30, updated.getAge());
+
+        // Call getUser to read back the user directly from Firebase
+        // after the update.
         CompletableFuture<User> getFuture =
                 userService.getUser(tempUsername);
-        // Wait for the getUser result with a timeout of 20 seconds
+
+        // Wait for the getUser result with a timeout of 20 seconds.
         User fromDb = getFuture.get(20, TimeUnit.SECONDS);
-        // Assert that the returned user object is not null
+
+        // Assert that the returned user object is not null.
         assertNotNull(fromDb);
-        // Assert that the password field was updated
+
+        // Assert that the password field was updated in Firebase.
         assertEquals("newPass", fromDb.getPassword());
-        // Assert that the full name field was updated
+
+        // Assert that the full name field was updated in Firebase.
         assertEquals("Updated Name", fromDb.getFullName());
-        // Assert that the age field was updated
+
+        // Assert that the age field was updated in Firebase.
         assertEquals(30, fromDb.getAge());
-        // Assert that the old password value is no longer present
+
+        // Assert that the old password value is no longer present.
         assertNotEquals("origPass", fromDb.getPassword());
-        // Assert that the old full name value is no longer present
+
+        // Assert that the old full name value is no longer present.
         assertNotEquals("Original Name", fromDb.getFullName());
-        // Assert that the old age value is no longer present
+
+        // Assert that the old age value is no longer present.
         assertNotEquals(20, fromDb.getAge());
 
-        // Call deleteUser to clean up the temporary user
+        // Call deleteUser to clean up the temporary user.
         CompletableFuture<Boolean> deleteFuture =
                 userService.deleteUser(tempUsername);
-        // Wait for the delete result with a timeout of 20 seconds
+
+        // Wait for the delete result with a timeout of 20 seconds.
         Boolean deleted = deleteFuture.get(20, TimeUnit.SECONDS);
-        // Assert that the user was deleted successfully
+
+        // Assert that the user was deleted successfully.
         assertTrue(deleted);
     }
 
-    // --------------------------- UPDATE USER NON-EXISTING TEST ---------------------------
-    // Test that updateUser returns false when trying to update a non-existing user
-    @Test
-    void updateUser_nonExisting_returnsFalse() throws Exception {
-        // Build a username that should not exist in Firebase
-        String missingUsername = "updateUserNoSuch_" + System.currentTimeMillis();
 
-        // Create a User instance with this missing username
+    // --------------------------- UPDATE USER NON-EXISTING TEST ---------------------------
+    // Test that updateUser returns null when trying to update a non-existing user.
+    @Test
+    void updateUser_nonExisting_returnsNull() throws Exception {
+
+        // Build a username that should not exist in Firebase.
+        String missingUsername =
+                "updateUserNoSuch_" + System.currentTimeMillis();
+
+        // Create a User instance with this missing username.
         User candidate = new User();
-        // Set the username for the candidate user
+
+        // Set the username for the candidate user.
         candidate.setUserName(missingUsername);
-        // Set a password for the candidate user
+
+        // Set a password for the candidate user.
         candidate.setPassword("somePass");
-        // Set a full name for the candidate user
+
+        // Set a full name for the candidate user.
         candidate.setFullName("Some Name");
-        // Set an age for the candidate user
+
+        // Set an age for the candidate user.
         candidate.setAge(40);
 
-        // Call updateUser for this missing username
-        CompletableFuture<Boolean> updateFuture =
+        // Call updateUser for this missing username.
+        CompletableFuture<User> updateFuture =
                 userService.updateUser(missingUsername, candidate);
-        // Wait for the update result with a timeout of 20 seconds
-        Boolean updated = updateFuture.get(20, TimeUnit.SECONDS);
-        // Assert that the service returned false (user not found)
-        assertFalse(updated);
 
-        // verify that getUser still returns null for this username
+        // Wait for the update result with a timeout of 20 seconds.
+        User updated = updateFuture.get(20, TimeUnit.SECONDS);
+
+        // Assert that null was returned because the user does not exist.
+        assertNull(updated);
+
+        // Verify that getUser still returns null for this username.
         CompletableFuture<User> getFuture =
                 userService.getUser(missingUsername);
-        // Wait for the getUser result with a timeout of 20 seconds
+
+        // Wait for the getUser result with a timeout of 20 seconds.
         User fromDb = getFuture.get(20, TimeUnit.SECONDS);
-        // Assert that no user object exists in Firebase for this username
+
+        // Assert that no user object exists in Firebase for this username.
         assertNull(fromDb);
     }
 

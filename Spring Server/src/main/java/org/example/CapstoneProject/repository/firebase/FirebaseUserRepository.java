@@ -210,47 +210,89 @@ public class FirebaseUserRepository implements UserRepository {
     }
 
     // ---------------------------------------------------------------------
-    // Replaces an existing user by username.
+    // Updates the editable fields of an existing user by username while
+    // preserving the user's existing health and water-related data.
     //
-    // Returns true when the user was found and updated.
-    // Returns false when no matching user exists.
+    // Returns the updated user when the operation succeeds.
+    // Returns null when no matching user exists.
     // ---------------------------------------------------------------------
     @Override
-    public CompletableFuture<Boolean> updateByUsername(String username, User updatedUser) {
+    public CompletableFuture<User> updateByUsername(
+            String username,
+            User updatedUser) {
+
         // Create the future that will hold the asynchronous result.
-        var future = new CompletableFuture<Boolean>();
+        var future = new CompletableFuture<User>();
 
         // Query the Users node by the userName field.
         usersRef.orderByChild("userName")
                 .equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
+
                     // Handle the returned Firebase data.
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
+
                         // Loop over matching users.
                         for (DataSnapshot child : snapshot.getChildren()) {
+
+                            // Read the complete existing user from Firebase.
+                            var existingUser = child.getValue(User.class);
+
+                            // If Firebase could not convert the stored data
+                            // into a User object, treat the operation as failed.
+                            if (existingUser == null) {
+                                future.complete(null);
+                                return;
+                            }
+
                             // Keep the original username unchanged.
-                            updatedUser.setUserName(username);
+                            existingUser.setUserName(username);
 
-                            // Replace the complete user object in Firebase.
-                            child.getRef().setValue(updatedUser, (error, reference) -> {
-                                // Complete with true when the update succeeded.
-                                future.complete(error == null);
-                            });
+                            // Update only the editable fields received
+                            // from the PUT request.
+                            existingUser.setPassword(updatedUser.getPassword());
+                            existingUser.setFullName(updatedUser.getFullName());
+                            existingUser.setAge(updatedUser.getAge());
 
-                            // Stop after the first match.
+                            // Save the complete user object back to Firebase.
+                            //
+                            // Existing values such as BMI, calories, water log,
+                            // and daily goal remain unchanged.
+                            child.getRef().setValue(
+                                    existingUser,
+                                    (error, reference) -> {
+
+                                        // Complete exceptionally if Firebase
+                                        // reports an error while saving.
+                                        if (error != null) {
+                                            future.completeExceptionally(
+                                                    error.toException()
+                                            );
+                                            return;
+                                        }
+
+                                        // Return the complete updated user.
+                                        future.complete(existingUser);
+                                    }
+                            );
+
+                            // Stop after the first matching user.
                             return;
                         }
 
-                        // Complete with false when no user was found.
-                        future.complete(false);
+                        // Complete with null when no matching user was found.
+                        future.complete(null);
                     }
 
                     // Handle Firebase query failure.
                     @Override
                     public void onCancelled(DatabaseError error) {
+
                         // Complete the future exceptionally.
-                        future.completeExceptionally(error.toException());
+                        future.completeExceptionally(
+                                error.toException()
+                        );
                     }
                 });
 

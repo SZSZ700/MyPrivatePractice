@@ -251,7 +251,9 @@ public class UsersController {
 
     // ---------------------------------------------------------------------
     // UPDATE USER (PUT /api/users/{username})
-    // Replaces the entire user object with the provided one
+    //
+    // Updates the user's editable fields while preserving existing
+    // health and water-related data.
     // ---------------------------------------------------------------------
     @PutMapping("/{username}")
     public CompletableFuture<ResponseEntity<?>> updateUser(
@@ -273,27 +275,29 @@ public class UsersController {
         // Copy the age from the request.
         updatedUser.setAge(updateRequest.getAge());
 
-        // Call UserService to update the user.
-        return userService.updateUser(username, updatedUser).thenApply(success -> {
-            if (!success) {
-                // If user not found, return 404.
-                return ResponseEntity
-                        .status(HttpStatus.NOT_FOUND)
-                        .body("User not found");
-            }
+        // Update the user and receive the complete updated user back.
+        return userService.updateUser(username, updatedUser)
+                .thenApply(savedUser -> {
 
-            // Create a response DTO from the updated User model.
-            var response = new UserResponse(
-                    updatedUser.getUserName(),
-                    updatedUser.getPassword(),
-                    updatedUser.getAge(),
-                    updatedUser.getFullName(),
-                    updatedUser.getBmi()
-            );
+                    // If no matching user exists, return 404.
+                    if (savedUser == null) {
+                        return ResponseEntity
+                                .status(HttpStatus.NOT_FOUND)
+                                .body("User not found");
+                    }
 
-            // Return HTTP 200 with the user response DTO.
-            return ResponseEntity.ok(response);
-        });
+                    // Create the response DTO from the complete updated user.
+                    var response = new UserResponse(
+                            savedUser.getUserName(),
+                            savedUser.getPassword(),
+                            savedUser.getAge(),
+                            savedUser.getFullName(),
+                            savedUser.getBmi()
+                    );
+
+                    // Return HTTP 200 with the updated user response.
+                    return ResponseEntity.ok(response);
+                });
     }
 
     // ---------------------------------------------------------------------

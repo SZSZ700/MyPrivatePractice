@@ -41,13 +41,13 @@ public interface UserRepository {
     // ---------------------------------------------------------------------
     CompletableFuture<Boolean> deleteByUsername(String username);
 
-    // ---------------------------------------------------------------------
-    // Replaces an existing user by username.
+    // -------------------------------------------------------------------------
+    // Updates an existing user by username.
     //
-    // Returns true when the user was found and updated.
-    // Returns false when no matching user exists.
-    // ---------------------------------------------------------------------
-    CompletableFuture<Boolean> updateByUsername(String username, User updatedUser);
+    // Returns the updated user when the operation succeeds.
+    // Returns null when no matching user exists.
+    // -------------------------------------------------------------------------
+    CompletableFuture<User> updateByUsername(String username, User updatedUser);
 
     // ---------------------------------------------------------------------
     // Partially updates an existing user by username.
