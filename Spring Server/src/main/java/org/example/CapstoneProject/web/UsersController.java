@@ -7,6 +7,7 @@ import org.example.CapstoneProject.dto.UserResponse;
 import org.example.CapstoneProject.dto.UpdateUserRequest;
 import org.example.CapstoneProject.dto.WaterResponse;
 import org.example.CapstoneProject.dto.GoalResponse;
+import org.example.CapstoneProject.dto.CaloriesResponse;
 import org.example.CapstoneProject.model.User;
 // Import the Firebase service that handles database operations
 import org.example.CapstoneProject.service.*;
@@ -563,16 +564,20 @@ public class UsersController {
     // -------------------------------- GET CALORIES ----------------------------
     // Returns JSON: {"calories": 1800}
     @GetMapping("/{username}/calories")
-    public CompletableFuture<ResponseEntity<Map<String, Integer>>> getCalories(
+    public CompletableFuture<ResponseEntity<CaloriesResponse>> getCalories(
             @PathVariable("username") String username) {
 
+        // Call UserHealthService to get the user's calories value.
         return userHealthService.getCalories(username)
                 .thenApply(cals -> {
-                    // Build a simple JSON map: {"calories": X}
-                    Map<String, Integer> body = Collections.singletonMap("calories",
-                            (cals != null ? cals : 0));
 
-                    return ResponseEntity.ok(body);
+                    // Create a response DTO with the calories value.
+                    var response = new CaloriesResponse(
+                            cals != null ? cals : 0
+                    );
+
+                    // Return HTTP 200 with the calories response DTO.
+                    return ResponseEntity.ok(response);
                 });
     }
 
