@@ -3,7 +3,7 @@ package org.example.CapstoneProject.web;
 // Import the User model (POJO with username, password, age, fullName)
 import org.example.CapstoneProject.model.User;
 // Import the Firebase service that handles database operations
-import org.example.CapstoneProject.service.FirebaseService;
+import org.example.CapstoneProject.service.*;
 // Import Spring framework classes for HTTP status and response handling
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 // Import Java utility classes
 import java.util.*;
 import java.util.concurrent.CompletableFuture;   // For async non-blocking calls
+
 
 // NOTE:
 // I use thenApply (not thenApplyAsync) because this continuation is very light:
@@ -35,16 +36,60 @@ import java.util.concurrent.CompletableFuture;   // For async non-blocking calls
 // Base URL for all endpoints in this controller
 @RequestMapping("/api/users")
 public class UsersController {
+    // ---------------------------------------------------------------------
+    // Reference to UserService for user-related business logic.
+    // ---------------------------------------------------------------------
+    private final UserService userService;
 
     // ---------------------------------------------------------------------
-    // Reference to FirebaseService (business logic layer)
-    // Will be injected automatically by Spring Boot (constructor injection)
+    // Reference to AuthenticationService for authentication-related
+    // business logic such as signup and login.
     // ---------------------------------------------------------------------
-    private final FirebaseService firebaseService;
+    private final AuthenticationService authenticationService;
 
-    // Constructor for dependency injection
-    public UsersController(FirebaseService firebaseService) {
-        this.firebaseService = firebaseService;
+    // ---------------------------------------------------------------------
+    // Reference to WaterService for water-related business logic.
+    // ---------------------------------------------------------------------
+    private final WaterService waterService;
+
+    // ---------------------------------------------------------------------
+    // Reference to UserHealthService for BMI and calorie-related
+    // business logic.
+    // ---------------------------------------------------------------------
+    private final UserHealthService userHealthService;
+
+    // ---------------------------------------------------------------------
+    // Reference to StatisticsService for global statistical business logic.
+    // ---------------------------------------------------------------------
+    private final StatisticsService statisticsService;
+
+
+    // ---------------------------------------------------------------------
+    // Constructor for dependency injection.
+    //
+    // Spring automatically injects the required services.
+    // ---------------------------------------------------------------------
+    public UsersController(
+            UserService userService,
+            AuthenticationService authenticationService,
+            WaterService waterService,
+            UserHealthService userHealthService,
+            StatisticsService statisticsService) {
+
+        // Store the user service reference.
+        this.userService = userService;
+
+        // Store the authentication service reference.
+        this.authenticationService = authenticationService;
+
+        // Store the water service reference.
+        this.waterService = waterService;
+
+        // Store the user health service reference.
+        this.userHealthService = userHealthService;
+
+        // store the statistics service reference.
+        this.statisticsService = statisticsService;
     }
 
     // ---------------------------------------------------------------------
@@ -63,8 +108,8 @@ public class UsersController {
     // =========================================================
     @PostMapping("/signup")
     public CompletableFuture<ResponseEntity<String>> signup(@RequestBody User user) {
-        // Call service.signup() which checks username and creates user
-        return firebaseService.signup(user).thenApply(result -> {
+        // Call authenticationService.signup() which checks username and creates user
+        return authenticationService.signup(user).thenApply(result -> {
             if ("User created successfully".equals(result)) {
                 // Return HTTP 201 if success
                 return ResponseEntity
@@ -94,8 +139,8 @@ public class UsersController {
         var username = loginRequest.getUserName();
         var password = loginRequest.getPassword();
 
-        // Call service.login() which validates credentials
-        return firebaseService.login(username, password).thenApply(user -> {
+        // Call authenticationService.login() which validates credentials
+        return authenticationService.login(username, password).thenApply(user -> {
             if (user != null) {
                 // Return HTTP 200 with user object if valid
                 return ResponseEntity
@@ -116,7 +161,7 @@ public class UsersController {
     @GetMapping
     public CompletableFuture<ResponseEntity<List<User>>> getAllUsers() {
         // Call Firebase service to fetch all users, wrap result in ResponseEntity
-        return firebaseService.getAllUsers().thenApply( ResponseEntity::ok);
+        return userService.getAllUsers().thenApply( ResponseEntity::ok);
     }
 
     // ---------------------------------------------------------------------
@@ -126,7 +171,7 @@ public class UsersController {
     @GetMapping("/{username}")
     public CompletableFuture<ResponseEntity<?>> getUser(@PathVariable("username") String username) {
         // Call Firebase service to fetch a specific user
-        return firebaseService.getUser(username).thenApply(user -> {
+        return userService.getUser(username).thenApply(user -> {
             // If user not found, return 404 response
             if (user == null) {
                 return ResponseEntity
@@ -147,7 +192,7 @@ public class UsersController {
             @PathVariable("username") String username,
             @RequestBody User updatedUser) {
         // Call Firebase service to update user
-        return firebaseService.updateUser(username, updatedUser).thenApply(success -> {
+        return userService.updateUser(username, updatedUser).thenApply(success -> {
             // If user not found, return 404
             if (!success) {
                 return ResponseEntity
@@ -168,7 +213,7 @@ public class UsersController {
             @PathVariable("username") String username,
             @RequestBody Map<String, Object> updates) {
         // Call Firebase service to patch user fields
-        return firebaseService.patchUser(username, updates).thenApply(updatedUser -> {
+        return userService.patchUser(username, updates).thenApply(updatedUser -> {
             // If user not found, return 404
             if (updatedUser == null) {
                 return ResponseEntity
@@ -186,7 +231,7 @@ public class UsersController {
     // ---------------------------------------------------------------------
     @DeleteMapping("/{username}")
     public CompletableFuture<ResponseEntity<?>> deleteUser(@PathVariable("username") String username) {
-        return firebaseService.deleteUser(username).thenApply(success -> {
+        return userService.deleteUser(username).thenApply(success -> {
             if (!success) {
                 return ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
@@ -203,7 +248,7 @@ public class UsersController {
     @RequestMapping(value = "/{username}", method = RequestMethod.HEAD)
     public CompletableFuture<ResponseEntity<Void>> headUser(@PathVariable("username") String username) {
         // Call Firebase service to check if user exists
-        return firebaseService.exists(username).thenApply(exists -> {
+        return userService.exists(username).thenApply(exists -> {
             if (exists) {
                 // Return 200 OK if user exists
                 return ResponseEntity.ok().build();
@@ -222,7 +267,7 @@ public class UsersController {
             @PathVariable("username") String username,
             @RequestParam("bmi") double bmi) {
         // Call Firebase service to update BMI
-        return firebaseService.updateBmi(username, bmi).thenApply(success -> {
+        return userHealthService.updateBmi(username, bmi).thenApply(success -> {
             if (!success) {
                 // If user not found, return 404 with error message
                 return ResponseEntity
@@ -243,7 +288,7 @@ public class UsersController {
             @PathVariable("username") String username,
             @RequestParam("amount") int amount) {
         // Call Firebase service to update water log
-        return firebaseService.updateWater(username, amount).thenApply(success -> {
+        return waterService.updateWater(username, amount).thenApply(success -> {
             if (!success) {
                 // If user not found or slots are full, return 404 with error message
                 return ResponseEntity
@@ -264,7 +309,7 @@ public class UsersController {
             @PathVariable("username") String username) {
 
         // Call Firebase service to get today's and yesterday's water amounts
-        return firebaseService.getWater(username).thenApply(result -> {
+        return waterService.getWater(username).thenApply(result -> {
                     // If user not found, return 404
                     if (result == null) {
                         return ResponseEntity
@@ -272,7 +317,7 @@ public class UsersController {
                             .body("User not found");
                     }
 
-                    // Convert JSONObject from FirebaseService into a plain Java Map
+                    // Convert JSONObject from WaterService into a plain Java Map
                     Map<String, Object> response = new HashMap<>();
                     response.put("todayWater", result.optInt("todayWater", 0));
                     response.put("yesterdayWater", result.optInt("yesterdayWater", 0));
@@ -291,7 +336,7 @@ public class UsersController {
             @PathVariable("username") String username,
             @RequestParam(name = "days", defaultValue = "7") int days) {
         // Call Firebase service to get the water history map
-        return firebaseService.getWaterHistoryMap(username, days).thenApply(result -> {
+        return waterService.getWaterHistoryMap(username, days).thenApply(result -> {
                     // If user not found, return 404 with error message
                     if (result == null) {
                         return ResponseEntity
@@ -315,7 +360,7 @@ public class UsersController {
             @PathVariable("username") String username) {
         // Call Firebase service to get weekly averages
         // Initially returns an empty FUTURE (container for async result)
-        return firebaseService.getWeeklyAverages(username)
+        return waterService.getWeeklyAverages(username)
                 .thenApply(result -> {
                     // If result is null or empty, return 404 with an empty map
                     if (result == null || result.isEmpty()) {
@@ -339,7 +384,7 @@ public class UsersController {
     public CompletableFuture<ResponseEntity<Map<String, Integer>>> getGoal(
             @PathVariable("username") String username) {
         // Call Firebase service to get goal value
-        return firebaseService.getGoalMl(username)
+        return waterService.getGoalMl(username)
                 .thenApply(goal -> {
                     // Always return 200 OK with a value (default if not found)
                     return ResponseEntity.ok(Map.of("goalMl", goal));
@@ -362,7 +407,7 @@ public class UsersController {
             @PathVariable("username") String username,
             @RequestParam("goalMl") int goalMl) {
         // Call Firebase service to update goal
-        return firebaseService.updateGoalMl(username, goalMl)
+        return waterService.updateGoalMl(username, goalMl)
                 .thenApply(ok -> ok
                         // If update succeeds -> 200 OK
                         ? ResponseEntity.ok(Map.of("status", "OK"))
@@ -394,7 +439,7 @@ public class UsersController {
     @GetMapping("/stats/bmiDistribution")
     public CompletableFuture<ResponseEntity<Map<String, Integer>>> getBmiDistribution() {
         // Call Firebase service to calculate BMI distribution
-        return firebaseService.getBmiDistribution()
+        return statisticsService.getBmiDistribution()
                 .thenApply(result -> {
                     // Never null – always at least empty map
                     //noinspection Convert2MethodRef
@@ -416,7 +461,7 @@ public class UsersController {
     public CompletableFuture<ResponseEntity<Map<String, Integer>>> getCalories(
             @PathVariable("username") String username) {
 
-        return firebaseService.getCalories(username)
+        return userHealthService.getCalories(username)
                 .thenApply(cals -> {
                     // Build a simple JSON map: {"calories": X}
                     Map<String, Integer> body = Collections.singletonMap("calories",
@@ -434,7 +479,7 @@ public class UsersController {
             @PathVariable("username") String username,
             @RequestParam("calories") int calories) {
 
-        return firebaseService.updateCalories(username, calories)
+        return userHealthService.updateCalories(username, calories)
                 .thenApply(success -> {
                     if (success) {
                         // 204 No Content on success

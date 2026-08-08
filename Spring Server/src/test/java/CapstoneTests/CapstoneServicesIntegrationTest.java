@@ -2,7 +2,11 @@
 package CapstoneTests;
 import org.example.CapstoneProject.Application;
 // Import assertion methods from JUnit Jupiter
-import org.example.CapstoneProject.service.FirebaseService;
+import org.example.CapstoneProject.service.AuthenticationService;
+import org.example.CapstoneProject.service.StatisticsService;
+import org.example.CapstoneProject.service.UserHealthService;
+import org.example.CapstoneProject.service.UserService;
+import org.example.CapstoneProject.service.WaterService;
 import org.junit.jupiter.api.AfterAll;
 // Import annotation to define methods that run before all tests
 import org.junit.jupiter.api.BeforeAll;
@@ -14,15 +18,13 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-// Import the ParameterizedTest annotation for parameterized test methods
-// Import ValueSource to supply simple parameter values for parameterized tests
 // Import the SpringBootTest annotation to load the full Spring context
 import org.springframework.boot.test.context.SpringBootTest;
 // Import Autowired to inject Spring beans into the test class
 import org.springframework.beans.factory.annotation.Autowired;
 // Import static assertion methods for cleaner code
 import static org.junit.jupiter.api.Assertions.*;
-// Import the User model used by FirebaseService
+// Import the User model used by the service layer
 import org.example.CapstoneProject.model.User;
 // Import JSONObject used by getWater method
 import org.json.JSONObject;
@@ -33,28 +35,42 @@ import java.util.concurrent.TimeUnit;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-// FirebaseServiceIntegrationTest is an end-to-end integration test class that
-// verifies the behavior of FirebaseService against a real Firebase Realtime
-// Database. Instead of calling the REST controllers, these tests interact
-// directly with the service layer to ensure that all low-level operations
-// (such as creating users, updating BMI, managing water and calories, and
-// reading/writing structured data) work correctly with Firebase. By running
-// these tests we can detect issues related to data structure, paths,
-// serialization, asynchronous operations, and error handling before the
-// HTTP layer is even involved. In other words, this class validates that
-// FirebaseService is reliable and consistent as the core data access layer
-// of the application.
+// CapstoneServicesIntegrationTest is an end-to-end integration test class that
+// verifies the behavior of the refactored service layer against a real Firebase
+// Realtime Database. Instead of calling the REST controllers, these tests
+// interact directly with the domain services to verify user, authentication,
+// water, health and statistics operations. The services delegate database
+// access to the repository layer, which uses the real Firebase implementation.
+// By running these tests we can detect issues related to data structure, paths,
+// serialization, asynchronous operations and integration between the service
+// and repository layers before the HTTP layer is involved.
 
 // Annotate this class as a Spring Boot integration test (loads the full application context)
 @SpringBootTest(classes = Application.class)
 // Use a single test instance for the whole class so @BeforeAll and @AfterAll can be non-static
 @TestInstance(Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
-public class FirebaseServiceIntegrationTest {
+public class CapstoneServicesIntegrationTest {
 
-    // Inject the real FirebaseService bean from the Spring context
+    // Inject the real UserService bean from the Spring context.
     @Autowired
-    private FirebaseService firebaseService;
+    private UserService userService;
+
+    // Inject the real AuthenticationService bean from the Spring context.
+    @Autowired
+    private AuthenticationService authenticationService;
+
+    // Inject the real WaterService bean from the Spring context.
+    @Autowired
+    private WaterService waterService;
+
+    // Inject the real UserHealthService bean from the Spring context.
+    @Autowired
+    private UserHealthService userHealthService;
+
+    // Inject the real StatisticsService bean from the Spring context.
+    @Autowired
+    private StatisticsService statisticsService;
 
     // Per-run usernames for shared baseline users.
     private String TEST_USERNAME_1;
@@ -74,7 +90,7 @@ public class FirebaseServiceIntegrationTest {
     // --------------------------- TEST LIFECYCLE ---------------------------
 
     private void createUserOrFail(User user) throws Exception {
-        CompletableFuture<Boolean> future = firebaseService.createUser(user);
+        CompletableFuture<Boolean> future = userService.createUser(user);
         Boolean created = future.get(20, TimeUnit.SECONDS);
         assertTrue(created, "Failed to create test user: " + user.getUserName());
         createdUsernames.add(user.getUserName());
@@ -110,7 +126,7 @@ public class FirebaseServiceIntegrationTest {
     void cleanUpTestUsers() {
         for (String username : new ArrayList<>(createdUsernames)) {
             try {
-                firebaseService.deleteUser(username).get(20, TimeUnit.SECONDS);
+                userService.deleteUser(username).get(20, TimeUnit.SECONDS);
             } catch (Exception e) {
                 System.out.println("WARN cleanup failed for username=" + username
                         + " message=" + e.getMessage());
@@ -138,7 +154,7 @@ public class FirebaseServiceIntegrationTest {
         signupUser.setAge(25);
 
         // Call the signup method asynchronously
-        CompletableFuture<String> resultFuture = firebaseService.signup(signupUser);
+        CompletableFuture<String> resultFuture = authenticationService.signup(signupUser);
         // Wait for the result of the signup call with a timeout of 20 seconds
         String firstResult = resultFuture.get(20, TimeUnit.SECONDS);
         // Assert that the first signup attempt completed with a success message
@@ -146,7 +162,7 @@ public class FirebaseServiceIntegrationTest {
         createdUsernames.add(uniqueUsername);
 
         // Call signup again with the same username to check duplicate handling
-        CompletableFuture<String> duplicateFuture = firebaseService.signup(signupUser);
+        CompletableFuture<String> duplicateFuture = authenticationService.signup(signupUser);
         // Wait for the duplicate signup result with a timeout of 20 seconds
         String secondResult = duplicateFuture.get(20, TimeUnit.SECONDS);
         // Assert that the second signup attempt reports a duplicate username
@@ -171,7 +187,7 @@ public class FirebaseServiceIntegrationTest {
         tempUser.setAge(25);
 
         // Call createUser for the temporary user
-        CompletableFuture<Boolean> createFuture = firebaseService.createUser(tempUser);
+        CompletableFuture<Boolean> createFuture = userService.createUser(tempUser);
         // Wait for the create result with a timeout of 20 seconds
         Boolean created = createFuture.get(20, TimeUnit.SECONDS);
         // Assert that the user was created successfully
@@ -179,21 +195,21 @@ public class FirebaseServiceIntegrationTest {
         createdUsernames.add(tempUsername);
 
         // Call exists to check that the user now exists in Firebase
-        CompletableFuture<Boolean> existsFuture = firebaseService.exists(tempUsername);
+        CompletableFuture<Boolean> existsFuture = userService.exists(tempUsername);
         // Wait for the exists result with a timeout of 20 seconds
         Boolean exists = existsFuture.get(20, TimeUnit.SECONDS);
         // Assert that the user indeed exists
         assertTrue(exists);
 
         // Call deleteUser to remove the temporary user
-        CompletableFuture<Boolean> deleteFuture = firebaseService.deleteUser(tempUsername);
+        CompletableFuture<Boolean> deleteFuture = userService.deleteUser(tempUsername);
         // Wait for the delete result with a timeout of 20 seconds
         Boolean deleted = deleteFuture.get(20, TimeUnit.SECONDS);
         // Assert that the user was deleted successfully
         assertTrue(deleted);
 
         // Call exists again to verify that the user no longer exists
-        CompletableFuture<Boolean> existsAfterDeleteFuture = firebaseService.exists(tempUsername);
+        CompletableFuture<Boolean> existsAfterDeleteFuture = userService.exists(tempUsername);
         // Wait for the result with a timeout of 20 seconds
         Boolean existsAfterDelete = existsAfterDeleteFuture.get(20, TimeUnit.SECONDS);
         // Assert that the user does not exist anymore
@@ -209,7 +225,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call getUser for this missing username
         CompletableFuture<User> future =
-                firebaseService.getUser(missingUsername);
+                userService.getUser(missingUsername);
         // Wait for the getUser result with a timeout of 20 seconds
         User result = future.get(20, TimeUnit.SECONDS);
         // Assert that no user object was found
@@ -234,9 +250,9 @@ public class FirebaseServiceIntegrationTest {
         // Set age for the original user
         originalUser.setAge(20);
 
-        // Create the original user in Firebase using createUser
+        // Create the original user in Firebase using UserService.createUser
         CompletableFuture<Boolean> createFuture =
-                firebaseService.createUser(originalUser);
+                userService.createUser(originalUser);
         // Wait for the creation result with a timeout of 20 seconds
         Boolean created = createFuture.get(20, TimeUnit.SECONDS);
         // Assert that the user was created successfully
@@ -256,7 +272,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call updateUser to replace the existing record with the updated user
         CompletableFuture<Boolean> updateFuture =
-                firebaseService.updateUser(tempUsername, updatedUser);
+                userService.updateUser(tempUsername, updatedUser);
         // Wait for the update result with a timeout of 20 seconds
         Boolean updated = updateFuture.get(20, TimeUnit.SECONDS);
         // Assert that the update operation succeeded
@@ -264,7 +280,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call getUser to read back the user after the update
         CompletableFuture<User> getFuture =
-                firebaseService.getUser(tempUsername);
+                userService.getUser(tempUsername);
         // Wait for the getUser result with a timeout of 20 seconds
         User fromDb = getFuture.get(20, TimeUnit.SECONDS);
         // Assert that the returned user object is not null
@@ -284,7 +300,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call deleteUser to clean up the temporary user
         CompletableFuture<Boolean> deleteFuture =
-                firebaseService.deleteUser(tempUsername);
+                userService.deleteUser(tempUsername);
         // Wait for the delete result with a timeout of 20 seconds
         Boolean deleted = deleteFuture.get(20, TimeUnit.SECONDS);
         // Assert that the user was deleted successfully
@@ -311,7 +327,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call updateUser for this missing username
         CompletableFuture<Boolean> updateFuture =
-                firebaseService.updateUser(missingUsername, candidate);
+                userService.updateUser(missingUsername, candidate);
         // Wait for the update result with a timeout of 20 seconds
         Boolean updated = updateFuture.get(20, TimeUnit.SECONDS);
         // Assert that the service returned false (user not found)
@@ -319,7 +335,7 @@ public class FirebaseServiceIntegrationTest {
 
         // verify that getUser still returns null for this username
         CompletableFuture<User> getFuture =
-                firebaseService.getUser(missingUsername);
+                userService.getUser(missingUsername);
         // Wait for the getUser result with a timeout of 20 seconds
         User fromDb = getFuture.get(20, TimeUnit.SECONDS);
         // Assert that no user object exists in Firebase for this username
@@ -332,7 +348,7 @@ public class FirebaseServiceIntegrationTest {
     @Test
     void login_withCorrectCredentials_returnsUser() throws Exception {
         // Call login using the known username and password of testUser1
-        CompletableFuture<User> loginFuture = firebaseService.login(TEST_USERNAME_1, "pass1");
+        CompletableFuture<User> loginFuture = authenticationService.login(TEST_USERNAME_1, "pass1");
         // Wait for the login result with a timeout of 20 seconds
         User loggedUser = loginFuture.get(20, TimeUnit.SECONDS);
         // Assert that a non-null user object was returned
@@ -347,7 +363,7 @@ public class FirebaseServiceIntegrationTest {
     @Test
     void login_withWrongPassword_returnsNull() throws Exception {
         // Call login with the correct username but wrong password
-        CompletableFuture<User> loginFuture = firebaseService.login(TEST_USERNAME_1, "wrongPass");
+        CompletableFuture<User> loginFuture = authenticationService.login(TEST_USERNAME_1, "wrongPass");
         // Wait for the login result with a timeout of 20 seconds
         User loggedUser = loginFuture.get(20, TimeUnit.SECONDS);
         // Assert that no user was found for the wrong credentials
@@ -362,7 +378,7 @@ public class FirebaseServiceIntegrationTest {
     @Test
     void updateWater_increasesTodayTotal_and_getWaterIsConsistent() throws Exception {
         // Call getWater to read today's and yesterday's values before the update
-        CompletableFuture<JSONObject> beforeFuture = firebaseService.getWater(TEST_USERNAME_1);
+        CompletableFuture<JSONObject> beforeFuture = waterService.getWater(TEST_USERNAME_1);
         // Wait for the JSON result with a timeout of 20 seconds
         JSONObject beforeJson = beforeFuture.get(20, TimeUnit.SECONDS);
         // Assert that the JSON object is not null
@@ -374,14 +390,14 @@ public class FirebaseServiceIntegrationTest {
         int addedAmount = 500;
 
         // Call updateWater to add the new amount for the given user
-        CompletableFuture<Boolean> updateFuture = firebaseService.updateWater(TEST_USERNAME_1, addedAmount);
+        CompletableFuture<Boolean> updateFuture = waterService.updateWater(TEST_USERNAME_1, addedAmount);
         // Wait for the update result with a timeout of 20 seconds
         Boolean updated = updateFuture.get(20, TimeUnit.SECONDS);
         // Assert that the update operation succeeded
         assertTrue(updated);
 
         // Call getWater again to read the updated values
-        CompletableFuture<JSONObject> afterFuture = firebaseService.getWater(TEST_USERNAME_1);
+        CompletableFuture<JSONObject> afterFuture = waterService.getWater(TEST_USERNAME_1);
         // Wait for the updated JSON result with a timeout of 20 seconds
         JSONObject afterJson = afterFuture.get(20, TimeUnit.SECONDS);
         // Assert that the JSON object is not null
@@ -392,12 +408,12 @@ public class FirebaseServiceIntegrationTest {
         // Assert that today's water increased exactly by the added amount
         assertEquals(todayBefore + addedAmount, todayAfter);
 
-        // Build today's date key in the same format used by FirebaseService
+        // Build today's date key in the same format used by WaterService
         String todayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
         // Call getWaterHistoryMap for the last 3 days for this user
         CompletableFuture<Map<String, Long>> historyFuture =
-                firebaseService.getWaterHistoryMap(TEST_USERNAME_1, 3);
+                waterService.getWaterHistoryMap(TEST_USERNAME_1, 3);
         // Wait for the history map result with a timeout of 20 seconds
         Map<String, Long> history = historyFuture.get(20, TimeUnit.SECONDS);
         // Assert that the history map is not null
@@ -416,7 +432,7 @@ public class FirebaseServiceIntegrationTest {
     void getWaterHistoryMap_forNewUser_returnsAllZerosWithExpectedKeys() throws Exception {
         // Choose the number of days we want to request in the history map
         int days = 7;
-        // Create a date formatter that matches the format used inside FirebaseService ("yyyy-MM-dd")
+        // Create a date formatter that matches the format used by WaterService ("yyyy-MM-dd")
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         // Create a Calendar instance initialized to "now" (today)
         Calendar cal = Calendar.getInstance();
@@ -435,7 +451,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call the service to get the actual water history map for the second test user
         CompletableFuture<Map<String, Long>> future =
-                firebaseService.getWaterHistoryMap(TEST_USERNAME_2, days);
+                waterService.getWaterHistoryMap(TEST_USERNAME_2, days);
         // Wait for the asynchronous result with a timeout of 20 seconds
         Map<String, Long> actual = future.get(20, TimeUnit.SECONDS);
         // Assert that the actual map is not null
@@ -448,7 +464,7 @@ public class FirebaseServiceIntegrationTest {
     @Test
     void getWater_forNewUser_returnsZeroTotals() throws Exception {
         // Call getWater for the second test user (assuming no water updates done yet)
-        CompletableFuture<JSONObject> future = firebaseService.getWater(TEST_USERNAME_2);
+        CompletableFuture<JSONObject> future = waterService.getWater(TEST_USERNAME_2);
         // Wait for the JSON result with a timeout of 20 seconds
         JSONObject json = future.get(20, TimeUnit.SECONDS);
         // Assert that the JSON object is not null (service returns an object, not null)
@@ -477,7 +493,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call updateGoalMl to set the new goal for the main test user
         CompletableFuture<Boolean> updateFuture =
-                firebaseService.updateGoalMl(TEST_USERNAME_1, newGoal);
+                waterService.updateGoalMl(TEST_USERNAME_1, newGoal);
         // Wait for the update result with a timeout of 20 seconds
         Boolean updated = updateFuture.get(20, TimeUnit.SECONDS);
         // Assert that the update operation returned true
@@ -485,7 +501,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call getGoalMl to read the goal for the same user
         CompletableFuture<Integer> getFuture =
-                firebaseService.getGoalMl(TEST_USERNAME_1);
+                waterService.getGoalMl(TEST_USERNAME_1);
         // Wait for the goal result with a timeout of 20 seconds
         Integer goalValue = getFuture.get(20, TimeUnit.SECONDS);
         // Assert that the returned goal is not null
@@ -507,9 +523,9 @@ public class FirebaseServiceIntegrationTest {
         // Set a password for the test user
         user.setPassword("p");
 
-        // Create the user in Firebase using createUser
+        // Create the user in Firebase using UserService.createUser
         CompletableFuture<Boolean> createFuture =
-                firebaseService.createUser(user);
+                userService.createUser(user);
         // Wait for the creation result with a timeout of 20 seconds
         Boolean created = createFuture.get(20, TimeUnit.SECONDS);
         // Assert that the user was created successfully
@@ -518,7 +534,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call getGoalMl before any explicit update to read the default goal
         CompletableFuture<Integer> beforeFuture =
-                firebaseService.getGoalMl(username);
+                waterService.getGoalMl(username);
         // Wait for the goal result with a timeout of 20 seconds
         Integer before = beforeFuture.get(20, TimeUnit.SECONDS);
         // Assert that the default goal value is 3000 for a new user
@@ -526,13 +542,13 @@ public class FirebaseServiceIntegrationTest {
 
         // Try to update the goal with a value below the allowed range
         CompletableFuture<Boolean> lowFuture =
-                firebaseService.updateGoalMl(username, 100);
+                waterService.updateGoalMl(username, 100);
         // Wait for the low update result with a timeout of 20 seconds
         Boolean low = lowFuture.get(20, TimeUnit.SECONDS);
 
         // Try to update the goal with a value above the allowed range
         CompletableFuture<Boolean> highFuture =
-                firebaseService.updateGoalMl(username, 20000);
+                waterService.updateGoalMl(username, 20000);
         // Wait for the high update result with a timeout of 20 seconds
         Boolean high = highFuture.get(20, TimeUnit.SECONDS);
 
@@ -542,7 +558,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call getGoalMl again after the invalid updates
         CompletableFuture<Integer> afterFuture =
-                firebaseService.getGoalMl(username);
+                waterService.getGoalMl(username);
         // Wait for the goal result with a timeout of 20 seconds
         Integer after = afterFuture.get(20, TimeUnit.SECONDS);
         // Assert that the goal value did not change after invalid updates
@@ -550,7 +566,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Clean up: delete the temporary test user from Firebase
         CompletableFuture<Boolean> deleteFuture =
-                firebaseService.deleteUser(username);
+                userService.deleteUser(username);
         // Wait for the delete result with a timeout of 20 seconds
         Boolean deleted = deleteFuture.get(20, TimeUnit.SECONDS);
         // Assert that the delete operation succeeded
@@ -567,7 +583,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call patchUser with the partial updates for the main test user
         CompletableFuture<User> patchFuture =
-                firebaseService.patchUser(TEST_USERNAME_1, updates);
+                userService.patchUser(TEST_USERNAME_1, updates);
         // Wait for the updated User object with a timeout of 20 seconds
         User updatedUser = patchFuture.get(20, TimeUnit.SECONDS);
         // Assert that the returned User object is not null
@@ -575,7 +591,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call getGoalMl to verify that goalMl was really updated in Firebase
         CompletableFuture<Integer> goalFuture =
-                firebaseService.getGoalMl(TEST_USERNAME_1);
+                waterService.getGoalMl(TEST_USERNAME_1);
         // Wait for the goal result with a timeout of 20 seconds
         Integer goalValue = goalFuture.get(20, TimeUnit.SECONDS);
         // Assert that the returned goal is not null
@@ -594,7 +610,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call updateCalories for the main test user
         CompletableFuture<Boolean> updateFuture =
-                firebaseService.updateCalories(TEST_USERNAME_1, newCalories);
+                userHealthService.updateCalories(TEST_USERNAME_1, newCalories);
         // Wait for the update result with a timeout of 20 seconds
         Boolean updated = updateFuture.get(20, TimeUnit.SECONDS);
         // Assert that the update operation succeeded
@@ -602,7 +618,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call getCalories to read the calories value for the same user
         CompletableFuture<Integer> getFuture =
-                firebaseService.getCalories(TEST_USERNAME_1);
+                userHealthService.getCalories(TEST_USERNAME_1);
         // Wait for the calories result with a timeout of 20 seconds
         Integer calories = getFuture.get(20, TimeUnit.SECONDS);
         // Assert that the returned calories value is not null
@@ -616,7 +632,7 @@ public class FirebaseServiceIntegrationTest {
     void getCalories_forNewUser_returnsZero() throws Exception {
         // Call getCalories for the second test user
         CompletableFuture<Integer> getFuture =
-                firebaseService.getCalories(TEST_USERNAME_2);
+                userHealthService.getCalories(TEST_USERNAME_2);
         // Wait for the calories result with a timeout of 20 seconds
         Integer calories = getFuture.get(20, TimeUnit.SECONDS);
         // Assert that the returned calories value is not null
@@ -633,7 +649,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call getCalories for this non-existing username
         CompletableFuture<Integer> future =
-                firebaseService.getCalories(missingUsername);
+                userHealthService.getCalories(missingUsername);
         // Wait for the calories result with a timeout of 20 seconds
         Integer cals = future.get(20, TimeUnit.SECONDS);
         // Assert that the returned calories value is exactly 0
@@ -655,7 +671,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Create the user in Firebase
         CompletableFuture<Boolean> createFuture =
-                firebaseService.createUser(user);
+                userService.createUser(user);
         // Wait for the creation result with a timeout of 20 seconds
         Boolean created = createFuture.get(20, TimeUnit.SECONDS);
         // Assert that the user was created successfully
@@ -664,7 +680,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Read the initial calories value for this user
         CompletableFuture<Integer> initialFuture =
-                firebaseService.getCalories(username);
+                userHealthService.getCalories(username);
         // Wait for the calories result with a timeout of 20 seconds
         Integer initial = initialFuture.get(20, TimeUnit.SECONDS);
         // Assert that the initial calories value is 0
@@ -674,7 +690,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call updateCalories with a valid value inside the allowed range
         CompletableFuture<Boolean> validUpdateFuture =
-                firebaseService.updateCalories(username, 1200);
+                userHealthService.updateCalories(username, 1200);
         // Wait for the update result with a timeout of 20 seconds
         Boolean validUpdated = validUpdateFuture.get(20, TimeUnit.SECONDS);
         // Assert that the update operation succeeded
@@ -682,7 +698,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Read calories after the valid update
         CompletableFuture<Integer> afterValidFuture =
-                firebaseService.getCalories(username);
+                userHealthService.getCalories(username);
         // Wait for the calories result with a timeout of 20 seconds
         Integer afterValid = afterValidFuture.get(20, TimeUnit.SECONDS);
         // Assert that the calories value was updated correctly to 1200
@@ -692,7 +708,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Try to update calories with a negative value (invalid)
         CompletableFuture<Boolean> invalidLowFuture =
-                firebaseService.updateCalories(username, -5);
+                userHealthService.updateCalories(username, -5);
         // Wait for the update result with a timeout of 20 seconds
         Boolean invalidLow = invalidLowFuture.get(20, TimeUnit.SECONDS);
         // Assert that the negative update was rejected
@@ -700,7 +716,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Try to update calories with an extremely high value (invalid)
         CompletableFuture<Boolean> invalidHighFuture =
-                firebaseService.updateCalories(username, 50000);
+                userHealthService.updateCalories(username, 50000);
         // Wait for the update result with a timeout of 20 seconds
         Boolean invalidHigh = invalidHighFuture.get(20, TimeUnit.SECONDS);
         // Assert that the too-high update was rejected
@@ -708,7 +724,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Read calories again after both invalid updates
         CompletableFuture<Integer> afterInvalidFuture =
-                firebaseService.getCalories(username);
+                userHealthService.getCalories(username);
         // Wait for the calories result with a timeout of 20 seconds
         Integer afterInvalid = afterInvalidFuture.get(20, TimeUnit.SECONDS);
         // Assert that the calories value remained equal to the last valid value (1200)
@@ -716,7 +732,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Clean up: delete the temporary test user
         CompletableFuture<Boolean> deleteFuture =
-                firebaseService.deleteUser(username);
+                userService.deleteUser(username);
         // Wait for the delete result with a timeout of 20 seconds
         Boolean deleted = deleteFuture.get(20, TimeUnit.SECONDS);
         // Assert that the delete operation succeeded
@@ -729,7 +745,7 @@ public class FirebaseServiceIntegrationTest {
     void getBmiDistribution_countsEachBmiCategoryForNewUsers() throws Exception {
         // Call getBmiDistribution once to capture the initial state before adding test users
         CompletableFuture<Map<String, Integer>> beforeFuture =
-                firebaseService.getBmiDistribution();
+                statisticsService.getBmiDistribution();
         // Wait for the "before" distribution map with a timeout of 20 seconds
         Map<String, Integer> before = beforeFuture.get(20, TimeUnit.SECONDS);
         // Assert that the "before" map is not null
@@ -773,8 +789,8 @@ public class FirebaseServiceIntegrationTest {
             // Set a simple password
             u.setPassword("bmiPass");
 
-            // Create the user in Firebase using createUser
-            CompletableFuture<Boolean> createFuture = firebaseService.createUser(u);
+            // Create the user in Firebase using UserService.createUser
+            CompletableFuture<Boolean> createFuture = userService.createUser(u);
             // Wait for the creation result with a timeout of 20 seconds
             Boolean created = createFuture.get(20, TimeUnit.SECONDS);
             // Assert that the user was created successfully (or at least not failed)
@@ -783,7 +799,7 @@ public class FirebaseServiceIntegrationTest {
 
             // Update the BMI value for this user according to the array
             CompletableFuture<Boolean> bmiFuture =
-                    firebaseService.updateBmi(bmiUsers[i], bmiValues[i]);
+                    userHealthService.updateBmi(bmiUsers[i], bmiValues[i]);
             // Wait for the BMI update result with a timeout of 20 seconds
             Boolean bmiUpdated = bmiFuture.get(20, TimeUnit.SECONDS);
             // Assert that the BMI update operation succeeded
@@ -792,7 +808,7 @@ public class FirebaseServiceIntegrationTest {
 
         // Call getBmiDistribution again after adding the four new test users
         CompletableFuture<Map<String, Integer>> afterFuture =
-                firebaseService.getBmiDistribution();
+                statisticsService.getBmiDistribution();
         // Wait for the "after" distribution map with a timeout of 20 seconds
         Map<String, Integer> after = afterFuture.get(20, TimeUnit.SECONDS);
         // Assert that the "after" map is not null
@@ -819,7 +835,7 @@ public class FirebaseServiceIntegrationTest {
         // Finally, clean up all four temporary BMI test users from Firebase
         for (String uname : bmiUsers) {
             // Call deleteUser for the current temporary BMI user
-            CompletableFuture<Boolean> deleteFuture = firebaseService.deleteUser(uname);
+            CompletableFuture<Boolean> deleteFuture = userService.deleteUser(uname);
             // Wait for the deletion result with a timeout of 20 seconds
             Boolean deleted = deleteFuture.get(20, TimeUnit.SECONDS);
             // Assert that the delete operation finished successfully

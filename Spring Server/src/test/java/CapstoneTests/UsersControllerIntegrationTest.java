@@ -14,8 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.boot.test.context.SpringBootTest;
 // Import Autowired to inject beans into this test class
 import org.springframework.beans.factory.annotation.Autowired;
-// Import the FirebaseService to prepare data directly in Firebase for tests
-import org.example.CapstoneProject.service.FirebaseService;
+// Import UserService to prepare and clean up test users through the service layer
+import org.example.CapstoneProject.service.UserService;
 // Import the User model used in requests and responses
 import org.example.CapstoneProject.model.User;
 // Import Spring's TestRestTemplate for real HTTP calls to the running server
@@ -27,23 +27,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpMethod;
 // Import HttpEntity to send request bodies for PUT/PATCH
 import org.springframework.http.HttpEntity;
-// Import Java TimeUnit for waiting on async FirebaseService operations in helpers
+// Import Java TimeUnit for waiting on asynchronous service operations in helpers
 import java.util.concurrent.TimeUnit;
 // Import Java utilities for maps and collections
 import java.util.*;
 
 // UsersControllerIntegrationTest is an end-to-end integration test class that
 // verifies the REST API exposed by UsersController using a real embedded
-// Spring Boot web server. Instead of calling FirebaseService directly, these
-// tests use TestRestTemplate to perform real HTTP requests (GET, POST, PUT,
-// PATCH, DELETE, HEAD) against the /api/users endpoints and assert on both
-// the HTTP status codes and the response bodies. In this way, the class
-// validates that request mappings, URL paths, query parameters, JSON
-// serialization/deserialization, and error handling are all wired correctly
-// on the controller layer, while FirebaseServiceIntegrationTest already
-// ensures that the underlying FirebaseService logic works correctly with the
-// database. Together, they give full confidence that the API behaves as
-// expected from the client’s point of view.
+// Spring Boot web server. The tests use TestRestTemplate to perform real HTTP
+// requests (GET, POST, PUT, PATCH, DELETE, HEAD) against the /api/users
+// endpoints and assert on both the HTTP status codes and response bodies.
+// Test users are prepared and cleaned up through UserService, while the
+// controller itself is always exercised through HTTP. In this way, the class
+// validates request mappings, URL paths, query parameters, JSON
+// serialization/deserialization and the complete controller-to-service-to-
+// repository integration from the client's point of view.
 
 // RestTemplate is a Spring HTTP client that allows us to call REST endpoints
 // in a simple, type-safe way. Instead of manually opening connections,
@@ -67,11 +65,11 @@ public class UsersControllerIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
-    // Inject FirebaseService to prepare test data directly in Firebase
+    // Inject UserService to prepare and clean up test data.
     @Autowired
-    private FirebaseService firebaseService;
+    private UserService userService;
 
-    // Define a constant timeout in seconds for FirebaseService helper calls
+    // Define a constant timeout in seconds for service helper calls
     private final long TIMEOUT_SECONDS = 20L;
 
     // Keep track of all usernames created during this test class
@@ -97,13 +95,13 @@ public class UsersControllerIntegrationTest {
         return user;
     }
 
-    // Helper method to create a user in Firebase directly using FirebaseService
+    // Helper method to create a test user through UserService
     @SuppressWarnings("UnusedReturnValue")
     private User createUserInFirebase(String username, String password) throws Exception {
         // Create a new User object with the requested username and password
         var user = buildUser(username, password);
-        // Call createUser on FirebaseService to persist this user
-        var future = firebaseService.createUser(user);
+        // Call createUser on UserService to persist this user
+        var future = userService.createUser(user);
         // Wait for the async result with a timeout
         var created = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         // Fail fast if setup did not actually create the user
@@ -116,11 +114,11 @@ public class UsersControllerIntegrationTest {
         return user;
     }
 
-    // Helper method to delete a user in Firebase safely
+    // Helper method to delete a test user safely through UserService
     private void deleteUserInFirebase(String username) {
         try {
-            // Call deleteUser on FirebaseService
-            var future = firebaseService.deleteUser(username);
+            // Call deleteUser on UserService
+            var future = userService.deleteUser(username);
             // Wait for the async result with a timeout
             @SuppressWarnings("unused") var deleted = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (Exception e) {
@@ -198,7 +196,7 @@ public class UsersControllerIntegrationTest {
     void login_withCorrectCredentials_returnsUserJson() throws Exception {
         // Build a unique username for this test
         var username = "loginOk_" + System.currentTimeMillis();
-        // Create the user directly in Firebase with the correct password
+        // Create the user through the service layer with the correct password
         createUserInFirebase(username, "pass1");
 
         // Build a login request body User with same username and password
@@ -228,7 +226,7 @@ public class UsersControllerIntegrationTest {
     void login_withWrongPassword_returns401() throws Exception {
         // Build a unique username for this test
         var username = "loginBad_" + System.currentTimeMillis();
-        // Create the user directly in Firebase with a known password
+        // Create the user through the service layer with a known password
         createUserInFirebase(username, "realPass");
 
         // Build a login request body with the correct username but wrong password
@@ -254,7 +252,7 @@ public class UsersControllerIntegrationTest {
     void getAllUsers_returnsArrayAndContainsAtLeastOneUser() throws Exception {
         // Create one user to ensure at least one user exists in the system
         var username = "allUsers_" + System.currentTimeMillis();
-        // Create the user directly in Firebase
+        // Create the user through the service layer
         createUserInFirebase(username, "p");
 
         // Perform a GET request to /api/users expecting an array of User
@@ -280,7 +278,7 @@ public class UsersControllerIntegrationTest {
     void getUser_existingUser_returnsUserJson() throws Exception {
         // Build a unique username for this test
         var username = "getUserOk_" + System.currentTimeMillis();
-        // Create this user in Firebase
+        // Create this user through the service layer
         createUserInFirebase(username, "p");
 
         // Perform a GET request to /api/users/{username} expecting a User body
@@ -319,7 +317,7 @@ public class UsersControllerIntegrationTest {
     void updateUser_existingUser_replacesRecord() throws Exception {
         // Build a unique username for this test
         var username = "updateUserOk_" + System.currentTimeMillis();
-        // Create the initial user in Firebase
+        // Create the initial user through the service layer
         createUserInFirebase(username, "origPass");
 
         // Build a new User object with updated fields
@@ -334,7 +332,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a PUT request to /api/users/{username} expecting a User response
         var response = this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.PUT, entity, User.class, username);
+                HttpMethod.PUT, entity, User.class, username);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -363,18 +361,18 @@ public class UsersControllerIntegrationTest {
 
         // Perform a PUT request to /api/users/{username} expecting String body
         var response = this.restTemplate.exchange(
-                        // url template
-                        "/api/users/{username}",
-                        // http method
-                        HttpMethod.PUT,
-                        // the request
-                        entity,
-                        // cast the body of the response to string
-                        String.class,
-                        // add the parameter username to the url
-                        // "/api/users/{username}"  +  username
-                        // = "/api/users/patchNoSuch_12345"
-                        username);
+                // url template
+                "/api/users/{username}",
+                // http method
+                HttpMethod.PUT,
+                // the request
+                entity,
+                // cast the body of the response to string
+                String.class,
+                // add the parameter username to the url
+                // "/api/users/{username}"  +  username
+                // = "/api/users/patchNoSuch_12345"
+                username);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -401,7 +399,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a PATCH request to /api/users/{username} expecting User response
         var response = this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.PATCH, entity, User.class, username);
+                HttpMethod.PATCH, entity, User.class, username);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -430,7 +428,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a PATCH request to /api/users/{username} expecting String body
         var response = this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.PATCH, entity, String.class, username);
+                HttpMethod.PATCH, entity, String.class, username);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -445,12 +443,12 @@ public class UsersControllerIntegrationTest {
     void deleteUser_existingUser_returnsOk() throws Exception {
         // Build a unique username for this test
         var username = "deleteUserOk_" + System.currentTimeMillis();
-        // Create the user in Firebase
+        // Create the user through the service layer
         createUserInFirebase(username, "p");
 
         // Perform a DELETE request to /api/users/{username} expecting String body
         var response = this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.DELETE, null, String.class, username);
+                HttpMethod.DELETE, null, String.class, username);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -466,7 +464,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a DELETE request to /api/users/{username} expecting String body
         var response = this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.DELETE, null, String.class, username);
+                HttpMethod.DELETE, null, String.class, username);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -481,12 +479,12 @@ public class UsersControllerIntegrationTest {
     void headUser_existingUser_returns200() throws Exception {
         // Build a unique username and create user in Firebase
         var username = "headUserOk_" + System.currentTimeMillis();
-        // Create this user in Firebase
+        // Create this user through the service layer
         createUserInFirebase(username, "p");
 
         // Perform a HEAD request to /api/users/{username} expecting no body
         var response = this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.HEAD, null, Void.class, username);
+                HttpMethod.HEAD, null, Void.class, username);
 
         // Assert that HTTP status is 200 OK
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -502,7 +500,7 @@ public class UsersControllerIntegrationTest {
 
         // Perform a HEAD request to /api/users/{username}
         var response = this.restTemplate.exchange("/api/users/{username}",
-                        HttpMethod.HEAD, null, Void.class, username);
+                HttpMethod.HEAD, null, Void.class, username);
 
         // Assert that HTTP status is 404 Not Found
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -515,7 +513,7 @@ public class UsersControllerIntegrationTest {
     void updateBmi_existingUser_returns200() throws Exception {
         // Build a unique username for this test
         var username = "bmiOk_" + System.currentTimeMillis();
-        // Create the user in Firebase
+        // Create the user through the service layer
         createUserInFirebase(username, "p");
 
         // Build URL with query parameter for bmi
@@ -554,7 +552,7 @@ public class UsersControllerIntegrationTest {
     void updateWater_and_getWater_flowForExistingUser() throws Exception {
         // Build a unique username for this test
         var username = "waterOk_" + System.currentTimeMillis();
-        // Create the user in Firebase
+        // Create the user through the service layer
         createUserInFirebase(username, "p");
 
         // Perform a GET request to read initial water values
@@ -623,7 +621,7 @@ public class UsersControllerIntegrationTest {
     void getWaterHistoryMap_existingUser_returnsMapWithRequestedDays() throws Exception {
         // Build a unique username for this test
         var username = "waterHistoryOk_" + System.currentTimeMillis();
-        // Create the user in Firebase
+        // Create the user through the service layer
         createUserInFirebase(username, "p");
         // Define how many days we want
         var days = 5;
@@ -667,7 +665,7 @@ public class UsersControllerIntegrationTest {
     void getWeeklyAverages_existingUser_returnsMap() throws Exception {
         // Build a unique username for this test
         var username = "weeklyAvgOk_" + System.currentTimeMillis();
-        // Create the user in Firebase
+        // Create the user through the service layer
         createUserInFirebase(username, "p");
         // add some water so at least one week has non-zero average
         var waterUrl = "/api/users/" + username + "/water?amount=300";
@@ -720,7 +718,7 @@ public class UsersControllerIntegrationTest {
     void goal_setAndGet_flowForExistingUser() throws Exception {
         // Build a unique username for this test
         var username = "goalOk_" + System.currentTimeMillis();
-        // Create the user in Firebase
+        // Create the user through the service layer
         createUserInFirebase(username, "p");
         // Define a valid goalMl value
         var newGoal = 3400;
@@ -761,7 +759,7 @@ public class UsersControllerIntegrationTest {
     void setGoal_invalidValue_returnsBadRequest() throws Exception {
         // Build a unique username for this test
         var username = "goalInvalid_" + System.currentTimeMillis();
-        // Create the user in Firebase
+        // Create the user through the service layer
         createUserInFirebase(username, "p");
 
         // Build URL for PUT request with invalid goalMl value (too low)
@@ -805,7 +803,7 @@ public class UsersControllerIntegrationTest {
     void calories_updateAndGet_flowWithValidAndInvalidValues() throws Exception {
         // Build a unique username for this test
         var username = "caloriesOk_" + System.currentTimeMillis();
-        // Create the user in Firebase
+        // Create the user through the service layer
         createUserInFirebase(username, "p");
 
         // Build URL for initial GET request to calories endpoint
