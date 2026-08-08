@@ -175,7 +175,8 @@ public class UsersController {
                         user.getUserName(),
                         user.getPassword(),
                         user.getAge(),
-                        user.getFullName()
+                        user.getFullName(),
+                        user.getBmi()
                 );
 
                 // Return HTTP 200 with the user response DTO.
@@ -207,7 +208,8 @@ public class UsersController {
                             user.getUserName(),
                             user.getPassword(),
                             user.getAge(),
-                            user.getFullName()
+                            user.getFullName(),
+                            user.getBmi()
                     ))
                     .collect(Collectors.toList());
 
@@ -238,7 +240,8 @@ public class UsersController {
                     user.getUserName(),
                     user.getPassword(),
                     user.getAge(),
-                    user.getFullName()
+                    user.getFullName(),
+                    user.getBmi()
             );
 
             // Return HTTP 200 with the user response DTO.
@@ -284,7 +287,8 @@ public class UsersController {
                     updatedUser.getUserName(),
                     updatedUser.getPassword(),
                     updatedUser.getAge(),
-                    updatedUser.getFullName()
+                    updatedUser.getFullName(),
+                    updatedUser.getBmi()
             );
 
             // Return HTTP 200 with the user response DTO.
@@ -314,7 +318,8 @@ public class UsersController {
                     updatedUser.getUserName(),
                     updatedUser.getPassword(),
                     updatedUser.getAge(),
-                    updatedUser.getFullName()
+                    updatedUser.getFullName(),
+                    updatedUser.getBmi()
             );
 
             // Return HTTP 200 with the user response DTO.
