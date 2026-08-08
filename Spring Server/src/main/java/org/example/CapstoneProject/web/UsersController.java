@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 // Import Java utility classes
 import java.util.*;
 import java.util.concurrent.CompletableFuture;   // For async non-blocking calls
-
+import jakarta.validation.Valid;
 
 // NOTE:
 // I use thenApply (not thenApplyAsync) because this continuation is very light:
@@ -109,7 +109,7 @@ public class UsersController {
     // Android → RestClient.register(user) → here
     // =========================================================
     @PostMapping("/signup")
-    public CompletableFuture<ResponseEntity<String>> signup(@RequestBody SignupRequest signupRequest) {
+    public CompletableFuture<ResponseEntity<String>> signup(@Valid @RequestBody SignupRequest signupRequest) {
 
         // Create a User model from the signup request data.
         var user = new User();
@@ -152,7 +152,7 @@ public class UsersController {
     // Android → RestClient.login(username,password) → here
     // =========================================================
     @PostMapping("/login")
-    public CompletableFuture<ResponseEntity<?>> login(@RequestBody LoginRequest loginRequest) {
+    public CompletableFuture<ResponseEntity<?>> login(@Valid @RequestBody LoginRequest loginRequest) {
 
         // Extract username & password from request body.
         var username = loginRequest.getUserName();

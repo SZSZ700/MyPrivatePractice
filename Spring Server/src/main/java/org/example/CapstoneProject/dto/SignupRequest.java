@@ -1,4 +1,6 @@
 package org.example.CapstoneProject.dto;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 
 // -------------------------------------------------------------------------
 // Represents the data required for a signup request.
@@ -11,15 +13,19 @@ package org.example.CapstoneProject.dto;
 public class SignupRequest {
 
     // Username provided by the client.
+    @NotBlank(message = "Username is required")
     private String userName;
 
     // Password provided by the client.
+    @NotBlank(message = "Password is required")
     private String password;
 
     // Full name provided by the client.
+    @NotBlank(message = "Full name is required")
     private String fullName;
 
     // Age provided by the client.
+    @Min(value = 1, message = "Age must be greater than 0")
     private int age;
 
     // ---------------------------------------------------------------------
