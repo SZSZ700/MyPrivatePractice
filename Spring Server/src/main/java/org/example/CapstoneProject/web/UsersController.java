@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;   // For async non-blocking calls
 import jakarta.validation.Valid;
+import org.example.CapstoneProject.dto.UpdateUserRequest;
 
 // NOTE:
 // I use thenApply (not thenApplyAsync) because this continuation is very light:
@@ -209,16 +210,33 @@ public class UsersController {
     @PutMapping("/{username}")
     public CompletableFuture<ResponseEntity<?>> updateUser(
             @PathVariable("username") String username,
-            @RequestBody User updatedUser) {
-        // Call Firebase service to update user
+            @Valid @RequestBody UpdateUserRequest updateRequest) {
+
+        // Create a User model from the update request data.
+        var updatedUser = new User();
+
+        // Keep the username from the path parameter.
+        updatedUser.setUserName(username);
+
+        // Copy the password from the request.
+        updatedUser.setPassword(updateRequest.getPassword());
+
+        // Copy the full name from the request.
+        updatedUser.setFullName(updateRequest.getFullName());
+
+        // Copy the age from the request.
+        updatedUser.setAge(updateRequest.getAge());
+
+        // Call UserService to update the user.
         return userService.updateUser(username, updatedUser).thenApply(success -> {
-            // If user not found, return 404
             if (!success) {
+                // If user not found, return 404.
                 return ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
                         .body("User not found");
             }
-            // If success, return 200 OK with updated user
+
+            // If success, return 200 OK with updated user.
             return ResponseEntity.ok(updatedUser);
         });
     }

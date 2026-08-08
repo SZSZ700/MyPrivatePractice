@@ -1,34 +1,22 @@
 package org.example.CapstoneProject.dto;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 // -------------------------------------------------------------------------
-// Represents the data required for a signup request.
+// Represents the data accepted when updating an existing user.
 //
-// This DTO contains the fields accepted from the client during
-// user registration and keeps the controller separated from the
-// persistence model.
+// This DTO keeps the controller separated from the persistence model
+// while preserving the same JSON structure used by the Android client.
 // -------------------------------------------------------------------------
 @SuppressWarnings("unused")
-public class SignupRequest {
+public class UpdateUserRequest {
 
     // Username provided by the client.
-    @NotBlank(message = "Username is required")
-    @Size(
-            min = 3,
-            max = 30,
-            message = "Username must be between 3 and 30 characters"
-    )
     private String userName;
 
     // Password provided by the client.
     @NotBlank(message = "Password is required")
-    @Size(
-            min = 4,
-            max = 100,
-            message = "Password must be between 4 and 100 characters"
-    )
     private String password;
 
     // Full name provided by the client.
@@ -42,45 +30,62 @@ public class SignupRequest {
     // ---------------------------------------------------------------------
     // Default constructor required for JSON deserialization.
     // ---------------------------------------------------------------------
-    public SignupRequest() {}
+    public UpdateUserRequest() {
+    }
 
     // ---------------------------------------------------------------------
     // Returns the username.
     // ---------------------------------------------------------------------
-    public String getUserName() { return userName; }
+    public String getUserName() {
+        return userName;
+    }
 
     // ---------------------------------------------------------------------
     // Sets the username.
     // ---------------------------------------------------------------------
-    public void setUserName(String userName) { this.userName = userName; }
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
     // ---------------------------------------------------------------------
     // Returns the password.
     // ---------------------------------------------------------------------
-    public String getPassword() { return password; }
+    public String getPassword() {
+        return password;
+    }
 
     // ---------------------------------------------------------------------
     // Sets the password.
     // ---------------------------------------------------------------------
-    public void setPassword(String password) { this.password = password; }
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
     // ---------------------------------------------------------------------
     // Returns the full name.
     // ---------------------------------------------------------------------
-    public String getFullName() { return fullName; }
+    public String getFullName() {
+        return fullName;
+    }
 
     // ---------------------------------------------------------------------
     // Sets the full name.
     // ---------------------------------------------------------------------
-    public void setFullName(String fullName) { this.fullName = fullName; }
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
     // ---------------------------------------------------------------------
     // Returns the age.
     // ---------------------------------------------------------------------
-    public int getAge() { return age; }
+    public int getAge() {
+        return age;
+    }
 
     // ---------------------------------------------------------------------
     // Sets the age.
     // ---------------------------------------------------------------------
-    public void setAge(int age) { this.age = age; }
+    public void setAge(int age) {
+        this.age = age;
+    }
 }
