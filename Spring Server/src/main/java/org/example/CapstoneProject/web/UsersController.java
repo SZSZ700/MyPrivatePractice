@@ -4,6 +4,9 @@ package org.example.CapstoneProject.web;
 import org.example.CapstoneProject.dto.LoginRequest;
 import org.example.CapstoneProject.dto.SignupRequest;
 import org.example.CapstoneProject.dto.UserResponse;
+import org.example.CapstoneProject.dto.UpdateUserRequest;
+import org.example.CapstoneProject.dto.WaterResponse;
+import org.example.CapstoneProject.dto.GoalResponse;
 import org.example.CapstoneProject.model.User;
 // Import the Firebase service that handles database operations
 import org.example.CapstoneProject.service.*;
@@ -15,9 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;   // For async non-blocking calls
 import java.util.stream.Collectors;
-
 import jakarta.validation.Valid;
-import org.example.CapstoneProject.dto.UpdateUserRequest;
+
 
 // NOTE:
 // I use thenApply (not thenApplyAsync) because this continuation is very light:
@@ -393,30 +395,33 @@ public class UsersController {
         });
     }
 
+
     // ---------------------------------------------------------------------
     // GET WATER (GET /api/users/{username}/water)
-    // Returns a JSON object with { todayWater, yesterdayWater }
+    //
+    // Returns today's and yesterday's water totals.
     // ---------------------------------------------------------------------
     @GetMapping("/{username}/water")
     public CompletableFuture<ResponseEntity<?>> getWater(
             @PathVariable("username") String username) {
 
-        // Call Firebase service to get today's and yesterday's water amounts
+        // Call WaterService to get today's and yesterday's water amounts.
         return waterService.getWater(username).thenApply(result -> {
-                    // If user not found, return 404
-                    if (result == null) {
-                        return ResponseEntity
-                            .status(HttpStatus.NOT_FOUND)
-                            .body("User not found");
-                    }
+            // If user not found, return 404.
+            if (result == null) {
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body("User not found");
+            }
 
-                    // Convert JSONObject from WaterService into a plain Java Map
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("todayWater", result.optInt("todayWater", 0));
-                    response.put("yesterdayWater", result.optInt("yesterdayWater", 0));
+            // Create a response DTO from the returned water data.
+            var response = new WaterResponse(
+                    result.optLong("todayWater", 0),
+                    result.optLong("yesterdayWater", 0)
+            );
 
-                    // Return 200 OK with the response map
-                    return ResponseEntity.ok(response);
+            // Return HTTP 200 with the water response DTO.
+            return ResponseEntity.ok(response);
         });
     }
 
@@ -470,25 +475,32 @@ public class UsersController {
         // Execution is placed into Spring's internal async waiting queue
     }
 
+
     // -------------------------------------------
-    // GET /api/users/{username}/goal  -> {"goalMl": 2600}
+    // GET /api/users/{username}/goal
+    // Returns JSON: {"goalMl": 2600}
     // -------------------------------------------
     @GetMapping("/{username}/goal")
-    public CompletableFuture<ResponseEntity<Map<String, Integer>>> getGoal(
+    public CompletableFuture<ResponseEntity<GoalResponse>> getGoal(
             @PathVariable("username") String username) {
-        // Call Firebase service to get goal value
+
+        // Call WaterService to get the user's water goal.
         return waterService.getGoalMl(username)
                 .thenApply(goal -> {
-                    // Always return 200 OK with a value (default if not found)
-                    return ResponseEntity.ok(Map.of("goalMl", goal));
+
+                    // Create a response DTO with the goal value.
+                    var response = new GoalResponse(goal);
+
+                    // Return HTTP 200 with the goal response DTO.
+                    return ResponseEntity.ok(response);
                 })
                 .exceptionally(ex -> {
-                    // On failure return 500 Internal Server Error
+                    // On failure return 500 Internal Server Error.
                     System.err.println("ERROR getGoal -> " + ex.getMessage());
 
                     return ResponseEntity
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(Map.of());
+                            .body(null);
                 });
     }
 
