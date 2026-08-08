@@ -1,6 +1,8 @@
 // Define the package where this controller belongs
 package org.example.CapstoneProject.web;
 // Import the User model (POJO with username, password, age, fullName)
+import org.example.CapstoneProject.dto.LoginRequest;
+import org.example.CapstoneProject.dto.SignupRequest;
 import org.example.CapstoneProject.model.User;
 // Import the Firebase service that handles database operations
 import org.example.CapstoneProject.service.*;
@@ -107,21 +109,37 @@ public class UsersController {
     // Android → RestClient.register(user) → here
     // =========================================================
     @PostMapping("/signup")
-    public CompletableFuture<ResponseEntity<String>> signup(@RequestBody User user) {
-        // Call authenticationService.signup() which checks username and creates user
+    public CompletableFuture<ResponseEntity<String>> signup(@RequestBody SignupRequest signupRequest) {
+
+        // Create a User model from the signup request data.
+        var user = new User();
+
+        // Copy the username from the request.
+        user.setUserName(signupRequest.getUserName());
+
+        // Copy the password from the request.
+        user.setPassword(signupRequest.getPassword());
+
+        // Copy the full name from the request.
+        user.setFullName(signupRequest.getFullName());
+
+        // Copy the age from the request.
+        user.setAge(signupRequest.getAge());
+
+        // Call authenticationService.signup() which checks username and creates user.
         return authenticationService.signup(user).thenApply(result -> {
             if ("User created successfully".equals(result)) {
-                // Return HTTP 201 if success
+                // Return HTTP 201 if success.
                 return ResponseEntity
                         .status(HttpStatus.CREATED)
                         .body(result);
             } else if ("Username already exists".equals(result)) {
-                // Return HTTP 409 if username exists
+                // Return HTTP 409 if username exists.
                 return ResponseEntity
                         .status(HttpStatus.CONFLICT)
                         .body(result);
             } else {
-                // Return HTTP 500 for generic errors
+                // Return HTTP 500 for generic errors.
                 return ResponseEntity
                         .status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(result);
@@ -134,19 +152,20 @@ public class UsersController {
     // Android → RestClient.login(username,password) → here
     // =========================================================
     @PostMapping("/login")
-    public CompletableFuture<ResponseEntity<?>> login(@RequestBody User loginRequest) {
-        // Extract username & password from request body
+    public CompletableFuture<ResponseEntity<?>> login(@RequestBody LoginRequest loginRequest) {
+
+        // Extract username & password from request body.
         var username = loginRequest.getUserName();
         var password = loginRequest.getPassword();
 
-        // Call authenticationService.login() which validates credentials
+        // Call authenticationService.login() which validates credentials.
         return authenticationService.login(username, password).thenApply(user -> {
             if (user != null) {
-                // Return HTTP 200 with user object if valid
+                // Return HTTP 200 with user object if valid.
                 return ResponseEntity
                         .ok(user);
             } else {
-                // Return HTTP 401 if invalid
+                // Return HTTP 401 if invalid.
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body("Invalid username or password");
