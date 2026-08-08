@@ -8,6 +8,7 @@ import org.example.CapstoneProject.dto.UpdateUserRequest;
 import org.example.CapstoneProject.dto.WaterResponse;
 import org.example.CapstoneProject.dto.GoalResponse;
 import org.example.CapstoneProject.dto.CaloriesResponse;
+import org.example.CapstoneProject.dto.GoalUpdateResponse;
 import org.example.CapstoneProject.model.User;
 // Import the Firebase service that handles database operations
 import org.example.CapstoneProject.service.*;
@@ -509,25 +510,40 @@ public class UsersController {
     // PUT /api/users/{username}/goal?goalMl=2600  -> 200/400
     // ------------------------------------------------------
     @PutMapping("/{username}/goal")
-    public CompletableFuture<ResponseEntity<Map<String, String>>> setGoal(
+    public CompletableFuture<ResponseEntity<GoalUpdateResponse>> setGoal(
             @PathVariable("username") String username,
             @RequestParam("goalMl") int goalMl) {
-        // Call Firebase service to update goal
+
+        // Call WaterService to update the user's water goal.
         return waterService.updateGoalMl(username, goalMl)
-                .thenApply(ok -> ok
-                        // If update succeeds -> 200 OK
-                        ? ResponseEntity.ok(Map.of("status", "OK"))
-                        // If invalid value or user not found -> 400 BAD REQUEST
-                        : ResponseEntity.badRequest()
-                        .body(Map.of("status", "INVALID_OR_NOT_FOUND"))
-                )
+                .thenApply(ok -> {
+                    if (ok) {
+                        // Return HTTP 200 with success status.
+                        return ResponseEntity.ok(
+                                new GoalUpdateResponse("OK")
+                        );
+                    }
+
+                    // Return HTTP 400 if the value is invalid or user was not found.
+                    return ResponseEntity
+                            .badRequest()
+                            .body(
+                                    new GoalUpdateResponse(
+                                            "INVALID_OR_NOT_FOUND"
+                                    )
+                            );
+                })
                 .exceptionally(ex -> {
-                    // On exception -> 500 Internal Server Error
-                    System.err.println("ERROR setGoal -> " + ex.getMessage());
+                    // On exception return 500 Internal Server Error.
+                    System.err.println(
+                            "ERROR setGoal -> " + ex.getMessage()
+                    );
 
                     return ResponseEntity
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(Map.of("status", "ERROR"));
+                            .body(
+                                    new GoalUpdateResponse("ERROR")
+                            );
                 });
     }
 
