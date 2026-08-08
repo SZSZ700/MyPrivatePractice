@@ -4,6 +4,7 @@ import java.util.Map;
 
 // This class represents a User model
 // It matches the structure expected in Spring Boot and Android side
+@SuppressWarnings({"unused", "DataFlowIssue"})
 public class User {
 
     // Username field
@@ -142,7 +143,7 @@ public class User {
     public String toString() {
         return "User{" +
                 "userName='" + userName + '\'' +
-                ", password='" + password + '\'' +
+                ", password='" + "*********" + '\'' +
                 ", age=" + age +
                 ", fullName='" + fullName + '\'' +
                 ", bmi=" + bmi +
